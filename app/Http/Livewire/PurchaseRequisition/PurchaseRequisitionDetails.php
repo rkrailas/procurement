@@ -8,96 +8,246 @@ use Illuminate\Support\Carbon;
 
 class PurchaseRequisitionDetails extends Component
 {
-    public $headerData, $detailData = [];
+    public $prHeader, $prDetail = [];
     public $requested_for_dd, $delivery_address_dd, $buyer_dd, $cost_center_dd;
+    public $isCreateMode, $editPRNo, $workAtCompany;
 
-    public function updatedHeaderDataRequestedFor()
+    public function showAddItem()
+    {
+        $this->dispatchBrowserEvent('show-modelAddItem');
+    }
+
+    public function setDefaultSelect2()
+    {
+        //requestedfor-select2
+        $xRequested_for_dd = json_decode(json_encode($this->requested_for_dd), true);
+        $newOption = "<option value=' '>---โปรดเลือก---</option>";
+        foreach ($xRequested_for_dd as $row) {
+            $newOption = $newOption . "<option value='" . $row['id'] . "' ";
+            if ($row['id'] == $this->prHeader['requested_for']) {
+                $newOption = $newOption . "selected='selected'"; 
+            }
+            $newOption = $newOption . ">" . $row['fullname'] . "</option>";
+        }
+        $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#requestedfor-select2']);
+
+        //buyer-select2
+        $xBuyer_dd = json_decode(json_encode($this->buyer_dd), true);
+        $newOption = "<option value=' '>---โปรดเลือก---</option>";
+        foreach ($xBuyer_dd as $row) {
+            $newOption = $newOption . "<option value='" . $row['id'] . "' ";
+            if ($row['id'] == $this->prHeader['buyer']) {
+                $newOption = $newOption . "selected='selected'"; 
+            }
+            $newOption = $newOption . ">" . $row['fullname'] . "</option>";
+        }
+        $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#buyer-select2']);
+        $this->skipRender();
+    }
+
+    public function editPR()
+    {
+        $strsql = "SELECT prh.prno, ort.description AS ordertypename, isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requestor_name
+                    , prh.requested_for, prh.delivery_address, FORMAT(prh.request_date,'yyy-MM-dd') AS request_date, prh.company, prh.site, prh.functions
+                    , prh.department, prh.division, prh.section, reqf.email, reqf.phone , prh.buyer, prh.cost_center, prh.edecision
+                    , pr_status.description AS statusname, FORMAT(prh.valid_until,'yyy-MM-dd') AS valid_until, prh.days_to_notify, prh.notify_below_10
+                    , prh.notify_below_25, prh.notify_below_35
+                    FROM pr_header prh
+                    LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
+                    LEFT JOIN users req ON req.id=prh.requestor
+                    LEFT JOIN users reqf ON reqf.id=prh.requested_for
+                    LEFT JOIN pr_status ON pr_status.status=prh.status
+                    WHERE prh.prno ='" . $this->editPRNo . "'";
+        $data = DB::select($strsql);
+        if (count($data)) {
+            $this->prHeader = collect($data[0]);
+            if ($this->prHeader['notify_below_10'] ==0) {
+                $this->prHeader['notify_below_10'] = false;
+            }
+            if ($this->prHeader['notify_below_25'] ==0) {
+                $this->prHeader['notify_below_25'] = false;
+            }
+            if ($this->prHeader['notify_below_35'] ==0) {
+                $this->prHeader['notify_below_35'] = false;
+            }
+        }
+    }
+
+    public function savePR()
+    {
+        if ($this->isCreateMode) {
+            DB::transaction(function () {
+                //pr_header
+                DB::statement("INSERT INTO pr_header(prno, ordertype, status, requestor, requested_for, buyer, delivery_address
+                , request_date, company, site, functions, department, division, section, cost_center, edecision, valid_until
+                , days_to_notify, notify_below_10, notify_below_25, notify_below_35, create_by, create_on)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                , [$this->prHeader['prno'], $this->prHeader['ordertype'], $this->prHeader['status'], $this->prHeader['requestor'], $this->prHeader['requested_for']
+                , $this->prHeader['buyer'], $this->prHeader['delivery_address'], $this->prHeader['request_date'], $this->prHeader['company'], $this->prHeader['site']
+                , $this->prHeader['functions'], $this->prHeader['department'], $this->prHeader['division'], $this->prHeader['section'], $this->prHeader['cost_center']
+                , $this->prHeader['edecision'], $this->prHeader['valid_until'], $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10']
+                , $this->prHeader['notify_below_25'], $this->prHeader['notify_below_35'], auth()->user()->id, Carbon::now()]);
+    
+                $strsql = "select msg_text from message_list where msg_no='100'";
+                $data = DB::select($strsql);
+                if (count($data) > 0) {
+                    $this->dispatchBrowserEvent('popup-success', [
+                        'title' => str_replace("<PR No.>", $this->prHeader['prno'], $data[0]->msg_text),
+                    ]);
+                }
+            });
+        } else {
+            // DB::transaction(function () {
+            //     DB::statement("UPDATE sales SET requestor=?, requested_for=?, buyer=?, delivery_address=?
+            //     , request_date=?, company=?, site=?, functions=?, department=?, division=?, section=?, cost_center=?, edecision=?, valid_until=?
+            //     , days_to_notify=?, notify_below_10=?, notify_below_25=?, notify_below_35=?, changedby=?, changedon=?
+            //     where snumber=?" 
+            //     , [$this->prHeader['requestor'], $this->prHeader['requested_for']
+            //     , $this->prHeader['buyer'], $this->prHeader['delivery_address'], $this->prHeader['request_date'], $this->prHeader['company'], $this->prHeader['site']
+            //     , $this->prHeader['functions'], $this->prHeader['department'], $this->prHeader['division'], $this->prHeader['section'], $this->prHeader['cost_center']
+            //     , $this->prHeader['edecision'], $this->prHeader['valid_until'], $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10']
+            //     , $this->prHeader['notify_below_25'], $this->prHeader['notify_below_35'], auth()->user()->id, Carbon::now()]);
+    
+            //     $strsql = "select msg_text from message_list where msg_no='110'";
+            //         $data = DB::select($strsql);
+            //         if (count($data) > 0) {
+            //             $this->dispatchBrowserEvent('popup-success', [
+            //                 'title' => str_replace("<PR No.>", $this->prHeader['prno'], $data[0]->msg_text),
+            //             ]);
+            //         }
+            // });
+        }
+
+        $this->skipRender();
+    }
+
+    public function updatedprHeaderRequestedFor()
     {
         $this->getRequestedFor();
     }
 
     public function getRequestedFor()
     {
-        $strsql = "SELECT usr.company, usr.department, usr.site, usr.functions, usr.division, usr.section, usr.email, usr.phone 
-                    FROM users usr
-                    LEFT JOIN company com ON com.company = usr.company
-                    LEFT JOIN cost_center cost ON cost.department = usr.department
-                    WHERE usr.id='" . $this->headerData['requested_for'] . "'";
-        $data = DB::select($strsql);
-        if (count($data)) {
-            $this->headerData['company'] = $data[0]->company;
-            $this->headerData['site'] = $data[0]->site;
-            $this->headerData['functions'] = $data[0]->functions;
-            $this->headerData['department'] = $data[0]->department;
-            $this->headerData['division'] = $data[0]->division;
-            $this->headerData['section'] = $data[0]->section;
-            $this->headerData['email'] = $data[0]->email;
-            $this->headerData['phone'] = $data[0]->phone;
+        if ($this->prHeader['requested_for'] != " ") {
+            $strsql = "SELECT usr.company, usr.department, usr.site, usr.functions, usr.division, usr.section, usr.email, usr.phone 
+                        FROM users usr
+                        LEFT JOIN company com ON com.company = usr.company
+                        LEFT JOIN cost_center cost ON cost.department = usr.department
+                        WHERE usr.id='" . $this->prHeader['requested_for'] . "'";
+            $data = DB::select($strsql);
+            if (count($data)) {
+                $this->prHeader['company'] = $data[0]->company;
+                $this->prHeader['site'] = $data[0]->site;
+                $this->prHeader['functions'] = $data[0]->functions;
+                $this->prHeader['department'] = $data[0]->department;
+                $this->prHeader['division'] = $data[0]->division;
+                $this->prHeader['section'] = $data[0]->section;
+                $this->prHeader['email'] = $data[0]->email;
+                $this->prHeader['phone'] = $data[0]->phone;
+            }
+        } else {
+            $this->prHeader['company'] = "";
+            $this->prHeader['site'] = "";
+            $this->prHeader['functions'] = "";
+            $this->prHeader['department'] = "";
+            $this->prHeader['division'] = "";
+            $this->prHeader['section'] = "";
+            $this->prHeader['email'] = "";
+            $this->prHeader['phone'] = "";
         }
+        
+        $this->skipRender();
     }
 
-    public function getPrHeader()
+    public function getNewPrNo()
     {
-        $strsql = "SELECT description as ordertype 
-                    FROM order_type WHERE ordertype='" . $_GET['ordertype'] . "'";
+        $strsql = "SELECT MAX(prno) as max_prno FROM pr_header WHERE company='" . $this->workAtCompany . "'";
         $data = DB::select($strsql);
         if (count($data)) {
-            $this->headerData['ordertype'] = $data[0]->ordertype;
+            $data2 = explode("-" , $data[0]->max_prno);
+            $newNo = intval($data2[1]) + 1;
+            $newNo = $data2[0] . "-" . sprintf("%05d", $newNo);
+            $newPRNo = $newNo;
+        }
+        return $newPRNo;
+    }
+
+    public function createPrHeader()
+    {
+        //สร้างฟิลด์ใน Array ไว้ก่อน
+        $this->prHeader = ([
+            'prno'=>'', 'ordertype'=>'', 'status'=>'', 'requestor'=>'', 'requested_for'=>'', 'buyer'=>'', 'delivery_address'=>''
+            , 'request_date'=>date_format(Carbon::now()->addMonth(+1),'Y-m-d'), 'company'=>'', 'site'=>'', 'functions'=>'', 'department'=>''
+            , 'division'=>'', 'section'=>'', 'cost_center'=>'', 'edecision'=>'', 'valid_until'=>'', 'days_to_notify'=>0
+            , 'notify_below_10'=>false, 'notify_below_25'=>false, 'notify_below_35'=>false
+        ]);
+
+        //สร้างเลขที่ PR ใหม่
+        $this->prHeader['prno'] = $this->getNewPrNo();
+
+        $this->prHeader['ordertype'] = $_GET['ordertype'];
+        $strsql = "SELECT description as ordertypename 
+                    FROM order_type WHERE ordertype='" . $this->prHeader['ordertype'] . "'";
+        $data = DB::select($strsql);
+        if (count($data)) {            
+            $this->prHeader['ordertypename'] = $data[0]->ordertypename;
         }
 
-        $strsql = "SELECT description as status 
+        $this->prHeader['status'] = $_GET['status'];
+        $strsql = "SELECT description as statusname 
                     FROM pr_status WHERE status='" . $_GET['status'] . "'";
         $data = DB::select($strsql);
         if (count($data)) {
-            $this->headerData['status'] = $data[0]->status;
+            $this->prHeader['statusname'] = $data[0]->statusname;
         }
 
-        $strsql = "SELECT isnull(name,'') + ' ' + isnull(lastname,'') as requestor 
-                    FROM users WHERE username='" . config('constants.USER_LOGIN') . "'";
+        $strsql = "SELECT id as requestor, isnull(name,'') + ' ' + isnull(lastname,'') as requestor_name 
+                    FROM users WHERE id=" . config('constants.USER_LOGIN');
         $data = DB::select($strsql);
         if (count($data)) {
-            $this->headerData['requestor'] = $data[0]->requestor;
+            $this->prHeader['requestor'] = $data[0]->requestor;
+            $this->prHeader['requestor_name'] = $data[0]->requestor_name;
         }
-
-        //ดึง Company มาก่อนเพื่อเป็นเงื่อนไขตอน loadDropDown
-        $strsql = "SELECT usr.company FROM users usr WHERE username='" . $this->headerData['requestor'] . "'";
-            $data = DB::select($strsql);
-            if (count($data)) {
-                $this->headerData['company'] = $data[0]->company;
-            }
-        
-        $this->headerData['requested_for'] = "";
-        $this->headerData['delivery_address'] = "";
-        $this->headerData['request_date'] = date_format(Carbon::now()->addMonth(+1),'Y-m-d');
-        $this->headerData['buyer'] = "";
-        $this->headerData['cost_center'] = "";
-        $this->headerData['cost_center_dscription'] = "";
-        $this->headerData['edecision'] = "";
     }
 
     public function loadDropdownList()
-    {
+    {   
         //Requested_For & Buyer
         $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users 
-                    WHERE company='" . $this->headerData['company'] . "' ORDER BY users.name";
+                    WHERE company='" . $this->workAtCompany . "' ORDER BY users.name";
         $this->requested_for_dd = DB::select($strsql);
         $this->buyer_dd = DB::select($strsql);
 
         //Delivery Address
         $strsql = "SELECT address_id, SUBSTRING(address,1,30) as address FROM site 
-                    WHERE company = '" . $this->headerData['company'] . "' ORDER BY address_id";
+                    WHERE company = '" . $this->workAtCompany . "' ORDER BY address_id";
         $this->delivery_address_dd = DB::select($strsql);
 
         //Cost_Center
         $strsql = "SELECT department, description FROM cost_center 
-                    WHERE company = '" . $this->headerData['company'] . "' ORDER BY department";
+                    WHERE company = '" . $this->workAtCompany . "' ORDER BY department";
         $this->cost_center_dd = DB::select($strsql);
     }
 
     public function mount()
     {
-        //เอามาไว้ที่ Mount เพราะต้องการให้ทำงานครั้งเดียว เนื่องจากค่า GET จะส้งมาครั้งแรกครั้งเดียว
-        $this->getPrHeader(); 
+        if ($_GET['mode'] == "create") {
+            $this->isCreateMode = true;
+            $this->workAtCompany = $_GET['company'];
+            $this->createPrHeader();
+            //$this->loadDropdownList();
+        } else if ($_GET['mode'] == "edit") {
+            $this->isCreateMode = false;
+            $this->editPRNo = $_GET['prno'];
+            //หา Company 
+            $strsql = "SELECT company FROM pr_header WHERE prno='" . $this->editPRNo . "'" ;
+            $data = DB::select($strsql);
+            if (count($data)) {
+                $this->workAtCompany = $data[0]->company;
+            }
+            //$this->loadDropdownList();
+            $this->editPR();            
+        }
     }
 
     public function render()

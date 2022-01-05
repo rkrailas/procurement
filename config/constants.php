@@ -2,7 +2,7 @@
 
 return [
 	
-	'USER_LOGIN' => 'user01',
+	'USER_LOGIN' => '1',
 	'USER_COMPANY' => '4112',
 
 ];

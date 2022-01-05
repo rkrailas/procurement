@@ -26,8 +26,12 @@ class PurchaseRequisitionList extends Component
     //for Dropdown
     public $ordertype_dd, $site_dd, $requestor_dd, $requestedfor_dd, $buyer_dd, $status_dd;
 
-    public $selectedOrderType;
+    public $selectedOrderType, $workAtCompany;
 
+    public function edit($prno)
+    {
+        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $prno);
+    }
 
     public function sortBy($sortby)
     {
@@ -48,7 +52,8 @@ class PurchaseRequisitionList extends Component
     public function createPR()
     {
         if ($this->selectedOrderType) {
-            return redirect("purchase-requisition/purchaserequisitiondetails?ordertype=" . $this->selectedOrderType . "&status=" . "01");
+            return redirect("purchase-requisition/purchaserequisitiondetails?company=" . $this->workAtCompany 
+                                . "&mode=create&ordertype=" . $this->selectedOrderType . "&status=01");
         } else {
             $this->dispatchBrowserEvent('popup-alert', [
                 'title' => "Please select Order Type",
@@ -79,6 +84,12 @@ class PurchaseRequisitionList extends Component
     public function mount()
     {
         $this->resetSearch();
+        //หา Company 
+        $strsql = "SELECT usr.company FROM users usr WHERE id=" . config('constants.USER_LOGIN');
+        $data = DB::select($strsql);
+        if (count($data)) {
+            $this->workAtCompany = $data[0]->company;
+        }
     }
 
     public function loadDropdownList()
@@ -122,13 +133,11 @@ class PurchaseRequisitionList extends Component
                 $this->dispatchBrowserEvent('popup-alert', [
                     'title' => $data[0]->msg_text,
                 ]);
-                $isValidate = false;
             }
         }else if ($this->requestdate_from == "" or $this->requestdate_to == "")  {
             $this->dispatchBrowserEvent('popup-alert', [
                 'title' => "Please ensure From Date is not empty",
             ]);
-            $isValidate = false;
         }
 
         //Condition
@@ -146,25 +155,25 @@ class PurchaseRequisitionList extends Component
         }
 
         $xWhere = "";
-        $xWhere = " where prh.prno like '%" . $this->prno . "%' 
-                    and prh.ordertype like '%" . $this->ordertype . "%'
-                    and prh.site like '%" . $this->site . "%'
-                    and prh.request_date between '" . $this->requestdate_from . "' and '" . $this->requestdate_to . "'
-                    and prh.status like '%" . $this->status . "%'
-                    and prh.requestor like '%" . $xRequestor . "%'
-                    and prh.requested_for like '%" . $xRequested_for . "%'
-                    and prh.buyer like '%" . $xBuyer. "%'
-                    order by " . $this->sortBy . " " . $this->sortDirection;
+        $xWhere = " WHERE prh.prno LIKE '%" . $this->prno . "%' 
+                    AND prh.ordertype LIKE '%" . $this->ordertype . "%'
+                    AND prh.site LIKE '%" . $this->site . "%'
+                    AND prh.request_date BETWEEN '" . $this->requestdate_from . "' AND '" . $this->requestdate_to . "'
+                    AND prh.status LIKE '%" . $this->status . "%'
+                    AND prh.requestor LIKE '%" . $xRequestor . "%'
+                    AND prh.requested_for LIKE '%" . $xRequested_for . "%'
+                    AND prh.buyer LIKE '%" . $xBuyer. "%'
+                    ORDER BY " . $this->sortBy . " " . $this->sortDirection;
 
-        $strsql = "select prh.prno, ort.description as order_type
-                    , isnull(req.name,'') + ' ' + isnull(req.lastname,'') as requested_for
-                    ,prh.site, pr_status.description as status, prh.request_date
-                    , isnull(buyer.name,'') + ' ' + isnull(buyer.lastname,'') as buyer
-                    from pr_header prh
-                    left join order_type ort on ort.ordertype=prh.ordertype
-                    left join users req on req.id=prh.requestor
-                    left join pr_status on pr_status.status=prh.status
-                    left join users buyer on buyer.id=prh.buyer";
+        $strsql = "SELECT prh.prno, ort.description AS order_type
+                    , isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requested_for
+                    ,prh.site, pr_status.description AS status, prh.request_date
+                    , isnull(buyer.name,'') + ' ' + isnull(buyer.lastname,'') AS buyer
+                    FROM pr_header prh
+                    LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
+                    LEFT JOIN users req ON req.id=prh.requested_for
+                    LEFT JOIN pr_status ON pr_status.status=prh.status
+                    LEFT JOIN users buyer ON buyer.id=prh.buyer";
         $strsql = $strsql . $xWhere;
         $pr_list = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 

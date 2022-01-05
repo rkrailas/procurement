@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\PurchaseRequisition\PurchaseRequisitionList;
 use App\Http\Livewire\PurchaseRequisition\PurchaseRequisitionDetails;
+use App\Http\Livewire\admin\ChangePassword;
+use App\Http\Controllers\ClientController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,10 +17,15 @@ use App\Http\Livewire\PurchaseRequisition\PurchaseRequisitionDetails;
 |
 */
 
-//======== Purchase Requisition ========
-Route::get('purchase-requisition/purchaserequisitionlist', PurchaseRequisitionList::class)->name('purchase-requisition.purchaserequisitionlist');
-Route::get('purchase-requisition/purchaserequisitiondetails', PurchaseRequisitionDetails::class)->name('purchase-requisition.purchaserequisitiondetails');
-
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::group(['middleware' => 'auth'], function () {
+    //======== Purchase Requisition ========
+    Route::get('purchase-requisition/purchaserequisitionlist', PurchaseRequisitionList::class)->name('purchase-requisition.purchaserequisitionlist');
+    Route::get('purchase-requisition/purchaserequisitiondetails', PurchaseRequisitionDetails::class)->name('purchase-requisition.purchaserequisitiondetails');
+});
+
+Route::get('admin/changepassword', ChangePassword::class)->name('admin.changepassword');
+Route::post('logout', [ClientController::class, 'logout'])->name('logout');

@@ -3,10 +3,6 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <!-- ปุ่มซ่อนเมนู -->
-                    <div class="float-left d-none d-sm-inline">
-                        <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
-                    </div>
                     <h1 class="m-0 text-dark">Purchase Requisition List</h1>
                 </div>
                 <div class="col-sm-6">
@@ -123,8 +119,16 @@
 
         <div class="row">
             <div class="col-md-12">
-                <button wire:click.prevent="resetSearch" class="btn btn-sm btn-secondary">CLEAR</button>
-                <button wire:click.prevent="searchPR" class="btn btn-sm btn-primary">APPLY</button>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <button wire:click.prevent="resetSearch" class="btn btn-sm btn-secondary">CLEAR</button>
+                        <button wire:click.prevent="searchPR" class="btn btn-sm btn-primary">APPLY</button>
+                    </div>
+                    <button wire:click.prevent="popupSelectOrderType" class="btn btn-sm btn-success"><i class="fa fa-plus-circle" mb-1></i>
+                        Create PR</button>
+                </div>
+                
+                
             </div>
         </div>
     </div>
@@ -132,16 +136,6 @@
     <!-- Table PR -->
     <div class="content">
         <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col">
-                    <div class="d-flex justify-content-end mb-2">
-                        <div>
-                            <button wire:click.prevent="popupSelectOrderType" class="btn btn-sm btn-success"><i class="fa fa-plus-circle" mb-1></i>
-                            Create PR</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
             <div class="row mb-2">
                 <div class="col">
                     <table class="table table-md table-hover">
@@ -153,7 +147,7 @@
                                     <i class="fa fa-arrow-down {{ $sortBy === 'prh.prno' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
                                 </span>
                             </th>
-                            <th scope="col">Order Type
+                            <th scope="col">Type
                                 <span wire:click="sortBy('ort.description')" class="float-right text-sm" style="cursor: pointer;">
                                     <i class="fa fa-arrow-up {{ $sortBy === 'ort.description' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
                                     <i class="fa fa-arrow-down {{ $sortBy === 'ort.description' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
@@ -177,19 +171,19 @@
                                     <i class="fa fa-arrow-down {{ $sortBy === 'prh.status' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
                                 </span>
                             </th>
-                            <th scope="col">T. Budget Price
+                            <th scope="col">Total Budget
                                 {{-- <span wire:click="sortBy('sales.transactiondate')" class="float-right text-sm" style="cursor: pointer;">
                                     <i class="fa fa-arrow-up {{ $sortBy === 'sales.transactiondate' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
                                     <i class="fa fa-arrow-down {{ $sortBy === 'sales.transactiondate' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
                                 </span> --}}
                             </th>
-                            <th scope="col">T. Final Price
+                            <th scope="col">Total Price
                                 {{-- <span wire:click="sortBy('sales.transactiondate')" class="float-right text-sm" style="cursor: pointer;">
                                     <i class="fa fa-arrow-up {{ $sortBy === 'sales.transactiondate' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
                                     <i class="fa fa-arrow-down {{ $sortBy === 'sales.transactiondate' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
                                 </span> --}}
                             </th>
-                            <th scope="col">Requested Date
+                            <th scope="col">Req. Date
                                 <span wire:click="sortBy('prh.request_date')" class="float-right text-sm" style="cursor: pointer;">
                                     <i class="fa fa-arrow-up {{ $sortBy === 'prh.request_date' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
                                     <i class="fa fa-arrow-down {{ $sortBy === 'prh.request_date' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
@@ -201,6 +195,7 @@
                                     <i class="fa fa-arrow-down {{ $sortBy === 'buyer.name' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
                                 </span>
                             </th>
+                            <th scope="col">Actions</th>
                         </thead>
                         <tbody>
                             @foreach ($pr_list as $row)
@@ -215,6 +210,13 @@
                                 <td scope="col">{{ number_format(0,2) }} </td>
                                 <td scope="col">{{ \Carbon\Carbon::parse($row->request_date)->format('Y-m-d') }} </td>
                                 <td scope="col">{{ $row->buyer }} </td>
+                                <td>
+                                    <center>
+                                        <a href="" wire:click.prevent="edit('{{ $row->prno }}')">
+                                            <i class="fa fa-edit mr-2"></i>
+                                        </a>
+                                    </center>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>

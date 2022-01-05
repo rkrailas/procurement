@@ -81,7 +81,7 @@
     <div class="wrapper">
 
         <!-- Navbar -->
-        {{-- @include('layouts.partials.navbar') --}}
+        @include('layouts.partials.navbar')
         <!-- /.navbar -->
 
         <!-- Main Sidebar Container -->
@@ -89,9 +89,7 @@
 
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
-
             {{ $slot }}
-
         </div>
         <!-- /.content-wrapper -->
 
@@ -134,6 +132,7 @@
     <!-- sweetalert2 -->
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <x-popup-alert></x-popup-alert>
+    <x-popup-success></x-popup-success>
     <x-delete-confirmation></x-delete-confirmation>
     <x-popup-image></x-popup-image>
 
