@@ -14,7 +14,8 @@ class PurchaseRequisitionDetails extends Component
 
     public function showAddItem()
     {
-        $this->dispatchBrowserEvent('show-modelAddItem');
+        $this->dispatchBrowserEvent('show-modelPartLineItem');
+        //$this->dispatchBrowserEvent('show-modelExpenseLineItem');        
     }
 
     public function setDefaultSelect2()

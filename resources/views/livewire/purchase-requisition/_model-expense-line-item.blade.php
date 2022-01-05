@@ -1,10 +1,10 @@
-<div class="modal" id="modelAddItem" tabindex="-1" role="dialog" data-backdrop="static" wire:ignore.self>
+<div class="modal" id="modelExpenseLineItem" tabindex="-1" role="dialog" data-backdrop="static" wire:ignore.self>
     <div class="modal-dialog" role="document" style="max-width: 80%;">
         <form autocomplete="off" wire:submit.prevent="addEditItem">
             <div class="modal-content ">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel" style="font-size: 20px;">
-                        Part Order Line Item
+                        Expense Line Item
                     </h5>
                 </div>
                 <div class="modal-body">
@@ -18,29 +18,11 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="row">
                         <hr width="100%">
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label>Part <span style="color: red">*</span></label>
-                            <x-select2 id="partno-select2" wire:model.defer="">
-                                <option value=" ">--- All ---</option>
-                                {{-- @foreach($requested_for_dd as $row)
-                                <option value="{{ $row->id }}">
-                                    {{ $row->fullname }}
-                                </option>
-                                @endforeach --}}
-                            </x-select2>
-                        </div>
-                        <div class="col-md-4">
-                        </div>
-                        <div class="col-md-4">
-                        </div>
-                    </div>
-
+                    {{-- Description --}}
                     <div class="row">
                         <div class="col-12">
                             <label>Description <span style="color: red">*</span></label>
@@ -48,10 +30,18 @@
                         </div>
                     </div>
 
+                    {{-- Purchase Unit --}}
                     <div class="row">
                         <div class="col-md-4">
-                            <label>Purchase Unit</label>
-                            <input class="form-control form-control-sm" type="text" readonly id="" wire:model.defer="">
+                            <label>Purchase Unit <span style="color: red">*</span></label>
+                            <x-select2 id="purchase_unit-select2" wire:model.defer="">
+                                <option value=" ">--- Please Select ---</option>
+                                {{-- @foreach($citys_dd as $row)
+                                <option value='{{ $row->city }}'>
+                                    {{ $row->city }}
+                                </option>
+                                @endforeach --}}
+                            </x-select2>
                         </div>
                         <div class="col-md-4">
                             <label>Budget Price Per Unit <span style="color: red">*</span></label>
@@ -60,12 +50,18 @@
                         </div>
                         <div class="col-md-4">
                             <label>Currency <span style="color: red">*</span></label>
-                            <select class="form-control form-control-sm" id="" wire:model.defer="">
-                                <option value="">--- Please Select ---</option>
-                            </select>
+                            <x-select2 id="currency2-select2" wire:model.defer="">
+                                <option value=" ">--- Please Select ---</option>
+                                {{-- @foreach($citys_dd as $row)
+                                <option value='{{ $row->city }}'>
+                                    {{ $row->city }}
+                                </option>
+                                @endforeach --}}
+                            </x-select2>
                         </div>
                     </div>
 
+                    {{-- Exchange Rate --}}
                     <div class="row">
                         <div class="col-md-4">
                             <label>Exchange Rate</label>
@@ -73,14 +69,20 @@
                         </div>
                         <div class="col-md-4">
                             <label>Purchase Group</label>
-                            <input class="form-control form-control-sm" type="text" readonly id="" wire:model.defer="">
+                            <x-select2 id="purchase_group-select2" wire:model.defer="">
+                                <option value=" ">--- Please Select ---</option>
+                                {{-- @foreach($citys_dd as $row)
+                                <option value='{{ $row->city }}'>
+                                    {{ $row->city }}
+                                </option>
+                                @endforeach --}}
+                            </x-select2>
                         </div>
                         <div class="col-md-4">
-                            <label>Accounting Group</label>
-                            <input class="form-control form-control-sm" type="text" readonly id="" wire:model.defer="">
                         </div>
                     </div>
 
+                    {{-- QTY --}}
                     <div class="row">
                         <div class="col-md-4">
                             <label>QTY <span style="color: red">*</span></label>
@@ -95,58 +97,35 @@
                                         <i class="fas fa-calendar"></i>
                                     </span>
                                 </div>
-                                <x-datepicker wire:model.defer="" id="request_date"
+                                <x-datepicker wire:model.defer="" id="request_date2"
                                     :error="'date'" required/>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <label>Internal Order</label>
-                            <x-select2 id="partno-select2" wire:model.defer="">
-                                <option value=" ">--- All ---</option>
-                                {{-- @foreach($requested_for_dd as $row)
-                                <option value="{{ $row->id }}">
-                                    {{ $row->fullname }}
+                            <x-select2 id="internal_order-select2" wire:model.defer="">
+                                <option value=" ">--- Please Select ---</option>
+                                {{-- @foreach($citys_dd as $row)
+                                <option value='{{ $row->city }}'>
+                                    {{ $row->city }}
                                 </option>
                                 @endforeach --}}
                             </x-select2>
                         </div>
                     </div>
 
+                    {{-- Budget Code --}}
                     <div class="row">
                         <div class="col-md-4">
                             <label>Budget Code <span style="color: red">*</span></label>
-                            <x-select2 id="partno-select2" wire:model.defer="">
-                                <option value=" ">--- All ---</option>
-                                {{-- @foreach($requested_for_dd as $row)
-                                <option value="{{ $row->id }}">
-                                    {{ $row->fullname }}
+                            <x-select2 id="budget_code-select2" wire:model.defer="">
+                                <option value=" ">--- Please Select ---</option>
+                                {{-- @foreach($citys_dd as $row)
+                                <option value='{{ $row->city }}'>
+                                    {{ $row->city }}
                                 </option>
                                 @endforeach --}}
                             </x-select2>
-                        </div>
-                        <div class="col-md-4">
-                            <label>Brand></label>
-                            <input class="form-control form-control-sm" type="text" readonly id="" wire:model.defer="">
-                        </div>
-                        <div class="col-md-4">
-                            <label>Model / Spec</label>
-                            <input class="form-control form-control-sm" type="text" readonly id="" wire:model.defer="">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label>RFQ & DOA</label>
-                            <div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" wire:model.defer="">
-                                    <label class="form-check-label">Skip RFQ</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" wire:model.defer="">
-                                    <label class="form-check-label">Skip RFQ</label>
-                                </div>
-                            </div>
                         </div>
                         <div class="col-md-4">
                             <label>Useful life more than 1 year</label>
@@ -183,38 +162,50 @@
                     {{-- Quotation --}}
                     <div class="row mb-0">
                         <div class="col-md-12">
-                            <label>Quotation</label>                            
+                            <label>Quotation</label>     
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label>Final Price</label>
-                            <input class="form-control form-control-sm" type="number" step="0.01" id=""
-                                wire:model.defer="">
-                        </div>
-                        <div class="col-md-4">
-                            <label>Quotation Expiry Date</label>
-                            <div class="input-group mb-1">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-calendar"></i>
-                                    </span>
+                    <div class="card shadow-none border rounded">
+                        <div class="card-body p-1">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label>Final Price</label>
+                                    <input class="form-control form-control-sm" type="number" step="0.01" id=""
+                                        wire:model.defer="">
                                 </div>
-                                <x-datepicker wire:model.defer="" id="quotation_expiry_date"
-                                    :error="'date'" required/>
+                                <div class="col-md-4">
+                                    <label>Quotation Expiry Date</label>
+                                    <div class="input-group mb-1">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="fas fa-calendar"></i>
+                                            </span>
+                                        </div>
+                                        <x-datepicker wire:model.defer="" id="expiry_date2"
+                                            :error="'date'" required/>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Confirmed On</label>
+                                    <div class="input-group mb-1">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="fas fa-calendar"></i>
+                                            </span>
+                                        </div>
+                                        <x-datepicker wire:model.defer="" id="confirm_on"
+                                            :error="'date'" required/>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <label>Nominated Supplier</label>
-                            <input class="form-control form-control-sm" type="text" id="" wire:model.defer="">
-                        </div>
-                    </div>
+                      </div>
 
                     {{-- Remarks --}}
                     <div class="row">
                         <div class="col-md-12">
                             <label>Remarks</label>
-                            <textarea class="form-control form-control-sm" rows="3"></textarea>
+                            <textarea class="form-control form-control-sm" rows="3" wire:model.defer=""></textarea>
                         </div>
                     </div>
 
@@ -259,12 +250,12 @@
 
 @push('js')
 <script>
-    window.addEventListener('show-modelAddItem', event => {
-        $('#modelAddItem').modal('show');
+    window.addEventListener('show-modelExpenseLineItem', event => {
+        $('#modelExpenseLineItem').modal('show');
     })
 
-    window.addEventListener('hide-modelAddItem', event => {
-        $('#modelAddItem').modal('hide');
+    window.addEventListener('hide-modelExpenseLineItem', event => {
+        $('#modelExpenseLineItem').modal('hide');
     })
 
     // window.addEventListener('clear-select2', event => {

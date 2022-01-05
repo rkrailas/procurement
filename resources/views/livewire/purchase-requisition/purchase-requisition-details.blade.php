@@ -322,7 +322,8 @@
             </div>
         </div>
     </div>
-    @include('livewire.purchase-requisition._model-add-item')
+    @include('livewire.purchase-requisition._model-part-line-item')
+    @include('livewire.purchase-requisition._model-expense-line-item')
 </div>
 
 @push('js')
