@@ -16,7 +16,7 @@ class PurchaseRequisitionList extends Component
 
     //for Grid
     public $sortDirection = "desc";
-    public $sortBy = "prh.prno";
+    public $sortBy = "prh.request_date";
     public $numberOfPage = 10;
     public $searchTerm = null;
 
@@ -30,7 +30,7 @@ class PurchaseRequisitionList extends Component
 
     public function edit($prno)
     {
-        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $prno . "&tab=item");
+        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $prno);
     }
 
     public function sortBy($sortby)
@@ -52,8 +52,8 @@ class PurchaseRequisitionList extends Component
     public function createPR()
     {
         if ($this->selectedOrderType) {
-            //return redirect(route('pr_detail'));
-            return redirect("purchase-requisition/purchaserequisitiondetails?mode=create&ordertype=" . $this->selectedOrderType);
+            return redirect("purchase-requisition/purchaserequisitiondetails?company=" . $this->workAtCompany 
+                                . "&mode=create&ordertype=" . $this->selectedOrderType . "&status=00");
         } else {
             $this->dispatchBrowserEvent('popup-alert', [
                 'title' => "Please select Order Type",
@@ -169,11 +169,7 @@ class PurchaseRequisitionList extends Component
                     , isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requested_for
                     ,prh.site, pr_status.description AS status, prh.request_date
                     , isnull(buyer.name,'') + ' ' + isnull(buyer.lastname,'') AS buyer
-                    , pri.total_budget, pri.total_final_price
                     FROM pr_header prh
-                    LEFT JOIN (SELECT prno, sum(qty * unit_price) as total_budget
-                                , sum(final_price) as total_final_price 
-                                FROM pr_item GROUP BY prno) pri ON pri.prno=prh.prno
                     LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
                     LEFT JOIN users req ON req.id=prh.requested_for
                     LEFT JOIN pr_status ON pr_status.status=prh.status

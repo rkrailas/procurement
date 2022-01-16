@@ -10,7 +10,7 @@
     <ul class="navbar-nav ml-auto">
       <li class="nav-item dropdown">
         <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="nav-link dropdown-toggle">
-          {{ auth()->user()->name }} {{ auth()->user()->lastname }}</a>
+          {{ auth()->user()->name }} {{ auth()->user()->lastname }} ({{ auth()->user()->company }})</a>
         <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow" style="left: 0px; right: inherit;">
           <li><a href="{{ route('admin.changepassword') }}" class="dropdown-item">Change Password </a></li>    
           <li>

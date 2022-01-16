@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Fortify;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -33,6 +35,20 @@ class FortifyServiceProvider extends ServiceProvider
     {
         fortify::loginView(function () {
             return view('auth.login');
+        });
+
+        fortify::authenticateUsing(function (Request $request) {
+            $user = User::where('username', $request->username)
+                    ->where('company', $request->company)
+                    ->first();
+            if ($user && 
+                Hash::check($request->password, $user->password)) {
+                return $user;
+            }
+        });
+
+        RateLimiter::for("login", function () {
+            Limit::perMinute(5);
         });
         
         // Fortify::createUsersUsing(CreateNewUser::class);

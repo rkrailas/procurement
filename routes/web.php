@@ -25,6 +25,8 @@ Route::group(['middleware' => 'auth'], function () {
     //======== Purchase Requisition ========
     Route::get('purchase-requisition/purchaserequisitionlist', PurchaseRequisitionList::class)->name('purchase-requisition.purchaserequisitionlist');
     Route::get('purchase-requisition/purchaserequisitiondetails', PurchaseRequisitionDetails::class)->name('purchase-requisition.purchaserequisitiondetails');
+    // Route::get('pr/pr_list', PurchaseRequisitionList::class)->name('pr.pr_list');
+    // Route::get('pr/pr_detail', PurchaseRequisitionDetails::class)->name('pr.pr_detail');
 });
 
 Route::get('admin/changepassword', ChangePassword::class)->name('admin.changepassword');
