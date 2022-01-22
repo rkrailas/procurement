@@ -18,7 +18,7 @@
 <body class="hold-transition login-page">
 <div class="login-box">
   <!-- /.login-logo -->
-  <div class="card card-outline card-primary">
+  <div class="card card-outline card-danger">
     <div class="card-header text-center">
       <a href="../../index2.html" class="h1"><b>Sign In</b></a>
     </div>
@@ -54,7 +54,7 @@
         </div>
         <div class="row">
           <div class="col-12">
-            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+            <button type="submit" class="btn btn-danger btn-block">Sign In</button>
           </div>
           <!-- /.col -->
         </div>

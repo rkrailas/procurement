@@ -4,12 +4,12 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">Purchase Requisition List</h1>
+                    <h1 class="m-0" style="color: #C3002F;">Purchase Requisition List</h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item">Purchase Requisition</li>
-                        <li class="breadcrumb-item active">Purchase Requisition List</li>
+                        <li class="breadcrumb-item active" style="color: #C3002F;">Purchase Requisition List</li>
                     </ol>
                 </div>
             </div>
@@ -123,8 +123,8 @@
 
                 <div class="row">
                     <div class="col-md-12">
-                        <button wire:click.prevent="resetSearch" class="btn btn-sm btn-secondary">CLEAR</button>
-                        <button wire:click.prevent="searchPR" class="btn btn-sm btn-primary">APPLY</button>
+                        <button wire:click.prevent="resetSearch" class="btn btn-sm btn-light">CLEAR</button>
+                        <button wire:click.prevent="searchPR" class="btn btn-sm btn-danger">APPLY</button>
                     </div>
                 </div>
             </div>
@@ -137,7 +137,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-12 d-flex justify-content-end">
-                    <button wire:click.prevent="popupSelectOrderType" class="btn btn-sm btn-success"><i
+                    <button wire:click.prevent="popupSelectOrderType" class="btn btn-sm btn-danger"><i
                             class="fa fa-plus-circle" mb-1></i>
                         Create PR</button>
                 </div>
@@ -151,84 +151,84 @@
                                 <span wire:click="sortBy('prh.prno')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
-                                        class="fa fa-arrow-up {{ $sortBy === 'prh.prno' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-up {{ $sortBy === 'prh.prno' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
                                     <i
-                                        class="fa fa-arrow-down {{ $sortBy === 'prh.prno' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-down {{ $sortBy === 'prh.prno' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
                             <th scope="col">Type
                                 <span wire:click="sortBy('ort.description')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
-                                        class="fa fa-arrow-up {{ $sortBy === 'ort.description' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-up {{ $sortBy === 'ort.description' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
                                     <i
-                                        class="fa fa-arrow-down {{ $sortBy === 'ort.description' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-down {{ $sortBy === 'ort.description' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
-                            <th scope="col">Requested For
+                            <th scope="col">Req. For
                                 <span wire:click="sortBy('req.name')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
-                                        class="fa fa-arrow-up {{ $sortBy === 'req.name' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-up {{ $sortBy === 'req.name' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
                                     <i
-                                        class="fa fa-arrow-down {{ $sortBy === 'req.name' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-down {{ $sortBy === 'req.name' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
                             <th scope="col">Site
                                 <span wire:click="sortBy('prh.site')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
-                                        class="fa fa-arrow-up {{ $sortBy === 'prh.site' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-up {{ $sortBy === 'prh.site' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
                                     <i
-                                        class="fa fa-arrow-down {{ $sortBy === 'prh.site' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-down {{ $sortBy === 'prh.site' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
                             <th scope="col">Status
                                 <span wire:click="sortBy('prh.status')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
-                                        class="fa fa-arrow-up {{ $sortBy === 'prh.status' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-up {{ $sortBy === 'prh.status' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
                                     <i
-                                        class="fa fa-arrow-down {{ $sortBy === 'prh.status' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-down {{ $sortBy === 'prh.status' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
                             <th scope="col">T. Budget
                                 <span wire:click="sortBy('pri.total_budget')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
-                                        class="fa fa-arrow-up {{ $sortBy === 'pri.total_budget' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-up {{ $sortBy === 'pri.total_budget' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
                                     <i
-                                        class="fa fa-arrow-down {{ $sortBy === 'pri.total_budget' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-down {{ $sortBy === 'pri.total_budget' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
                             <th scope="col">T. Final
                                 <span wire:click="sortBy('pri.total_final_price')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
-                                        class="fa fa-arrow-up {{ $sortBy === 'pri.total_final_price' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-up {{ $sortBy === 'pri.total_final_price' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
                                     <i
-                                        class="fa fa-arrow-down {{ $sortBy === 'pri.total_final_price' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-down {{ $sortBy === 'pri.total_final_price' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
                             <th scope="col">Req. Date
                                 <span wire:click="sortBy('prh.request_date')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
-                                        class="fa fa-arrow-up {{ $sortBy === 'prh.request_date' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-up {{ $sortBy === 'prh.request_date' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
                                     <i
-                                        class="fa fa-arrow-down {{ $sortBy === 'prh.request_date' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-down {{ $sortBy === 'prh.request_date' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
                             <th scope="col">Buyer
                                 <span wire:click="sortBy('buyer.name')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
-                                        class="fa fa-arrow-up {{ $sortBy === 'buyer.name' && $sortDirection === 'asc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-up {{ $sortBy === 'buyer.name' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
                                     <i
-                                        class="fa fa-arrow-down {{ $sortBy === 'buyer.name' && $sortDirection === 'desc' ? '' : 'text-muted'}}"></i>
+                                        class="fa fa-arrow-down {{ $sortBy === 'buyer.name' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
-                            <th scope="col">Actions</th>
+                            <th scope="col"></th>
                         </thead>
                         <tbody>
                             @foreach ($pr_list as $row)
@@ -307,8 +307,8 @@
                     </select>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" wire:click.prevent="createPR">Create PR</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" wire:click.prevent="createPR">Create PR</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

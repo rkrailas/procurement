@@ -6,7 +6,7 @@
                 <div class="col-sm-12">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item">Purchase Requisition</li>
-                        <li class="breadcrumb-item active">Purchase Requisition Details</li>
+                        <li class="breadcrumb-item active" style="color: #C3002F;">Purchase Requisition Details</li>
                     </ol>
                 </div>
             </div>
@@ -16,21 +16,20 @@
     <div class="container">
         {{-- Header --}}
         <div class="row">
-            <div class="col-md-12" style="font-size: 20px;">
-                Purchase Requsition No : <span style="color: blue">{{ $prHeader['prno'] }}</span>
+            <div class="col-md-12" style="font-size: 20px; color: #C3002F">
+                Purchase Requsition No : <span>{{ $prHeader['prno'] }}</span>
             </div>
         </div>
         <div class="card shadow-none border rounded">
             <div class="card-header my-card-header">
-                <div class="row">
+                <div class="row py-0 my-0">
                     <div class="col-12 d-flex justify-content-between">
                         <div>
-                            Order Type : <span style="color: blue">{{ $prHeader['ordertypename'] }}</span>
+                            Order Type : <span>{{ $prHeader['ordertypename'] }}</span>
                         </div>
                         <div>
-                            Status : <span style="color: blue">{{ $prHeader['statusname'] }}</span>
+                            Status : <span>{{ $prHeader['statusname'] }}</span>
                         </div>
-                        
                     </div>
                 </div>
             </div>
@@ -228,7 +227,7 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="d-flex justify-content-end mb-2">
-                            <button wire:click.prevent="showAddItem" class="btn btn-sm btn-success"><i class="fas fa-plus-square mr-1"></i>Add Item</button>
+                            <button wire:click.prevent="showAddItem" class="btn btn-sm btn-danger"><i class="fas fa-plus-square mr-1"></i>Add Item</button>
                         </div>
                     </div>
                 </div>                
@@ -266,7 +265,7 @@
                                 <td scope="col" class="text-right pr-2">{{ number_format($itemList[$index]['final_price'], 2) }} </td>
                                 <td scope="col">
                                     <center>
-                                        <a href="" wire:click.prevent="confirmDeleteLineItem('{{ $itemList[$index]['id'] }}', 'item')">
+                                        <a href="" wire:click.prevent="confirmDelete('{{ $itemList[$index]['id'] }}', 'item')">
                                             <i class="fas fa-times text-center" style="color: red"></i>
                                         </a>
                                     </center>
@@ -326,7 +325,7 @@
                     </div>
                     <div class="col-md-3"></div>
                     <div class="col-md-3 d-flex justify-content-end">
-                        <button wire:click.prevent="addDeliveryPlan" class="btn btn-sm btn-success mt-auto" {{ $enableAddPlan ? '' : 'disabled' }}>
+                        <button wire:click.prevent="addDeliveryPlan" class="btn btn-sm btn-danger mt-auto" {{ $enableAddPlan ? '' : 'disabled' }}>
                             <i class="fas fa-plus-square mr-1"></i>Add Plan</button>
                     </div>
                 </div>
@@ -348,7 +347,7 @@
                             <tbody>
                             @foreach ($prListDeliveryPlan as $index => $row)
                               <tr>
-                                <th scope="col">{{ $index + 1 }}</th>
+                                <td scope="col">{{ $index + 1 }}</td>
                                 <td scope="col">{{ $prListDeliveryPlan[$index]['lineno'] }}</td>
                                 <td scope="col">{{ $prListDeliveryPlan[$index]['description'] }}</td>
                                 <td scope="col">{{ $prListDeliveryPlan[$index]['partno'] }}</td>
@@ -357,7 +356,7 @@
                                 <td scope="col" class="text-center">{{ \Carbon\Carbon::parse( $prListDeliveryPlan[$index]['delivery_date'])->format('d-M-Y') }} </td>
                                 <td scope="col">
                                     <center>
-                                        <a href="" wire:click.prevent="confirmDeleteLineItem('{{ $prListDeliveryPlan[$index]['id'] }}', 'deliveryPlan')">
+                                        <a href="" wire:click.prevent="confirmDelete('{{ $prListDeliveryPlan[$index]['id'] }}', 'deliveryPlan')">
                                             <i class="fas fa-times text-center" style="color: red"></i>
                                         </a>
                                     </center>
@@ -374,55 +373,71 @@
             {{-- Tab Authorization --}}         
             <div class="tab-pane fade {{ $currentTab == 'auth' ? 'show active' : '' }}" id="pills-auth" role="tabpanel" aria-labelledby="pills-auth-tab" wire:ignore.self>
                 {{-- Decider --}}
-                <div class="card shadow-none border rounded">
-                    <div class="card-header my-card-header">
-                        Decider
-                    </div>
-                    <div class="card-body my-card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="input-group">
-                                    <select class="form-control form-control-sm mr-2" id="" wire:model.defer="">
-                                        <option value="">--- Select Decider ---</option>
-                                    </select>
-                                    <span class="input-group-btn">
-                                        <button wire:click.prevent="" class="btn btn-sm btn-primary">Confirm</button>
-                                    </span>
-                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="row">
                     <div class="col-md-12">
-                        <table class="table table-sm">
-                            <thead>
-                              <tr>
-                                <th scope="col">User ID</th>
-                                <th scope="col">Name</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Action</th>
-                                <th scope="col"></th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td scope="col">xxxxx</td>
-                                <td scope="col">xxxxxxxxxxxxxxxxx</td>
-                                <td scope="col">xxxxxx</td>
-                                <td scope="col">
-                                    <button wire:click.prevent="" class="btn btn-sm btn-success">Approve</button>
-                                    <button wire:click.prevent="" class="btn btn-sm btn-danger">Reject</button>
-                                </td>
-                                <td scope="col">
-                                    <i class="fas fa-times text-center" style="color: red"></i>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
+                        <div class="card shadow-none border rounded">
+                            <div class="card-header my-card-header">
+                                Decider
+                            </div>
+                            <div class="card-body my-card-body">
+                                <div class="row">
+                                    <div class="col-md-9">
+                                        <x-select2 id="decider-select2" wire:model.defer="decider">
+                                            <option value="">--- Please Select ---</option>
+                                            @foreach($decider_dd as $row)
+                                            <option value="{{ $row->username }}">
+                                                {{ $row->fullname }}
+                                            </option>
+                                            @endforeach
+                                        </x-select2>
+                                    </div>
+                                    <div class="col-md-3 text-left">
+                                        <button class="btn btn-sm btn-danger" {{ $deciderList ? 'disabled' : ''}} 
+                                            wire:click.prevent="addDecider"><i class="fas fa-plus-square mr-1"></i>Confirm</button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table class="table table-sm">
+                                            <thead>
+                                              <tr>
+                                                <th scope="col">User ID</th>
+                                                <th scope="col">Name</th>
+                                                <th scope="col">Status</th>
+                                                <th scope="col" style="width: 20%">Action</th>
+                                                <th scope="col"></th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                            @foreach ($deciderList as $index => $row)
+                                              <tr>
+                                                <td scope="col">{{ $deciderList[$index]['approver'] }}</td>
+                                                <td scope="col">{{ $deciderList[$index]['fullname'] }}</td>
+                                                <td scope="col">{{ $deciderList[$index]['status'] }}</td>
+                                                <td scope="col">
+                                                    @if (auth()->user()->username == $deciderList[$index]['approver'] AND $isValidatorApprove)
+                                                    <button class="btn btn-sm btn-danger" wire:click.prevent="deciderApprove" >Approve</button>
+                                                    <button class="btn btn-sm btn-light" wire:click.prevent="deciderReject" >Reject</button>
+                                                    @else
+                                                    <button class="btn btn-sm btn-danger" disabled wire:click.prevent="" >Approve</button>
+                                                    <button class="btn btn-sm btn-light" disabled wire:click.prevent="" >Reject</button>
+                                                    @endif
+                                                </td>
+                                                <td scope="col">
+                                                    <center>
+                                                        <a href="" wire:click.prevent="confirmDelete('{{ $deciderList[$index]['approver'] }}', 'decider')">
+                                                            <i class="fas fa-times text-center" style="color: red"></i>
+                                                        </a>
+                                                    </center>
+                                                </td>
+                                              </tr>
+                                            @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 {{-- Decider End--}}
@@ -430,134 +445,168 @@
                 <br>
 
                 {{-- Validator --}}
-                <div class="card shadow-none border rounded">
-                    <div class="card-header my-card-header">
-                        Validator
-                    </div>
-                    <div class="card-body my-card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="input-group">
-                                    <select class="form-control form-control-sm mr-2" id="" wire:model.defer="">
-                                        <option value="">--- Select Validator ---</option>
-                                    </select>
-                                    <span class="input-group-btn">
-                                        <button wire:click.prevent="" class="btn btn-sm btn-primary">Add</button>
-                                    </span>
-                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="row">
                     <div class="col-md-12">
-                        <table class="table table-sm">
-                            <thead>
-                              <tr>
-                                <th scope="col">User ID</th>
-                                <th scope="col">Name</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Action</th>
-                                <th scope="col"></th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td scope="col">xxxxx</td>
-                                <td scope="col">xxxxxxxxxxxxxxxxx</td>
-                                <td scope="col">xxxxxx</td>
-                                <td scope="col">
-                                    <button wire:click.prevent="" class="btn btn-sm btn-success">Approve</button>
-                                    <button wire:click.prevent="" class="btn btn-sm btn-danger">Reject</button>
-                                </td>
-                                <td scope="col">
-                                    <i class="fas fa-times text-center" style="color: red"></i>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td scope="col">xxxxx</td>
-                                <td scope="col">xxxxxxxxxxxxxxxxx</td>
-                                <td scope="col">xxxxxx</td>
-                                <td scope="col">
-                                    <button wire:click.prevent="" class="btn btn-sm btn-success">Approve</button>
-                                    <button wire:click.prevent="" class="btn btn-sm btn-danger">Reject</button>
-                                </td>
-                                <td scope="col">
-                                    <i class="fas fa-times text-center" style="color: red"></i>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td scope="col">xxxxx</td>
-                                <td scope="col">xxxxxxxxxxxxxxxxx</td>
-                                <td scope="col">xxxxxx</td>
-                                <td scope="col">
-                                    <button wire:click.prevent="" class="btn btn-sm btn-success">Approve</button>
-                                    <button wire:click.prevent="" class="btn btn-sm btn-danger">Reject</button>
-                                </td>
-                                <td scope="col">
-                                    <i class="fas fa-times text-center" style="color: red"></i>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                    </div>
-                </div>
-                {{-- Validator End--}}
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <label>Rejection Reason</label>
-                        <textarea class="form-control form-control-sm" rows="2"></textarea>
-                    </div>
-                </div>
-            </div>
-            {{-- Tab Authorization End --}}  
-            
-            {{-- Tab Attachments --}}        
-            <div class="tab-pane fade {{ $currentTab == 'attachments' ? 'show active' : '' }}" id="pills-attachments" role="tabpanel" aria-labelledby="pills-attachments-tab" wire:ignore.self>
-                <div class="card shadow-none border rounded">
-                    <div class="card-header my-card-header">
-                        Attachments
-                    </div>
-                    <div class="card-body my-card-body">
-                        <div class="row">
-                            <div class="col-6">
-                                <div class="custom-file">
-                                    <input wire:model="photo" type="file" class="custom-file-input"
-                                        id="customFile">
-                                    <label class="custom-file-label" for="customFile">
-                                        Choose Image
-                                    </label>
+                        <div class="card shadow-none border rounded">
+                            <div class="card-header my-card-header">
+                                Validator
+                            </div>
+                            <div class="card-body my-card-body">
+                                <div class="row">
+                                    <div class="col-md-9">
+                                        <x-select2 id="validator-select2" wire:model.defer="validator">
+                                            <option value="">--- Please Select ---</option>
+                                            @foreach($validator_dd as $row)
+                                            <option value="{{ $row->username }}">
+                                                {{ $row->fullname }}
+                                            </option>
+                                            @endforeach
+                                        </x-select2>
+                                    </div>
+                                    <div class="col-md-3 text-left">
+                                        <button class="btn btn-sm btn-danger"
+                                            wire:click.prevent="addValidator"><i class="fas fa-plus-square mr-1"></i>Add</button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                <th scope="col">User ID</th>
+                                                <th scope="col">Name</th>
+                                                <th scope="col">Status</th>
+                                                <th scope="col" style="width: 20%">Action</th>
+                                                <th scope="col"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($validatorList as $index => $row)
+                                                <tr>
+                                                    <td scope="col">{{ $validatorList[$index]['approver'] }}</td>
+                                                    <td scope="col">{{ $validatorList[$index]['fullname'] }}</td>
+                                                    <td scope="col">{{ $validatorList[$index]['status'] }}</td>
+                                                    <td scope="col">
+                                                        @if (auth()->user()->username == $validatorList[$index]['approver'])
+                                                        <button class="btn btn-sm btn-danger" wire:click.prevent="validatorApprove" >Approve</button>
+                                                        <button class="btn btn-sm btn-light" wire:click.prevent="validatorReject" >Reject</button>
+                                                        @else
+                                                        <button class="btn btn-sm btn-danger" disabled wire:click.prevent="" >Approve</button>
+                                                        <button class="btn btn-sm btn-light" disabled wire:click.prevent="" >Reject</button>
+                                                        @endif
+                                                    </td>
+                                                    <td scope="col">
+                                                        <center>
+                                                            <a href="" wire:click.prevent="confirmDelete('{{ $validatorList[$index]['approver'] }}', 'validator')">
+                                                                <i class="fas fa-times text-center" style="color: red"></i>
+                                                            </a>
+                                                        </center>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+        
+
+                {{-- Validator End--}}
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <label>Rejection Reason</label>
+                        <textarea class="form-control form-control-sm" rows="2" maxlength="250" wire:model.defer="rejectReason"></textarea>
+                    </div>
+                </div>
+            </div>
+            {{-- Tab Authorization End --}}  
+            
+            {{-- Tab Attachments --}}
+            <div class="tab-pane fade {{ $currentTab == 'attachments' ? 'show active' : '' }}" id="pills-attachments" role="tabpanel" aria-labelledby="pills-attachments-tab" wire:ignore.self>
+                <form autocomplete="off" enctype="multipart/form-data"
+                    wire:submit.prevent="addAttachment">
+                    @csrf
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label>Attachment Level</label>
+                            <select class="form-control form-control-sm" required wire:model.defer="attachment_lineid">
+                                <option value="">--- Please Select ---</option>
+                                <option value="0">0 : Level PR Header</option>
+                                @foreach($prLineNo_dd as $row)
+                                <option value="{{ $row->id }}">
+                                    {{ $row->lineno }} : {{ $row->description }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="custom-file">
+                                <input wire:model="attachment_file" type="file" class="custom-file-input"
+                                    id="customFile">
+                                <label class="custom-file-label" for="customFile">
+                                    @if ($attachment_file)
+                                    {{ $attachment_file->getClientOriginalName() }}
+                                    @else
+                                    Browse Files
+                                    @endif                                
+                                </label>
+                            </div>                        
+                        </div>
+                        <div class="col-md-6 text-left">
+                            <button type="submit" class="btn btn-danger"><i class="fas fa-plus-square mr-1"></i>Add Item</button>
+                        </div>
+                    </div>                
+                </form>
+
                 <div class="row">
                     <div class="col-md-12">
                         <table class="table table-sm">
                             <thead>
                               <tr>
-                                <th scope="col">#</th>
                                 <th scope="col">FileName</th>
                                 <th scope="col">File Type</th>
-                                <th scope="col">Ref Line Item</th>
+                                <th scope="col">Ref Doc Type</th>
+                                <th scope="col">Ref Document</th>
+                                <th scope="col">Line No.</th>
                                 <th scope="col"></th>
                               </tr>
                             </thead>
                             <tbody>
+                            @foreach ($attachmentFileList as $index => $row)
                               <tr>
-                                <td scope="col">1</td>
-                                <td scope="col">xxxxxxxxxxxxxxxxx</td>
-                                <td scope="col">xxxxxx</td>
-                                <td scope="col">10</td>
+                                <td scope="col">{{ $attachmentFileList[$index]['file_name'] }}</td>
                                 <td scope="col">
-                                    <i class="fas fa-times text-center" style="color: red"></i>
+                                    <select class="form-control form-control-sm" wire:model="attachmentFileList.{{$index}}.file_type"
+                                        {{-- wire:change="selectedFileType('{{ $attachmentFileList[$index]['id'] }}','{{ $attachmentFileList[$index]['file_type']}}')" --}}
+                                        >
+                                        <option value="">--- Please Select ---</option>
+                                        <option value="General_Documents">General Documents</option>
+                                        <option value="eDecision">eDecision</option>
+                                    </select>
+                                </td>
+                                <td scope="col">{{ $attachmentFileList[$index]['ref_doctype'] }}</td>
+                                <td scope="col">{{ $attachmentFileList[$index]['ref_docno'] }}</td>
+                                <td scope="col">{{ $attachmentFileList[$index]['ref_lineno'] }}</td>
+                                <td scope="col" class="d-flex justify-content-between">
+                                    <div>
+                                        <a href="" wire:click.prevent="confirmDelete('{{ $attachmentFileList[$index]['id'] }}', 'attachment')">
+                                            <i class="fas fa-times text-center" style="color: red"></i>
+                                        </a>
+                                    </div>
+                                    <div>
+                                        <a href="{{url('storage/attachments/' . $attachmentFileList[$index]['file_path'] )}}">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </div>
                                 </td>
                               </tr>
+                            @endforeach
                             </tbody>
                           </table>
                     </div>
@@ -569,16 +618,15 @@
             <div class="tab-pane fade {{ $currentTab == 'history' ? 'show active' : '' }}" id="pills-history" role="tabpanel" aria-labelledby="pills-history-tab" wire:ignore.self>
                 History
             </div>
-            {{-- Tab Attachments End --}} 
+            {{-- Tab History End --}} 
 
         </div>
         {{-- Tab Content End --}}
         @endif
 
         {{-- Actions --}}
-        <div class="row mt-3">
+        <div class="row mt-5">
             <div class="col-md-12">
-                <label style="color: blue; font-size: 20px;">Actions</label>
                 <hr width="100%">
             </div>
         </div>
@@ -587,22 +635,24 @@
             <div class="col-md-12">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <button wire:click.prevent="" class="btn btn-sm btn-success" disabled>Release for Sourcing</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-success" disabled>Release for PO</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-info" disabled>Print</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-secondary" disabled>Cancel</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>Delete</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-warning" disabled>Re-Open</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-success" disabled>Converet to PO</button>
+                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled><i class="fas fa-check mr-2"></i>Release for Sourcing</button>
+                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled><i class="fas fa-check mr-2"></i>Release for PO</button>
+                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled><i class="fas fa-print mr-2"></i>Print</button>
+                        <button wire:click.prevent="" class="btn btn-sm btn-light" disabled><i class="fas fa-times mr-2"></i>Cancel</button>
+                        <button wire:click.prevent="" class="btn btn-sm btn-light" disabled><i class="fas fa-trash-alt mr-2"></i>Delete</button>
+                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled><i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
+                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled><i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
                     </div>
                     <div>
-                        <button wire:click.prevent="backToPRList" class="btn btn-sm btn-secondary"><i class="fas fa-arrow-alt-circle-left mr-1"></i></i>Back</button>
-                        <button wire:click.prevent="savePR" class="btn btn-sm btn-primary"><i class="fas fa-save mr-1"></i>Save</button>
+                        <button wire:click.prevent="backToPRList" class="btn btn-sm btn-light"><i class="fas fa-arrow-alt-circle-left mr-1"></i></i>Back</button>
+                        <button wire:click.prevent="savePR" class="btn btn-sm btn-danger"><i class="fas fa-save mr-1"></i>Save</button>
                     </div>
                     
                 </div>
             </div>
         </div>
+        {{-- Actions End--}}
+
     </div>
     @if ($orderType == "10" or $orderType == "20" )
         @include('livewire.purchase-requisition._model-part-line-item')
@@ -625,6 +675,8 @@
 
     window.addEventListener('clear-select2', event => {
         clearSelect2('buyer-select2');
+        clearSelect2('decider-select2');
+        clearSelect2('validator-select2');
     })
 
     //Default Requested_for

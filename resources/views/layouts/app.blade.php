@@ -46,12 +46,13 @@
         .row {
             margin-bottom: 8px;
         }
-
-        /* th {
+        
+        
+        th {
             white-space: nowrap;
-            background-color:rgb(170, 5, 5);
-            color: white;;
-        } */
+            background-color:#c3002f;
+            color: white;
+        }
 
         /* 
         .btn {
@@ -69,6 +70,7 @@
         } */
 
         /* ทำให้ Tab content มีกรอบ */
+
         .tab-content {
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -81,6 +83,8 @@
             padding-bottom: 5px;
             padding-left: 5px;
             padding-right: 5px;
+            background-color: #c3002f;
+            color: white;
         }
 
         .my-card-body {
@@ -107,6 +111,19 @@
             margin-left: 1em;
         }
 
+        .btn-danger{
+            background-color: #c3002f;
+            border-color: white;
+            /* border-radius: 7px; */
+        }
+
+        .btn-light{
+            background-color: white;
+            border-color: #ced4da;
+            /* border-radius: 7px; */
+            color: #c3002f;
+        }
+
         hr {
             border: none;
             height: 3px;
@@ -114,6 +131,20 @@
             color:darkgray; /* old IE */
             background-color: darkgray; /* Modern Browsers */
         }
+
+        .custom-file-label,
+        .custom-file-label::after {
+            height: auto;
+            padding-top: 1;
+            padding-bottom: 1;
+        }
+
+        /* @font-face {
+            font-family: NISSANBRAND;
+            src: url('/fonts/NISSANBRAND-REGULAR.tff');
+            src: url("{{asset('/fonts/NISSANBRAND-REGULAR.tff')}}");
+        } */
+
     </style>
     
     @stack('styles')

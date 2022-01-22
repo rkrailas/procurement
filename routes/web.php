@@ -6,6 +6,10 @@ use App\Http\Livewire\PurchaseRequisition\PurchaseRequisitionDetails;
 use App\Http\Livewire\admin\ChangePassword;
 use App\Http\Controllers\ClientController;
 
+//for Test
+use App\Mail\WelcomeMail;
+use Illuminate\Support\Facades\Mail;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -31,3 +35,9 @@ Route::group(['middleware' => 'auth'], function () {
 
 Route::get('admin/changepassword', ChangePassword::class)->name('admin.changepassword');
 Route::post('logout', [ClientController::class, 'logout'])->name('logout');
+
+//for Test
+// Route::get('/email', function() {
+//     Mail::to('rkrailas@gmail.com')->send(New WelcomeMail());
+//     return new WelcomeMail;
+// });

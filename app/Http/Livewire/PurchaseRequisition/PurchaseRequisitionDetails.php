@@ -5,18 +5,260 @@ namespace App\Http\Livewire\PurchaseRequisition;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\File;
+use App\Mail\WelcomeMail;
+use Illuminate\Support\Facades\Mail;
 
 class PurchaseRequisitionDetails extends Component
 {
-    public $listeners = ['deleteConfirmed' => 'deleteLineItem'];
-    public $prHeader, $prItem, $itemList = []; //$itemList=ใน Grid, $prItem=ใน Modal, 
-    public $prDeliveryPlan, $prListDeliveryPlan = [];  //$prDeliveryPlan=ใน Tab, $prListDeliveryPlan=ใน Grid
-    public $requested_for_dd, $delivery_address_dd, $buyer_dd, $cost_center_dd;
-    public $partno_dd, $currency_dd, $internal_order_dd, $budget_code, $purchaseunit_dd, $purchasegroup_dd, $budgetcode_dd, $prLineNo_dd;
+    use WithFileUploads;
+
+    public $listeners = ['deleteConfirmed' => '']; //หลังจากกด Confirm Delete จะให้ไปทำ Function ไหน
+
     public $isCreateMode, $editPRNo, $workAtCompany, $isBlanket, $orderType;
-    public $deleteID, $deleteType; //เพื่อให้สามารถใช้ Function confirmDeleteLineItem ร่วมกับการลบหลาย ๆ แบบได้ 
+    public $deleteID, $deleteType; //เพื่อให้สามารถใช้ Function confirmDelete ร่วมกับการลบหลาย ๆ แบบได้ 
     public $currentTab = "";
     public $enableAddPlan = false;
+
+    //Header
+    public $prHeader = [], $requested_for_dd, $delivery_address_dd, $buyer_dd, $cost_center_dd; 
+
+    //Line Items > $itemList=in table, $prItem=ใน Modal, 
+    public $prItem = [], $itemList = [], $partno_dd, $currency_dd, $internal_order_dd, $budget_code, $purchaseunit_dd, $purchasegroup_dd, $budgetcode_dd, $prLineNo_dd; 
+
+    //DeliveryPlan
+    public $prDeliveryPlan, $prListDeliveryPlan = [];  //$prDeliveryPlan=ใน Tab, $prListDeliveryPlan=ใน Grid
+
+    //Authorization
+    public $decider_dd, $deciderList = [], $decider, $isValidatorApprove = false; //deciderList=in table, $decider=Dropdown
+    public $validator_dd, $validatorList = [], $validator; //validatorList=in table, $validator=Dropdown
+    public $rejectReason;
+
+    //Attachment Dropdown ใช้ตัวแปรร่วมกับ prLineNo_dd
+    public $attachment_lineid, $attachment_file, $attachmentFileList;
+
+
+    //=== Start Function ===    
+    //Attachment
+    public function updatedAttachmentFileList($value, $key) //No Refresh
+    {
+        $data = explode("." , $key);
+        DB::statement("UPDATE attactments SET file_type=?, changed_by=?, changed_on=?
+            WHERE id=?" 
+            , [$value, auth()->user()->id, Carbon::now(), $this->attachmentFileList[$data[0]]['id']]);
+    }
+
+    public function deleteAttachment()
+    {
+        $strsql = "SELECT file_path from attactments WHERE id=" . $this->deleteID;
+        $data = DB::select($strsql);
+        if ($data){
+            if(File::exists(public_path("storage/attachments/" . $data[0]->file_path))){
+                File::delete(public_path("storage/attachments/" . $data[0]->file_path));
+            }
+        }
+
+        DB::statement("DELETE FROM attactments WHERE id=?" , [$this->deleteID]);
+        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=attachments");
+    }
+
+    public function addAttachment()
+    {
+        if ($this->attachment_file) {
+            DB::transaction(function() 
+            {
+                $attachments = $this->attachment_file->store('/', 'attachments');
+
+                $strsql = "SELECT [lineno] FROM pr_item WHERE id=" . $this->attachment_lineid;
+                $data = DB::select($strsql);
+                $xLineNo = "";
+                if ($data) {
+                    $xLineNo = $data[0]->lineno;
+                }
+
+                DB::statement("INSERT INTO attactments (file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
+                    , ref_lineid, create_by, create_on)
+                VALUES(?,?,?,?,?,?,?,?,?)"
+                ,[$attachments, $this->attachment_file->getClientOriginalName(), 'PR', $this->prHeader['prno'], $this->prHeader['id']
+                ,$xLineNo, $this->attachment_lineid, auth()->user()->id, Carbon::now()]);
+
+            });
+            $this->reset(['attachment_file']);
+
+            return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=attachments");
+        } else {
+            $this->dispatchBrowserEvent('popup-alert', ['title' => "Please select a file"]);
+        }
+    }
+
+    //Authorization
+    public function deciderApprove() 
+    {
+        DB::statement("UPDATE dec_val_workflow SET status=?, changed_by=?, changed_on=?
+            WHERE approval_type='DECIDER' AND ref_doc_id=?" 
+            , ['APPROVED', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+
+        $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='100' AND class='DECIDER VALIDATOR'";
+        $data = DB::select($strsql);
+        if (count($data) > 0) {
+            $xMsg = $data[0]->msg_text;
+            $xMsg =  str_replace("<Doc Type>", $data[0]->class . " / ", $xMsg);
+            $xMsg =  str_replace("<Doc No>", $this->prHeader['prno'], $xMsg);
+            $this->dispatchBrowserEvent('popup-success', [
+                'title' => $xMsg,
+            ]);
+        }
+
+        //???ส่ง Mail หา Requestor
+        Mail::to('rkrailas@gmail.com')->send(New WelcomeMail($this->prHeader['prno']));
+
+        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
+    }
+
+    public function deciderReject() 
+    {
+        //ตรวจ Reason > pr_header.rejection_reason > del_val_workflow.status=DRAFT (all user) > Mail to Requestor
+        if ($this->rejectReason) {
+            DB::transaction(function() 
+            {
+                DB::statement("UPDATE pr_header SET rejection_reason=?, changed_by=?, changed_on=?
+                    WHERE id=?" 
+                    , [$this->rejectReason, auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+
+                DB::statement("UPDATE dec_val_workflow SET status=?, changed_by=?, changed_on=?
+                    WHERE ref_doc_id=?" 
+                    , ['DRAFT', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+
+                //???Mail to Requestor
+                return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
+            });
+
+        } else {
+            $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='102' AND class='DECIDER VALIDATOR'";
+            $data = DB::select($strsql);
+            if (count($data) > 0) {
+                $this->dispatchBrowserEvent('popup-alert', ['title' => $data[0]->msg_text]);
+            }
+        }
+    }
+
+    public function validatorApprove()
+    {
+        DB::statement("UPDATE dec_val_workflow SET status=?, changed_by=?, changed_on=?
+            WHERE approval_type='VALIDATOR' AND ref_doc_id=?" 
+            , ['APPROVED', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+
+        $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='100' AND class='DECIDER VALIDATOR'";
+        $data = DB::select($strsql);
+        if (count($data) > 0) {
+            $xMsg = $data[0]->msg_text;
+            $xMsg =  str_replace("<Doc Type>", $data[0]->class . " / ", $xMsg);
+            $xMsg =  str_replace("<Doc No>", $this->prHeader['prno'], $xMsg);
+            $this->dispatchBrowserEvent('popup-success', [
+                'title' => $xMsg,
+            ]);
+        }
+        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
+    }
+
+    public function validatorReject()
+    {
+        //ตรวจ Reason > pr_header.rejection_reason > del_val_workflow.status=DRAFT (all user) > Mail to Requestor
+        if ($this->rejectReason) {
+            DB::transaction(function() 
+            {
+                DB::statement("UPDATE pr_header SET rejection_reason=?, changed_by=?, changed_on=?
+                    WHERE id=?" 
+                    , [$this->rejectReason, auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+
+                DB::statement("UPDATE dec_val_workflow SET status=?, changed_by=?, changed_on=?
+                    WHERE ref_doc_id=?" 
+                    , ['DRAFT', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+
+                //???Mail to Requestor
+
+                return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
+            });
+
+        } else {
+            $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='102' AND class='DECIDER VALIDATOR'";
+            $data = DB::select($strsql);
+            if (count($data) > 0) {
+                $this->dispatchBrowserEvent('popup-alert', ['title' => $data[0]->msg_text]);
+            }
+        }
+
+    }
+
+    public function deleteValidator()
+    {
+        DB::statement("DELETE FROM dec_val_workflow where approval_type='VALIDATOR' AND approver=? " , [$this->deleteID]);
+
+        $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='105' AND class='DECIDER VALIDATOR'";
+            $data = DB::select($strsql);
+            if (count($data) > 0) {
+                $xMsg = $data[0]->msg_text;
+                $xMsg =  str_replace("<Doc Type>", $data[0]->class . " / ", $xMsg);
+                $xMsg =  str_replace("<Doc No>", $this->prHeader['prno'], $xMsg);
+                $this->dispatchBrowserEvent('popup-success', [
+                    'title' => $xMsg,
+                ]);
+            }
+        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
+    }
+
+    public function addValidator() 
+    {
+        if ($this->validator == ""){
+            $this->dispatchBrowserEvent('popup-alert', [
+                'title' => 'Please Select Validator',
+            ]);
+        } else {
+            DB::statement("INSERT INTO dec_val_workflow (approval_type, approver, status, ref_doc_type, ref_doc_no, ref_doc_id, create_by, create_on)
+            VALUES(?,?,?,?,?,?,?,?)"
+            ,['VALIDATOR', $this->validator, 'DRAFT', '10', $this->prHeader['prno'], $this->prHeader['id'], auth()->user()->id, Carbon::now()]);
+
+            $this->reset(['validator']);
+            $this->dispatchBrowserEvent('clear-select2');
+            return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
+        }
+    }
+
+    public function deleteDecider()
+    {
+        DB::statement("DELETE FROM dec_val_workflow where approval_type='DECIDER' AND approver=? " , [$this->deleteID]);
+
+        $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='105' AND class='DECIDER VALIDATOR'";
+            $data = DB::select($strsql);
+            if (count($data) > 0) {
+                $xMsg = $data[0]->msg_text;
+                $xMsg =  str_replace("<Doc Type>", $data[0]->class . " / ", $xMsg);
+                $xMsg =  str_replace("<Doc No>", $this->prHeader['prno'], $xMsg);
+                $this->dispatchBrowserEvent('popup-success', [
+                    'title' => $xMsg,
+                ]);
+            }
+        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
+    }
+
+    public function addDecider() 
+    {
+        if ($this->decider == ""){
+            $this->dispatchBrowserEvent('popup-alert', [
+                'title' => 'Please Select Deceder',
+            ]);
+        } else {
+            DB::statement("INSERT INTO dec_val_workflow (approval_type, approver, status, ref_doc_type, ref_doc_no, ref_doc_id, create_by, create_on)
+            VALUES(?,?,?,?,?,?,?,?)"
+            ,['DECIDER', $this->decider, 'DRAFT', '10', $this->prHeader['prno'], $this->prHeader['id'], auth()->user()->id, Carbon::now()]);
+
+            $this->reset(['decider']);
+            $this->dispatchBrowserEvent('clear-select2');
+            return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
+        }
+    }
+    //Authorization End
 
     //Delivery Plan
     public function deleteDeliveryPlan()
@@ -25,14 +267,15 @@ class PurchaseRequisitionDetails extends Component
         {
             DB::statement("DELETE FROM delivery_plan where id=? " , [$this->deleteID]);
             
-            $strsql = "SELECT msg_text FROM message_list WHERE msg_no='104'";
+            $strsql = "SELECT msg_text FROM message_list WHERE msg_no='104' AND class='PURCHASE REQUISITION'";
             $data = DB::select($strsql);
             if (count($data) > 0) {
                 $this->dispatchBrowserEvent('popup-success', [
                     'title' => $data[0]->msg_text,
-                ]);
-                return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=delivery");
+                ]);                
             }
+
+            return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=delivery");
         });
 
         $this->reset(['deleteID', 'deleteType']);
@@ -92,19 +335,6 @@ class PurchaseRequisitionDetails extends Component
     //Delivery Plan End
 
     //Line Item
-    public function confirmDeleteLineItem($deleteID, $deleteType)
-    {
-        $this->deleteID = $deleteID;
-
-        if ($deleteType == "item") {
-            $this->listeners = ['deleteConfirmed' => 'deleteLineItem'];
-        } else if ($deleteType == "deliveryPlan") {
-            $this->listeners = ['deleteConfirmed' => 'deleteDeliveryPlan'];
-        }
-
-        $this->dispatchBrowserEvent('delete-confirmation');
-    }
-
     public function deleteLineItem()
     {
         //???ก่อน Delete ต้องตรวจสอบอะไรบ้าง ?
@@ -114,14 +344,15 @@ class PurchaseRequisitionDetails extends Component
         {
             DB::statement("DELETE FROM pr_item where id=? " , [$this->deleteID]);
             
-            $strsql = "SELECT msg_text FROM message_list WHERE msg_no='104'";
+            $strsql = "SELECT msg_text FROM message_list WHERE msg_no='104' AND class='PURCHASE REQUISITION'";
             $data = DB::select($strsql);
             if (count($data) > 0) {
                 $this->dispatchBrowserEvent('popup-success', [
                     'title' => $data[0]->msg_text,
-                ]);
-                return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+                ]);                
             }
+
+            return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
         });
 
         $this->reset(['deleteID', 'deleteType']);
@@ -145,14 +376,14 @@ class PurchaseRequisitionDetails extends Component
                 $this->prItem['account_group'] = "";
             }
 
-            //??? ยังไม่มี unit_price
             //24 ฟิลด์
-            DB::statement("INSERT INTO pr_item (prno, [lineno], partno, description, purchase_unit, unit_price, currency, exchange_rate
+            DB::statement("INSERT INTO pr_item (prno, prno_id, [lineno], partno, description, purchase_unit, unit_price, currency, exchange_rate
             ,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
             ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-            ,[$this->prHeader['prno'], $lineno, $this->prItem['partno'], $this->prItem['description'], $this->prItem['purchase_unit'], $this->prItem['unit_price']
-            , $this->prItem['currency'], $this->prItem['exchange_rate'], $this->prItem['purchase_group'], $this->prItem['account_group'], $this->prItem['qty']
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+            ,[$this->prHeader['prno'], $this->prHeader['id'], $lineno, $this->prItem['partno'], $this->prItem['description']
+            , $this->prItem['purchase_unit'], $this->prItem['unit_price'], $this->prItem['currency'], $this->prItem['exchange_rate']
+            , $this->prItem['purchase_group'], $this->prItem['account_group'], $this->prItem['qty']
             , $this->prItem['req_date'], $this->prItem['internal_order'] ,$this->prItem['budget_code'], $this->prItem['over_1_year_life']
             , $this->prItem['snn_service'], $this->prItem['snn_production'] ,$this->prItem['nominated_supplier'], $this->prItem['remarks']
             , $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr'], "10" ,auth()->user()->id, Carbon::now()
@@ -160,7 +391,7 @@ class PurchaseRequisitionDetails extends Component
 
             $this->reset(['prItem']);
 
-            $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111'";
+            $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
             $data = DB::select($strsql);
             if (count($data) > 0) {
                 $this->dispatchBrowserEvent('popup-success', [
@@ -209,6 +440,25 @@ class PurchaseRequisitionDetails extends Component
         
     }
     //Line Item End
+
+    public function confirmDelete($deleteID, $deleteType)
+    {
+        $this->deleteID = $deleteID;
+
+        if ($deleteType == "item") {
+            $this->listeners = ['deleteConfirmed' => 'deleteLineItem'];
+        } else if ($deleteType == "deliveryPlan") {
+            $this->listeners = ['deleteConfirmed' => 'deleteDeliveryPlan'];
+        } else if ($deleteType == "decider") {
+            $this->listeners = ['deleteConfirmed' => 'deleteDecider'];
+        } else if ($deleteType == "validator") {
+            $this->listeners = ['deleteConfirmed' => 'deleteValidator'];
+        } else if ($deleteType == "attachment") {
+            $this->listeners = ['deleteConfirmed' => 'deleteAttachment'];
+        }
+
+        $this->dispatchBrowserEvent('delete-confirmation');
+    }
 
     public function backToPRList()
     {
@@ -301,23 +551,59 @@ class PurchaseRequisitionDetails extends Component
         }
 
         //Item List
-        $strsql = "SELECT pri.id, pri.[lineno], pri.description, pri.partno, pri.[status] + ' : ' + sts.[description] as [status]
-                    , pri.qty, pri.purchase_unit, pri.unit_price, pri.qty * pri.unit_price as budgettotal, pri.req_date, pri.final_price
-                    FROM pr_item pri
-                    left join pr_status sts on sts.status=pri.[status]
-                    WHERE pri.prno='" . $this->prHeader['prno'] . "'
-                    ORDER BY pri.[lineno]";
-        //$this->itemList = DB::select($strsql);
-        $this->itemList = json_decode(json_encode(DB::select($strsql)), true);
+            $strsql = "SELECT pri.id, pri.[lineno], pri.description, pri.partno, pri.[status] + ' : ' + sts.[description] as [status]
+                        , pri.qty, pri.purchase_unit, pri.unit_price, pri.qty * pri.unit_price as budgettotal, pri.req_date, pri.final_price
+                        FROM pr_item pri
+                        left join pr_status sts on sts.status=pri.[status]
+                        WHERE pri.prno='" . $this->prHeader['prno'] . "'
+                        ORDER BY pri.[lineno]";
+            //$this->itemList = DB::select($strsql);
+            $this->itemList = json_decode(json_encode(DB::select($strsql)), true);
+        //Item List End
 
         //Delivery Plan
-        if ($this->prHeader['ordertype'] == "20" or $this->prHeader['ordertype'] == "21"){
-            $strsql = "SELECT del.id, pri.[lineno], pri.description, pri.partno, del.qty, pri.purchase_unit, del.delivery_date
-                        FROM delivery_plan del
-                        JOIN pr_item pri ON pri.id = del.ref_prline_id
-                        WHERE del.ref_pr_id=" . $this->prHeader['id'];
-            $this->prListDeliveryPlan = json_decode(json_encode(DB::select($strsql)), true);
-        }
+            if ($this->prHeader['ordertype'] == "20" or $this->prHeader['ordertype'] == "21"){
+                $strsql = "SELECT del.id, pri.[lineno], pri.description, pri.partno, del.qty, pri.purchase_unit, del.delivery_date
+                            FROM delivery_plan del
+                            JOIN pr_item pri ON pri.id = del.ref_prline_id
+                            WHERE del.ref_pr_id=" . $this->prHeader['id'];
+                $this->prListDeliveryPlan = json_decode(json_encode(DB::select($strsql)), true);
+            }
+        //Delivery Plan End
+
+        //Authorization
+            $strsql = "SELECT dec.approver, usr.name + ' ' + usr.lastname AS fullname, status 
+                        FROM dec_val_workflow dec
+                        JOIN users usr ON usr.username = dec.approver
+                        WHERE dec.approval_type='DECIDER' AND dec.ref_doc_id =" . $this->prHeader['id'];
+            $this->deciderList = json_decode(json_encode(DB::select($strsql)), true);
+
+            $strsql = "SELECT dec.approver, usr.name + ' ' + usr.lastname AS fullname, status 
+                        FROM dec_val_workflow dec
+                        JOIN users usr ON usr.username = dec.approver
+                        WHERE dec.approval_type='VALIDATOR' AND dec.ref_doc_id =" . $this->prHeader['id'];
+            $this->validatorList = json_decode(json_encode(DB::select($strsql)), true);
+
+            //ตรวจสอบว่าจะ Enable ปุ่ม ของ Decider ได้หรือไม่
+            $strsql = "SELECT approver FROM dec_val_workflow 
+                        WHERE approval_type = 'VALIDATOR' AND ref_doc_id =" . $this->prHeader['id']; 
+            $strsql2 = "SELECT approver FROM dec_val_workflow 
+                        WHERE approval_type = 'VALIDATOR' AND status = 'APPROVED' AND ref_doc_id =" . $this->prHeader['id']; 
+
+            if (count(DB::select($strsql)) == count(DB::select($strsql2))) {
+                $this->isValidatorApprove = true;
+            };
+        //Authorization End
+        
+        //Attachments
+        $strsql = "SELECT id, file_name, file_type, ref_doctype, ref_docno, ref_lineno, file_path
+                FROM attactments 
+                WHERE ref_docid =" . $this->prHeader['id'] . "ORDER BY ref_lineno";
+        $this->attachmentFileList = json_decode(json_encode(DB::select($strsql)), true);
+
+        //Attachments End
+
+
     }
 
     public function savePR()
@@ -344,7 +630,7 @@ class PurchaseRequisitionDetails extends Component
                     ]
                 );
 
-                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='100'";
+                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='100' AND class='PURCHASE REQUISITION'";
                 $data = DB::select($strsql);
                 if (count($data) > 0) {
                     $this->dispatchBrowserEvent('popup-success', [
@@ -366,7 +652,7 @@ class PurchaseRequisitionDetails extends Component
                 , $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10'], $this->prHeader['notify_below_25'], $this->prHeader['notify_below_35']
                 , auth()->user()->id, Carbon::now(), $this->prHeader['prno']]);
 
-                $strsql = "select msg_text from message_list where msg_no='110'";
+                $strsql = "select msg_text from message_list where msg_no='110' AND class='PURCHASE REQUISITION'";
                     $data = DB::select($strsql);
                     if (count($data) > 0) {
                         $this->dispatchBrowserEvent('popup-success', [
@@ -506,22 +792,24 @@ class PurchaseRequisitionDetails extends Component
 
     public function loadDropdownList()
     {
-        //Requested_For & Buyer
-        $this->buyer_dd = [];
-        $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users WHERE company='" . $this->workAtCompany . "' ORDER BY users.name";
-        $this->requested_for_dd = DB::select($strsql);
-        $this->buyer_dd = DB::select($strsql);
+        //Herder
+            //Requested_For & Buyer
+            $this->buyer_dd = [];
+            $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users WHERE company='" . $this->workAtCompany . "' ORDER BY users.name";
+            $this->requested_for_dd = DB::select($strsql);
+            $this->buyer_dd = DB::select($strsql);
 
-        //Delivery Address
-        $this->cost_center_dd = [];
-        $strsql = "SELECT address_id, SUBSTRING(address,1,30) as address FROM site WHERE company = '" . $this->workAtCompany . "' ORDER BY address_id";
-        $this->delivery_address_dd = DB::select($strsql);
+            //Delivery Address
+            $this->cost_center_dd = [];
+            $strsql = "SELECT address_id, SUBSTRING(address,1,30) as address FROM site WHERE company = '" . $this->workAtCompany . "' ORDER BY address_id";
+            $this->delivery_address_dd = DB::select($strsql);
 
-        //Cost_Center
-        $strsql = "SELECT cost_center, description FROM cost_center WHERE company = '" . $this->workAtCompany . "' ORDER BY department";
-        $this->cost_center_dd = DB::select($strsql);
+            //Cost_Center
+            $strsql = "SELECT cost_center, description FROM cost_center WHERE company = '" . $this->workAtCompany . "' ORDER BY department";
+            $this->cost_center_dd = DB::select($strsql);
+        //Header End
 
-        //For Modal
+        //Line Items
             //partno
             $this->partno_dd = [];
             $strsql = "SELECT partno, part_name FROM part_master WHERE site = '" . $this->prHeader['site'] . "' ORDER BY partno";
@@ -558,7 +846,23 @@ class PurchaseRequisitionDetails extends Component
                 $strsql = "SELECT id, [lineno], description FROM pr_item WHERE prno = '" . $this->prHeader['prno'] . "' ORDER BY [lineno]";
                 $this->prLineNo_dd = DB::select($strsql);
             }
-        //For Modal End
+        //Line Items End
+
+        //Authorization
+            $this->decider_dd = [];
+            $this->validator_dd = [];
+            $strsql = "SELECT usr.username, usr.name + ' ' + usr.lastname AS fullname FROM users usr
+                        JOIN user_roles uro ON uro.username = usr.username 
+                        WHERE uro.role_id='10' AND usr.company = '" . $this->prHeader['company'] . "' ORDER BY usr.username";
+            $this->decider_dd = DB::select($strsql);
+            $this->validator_dd = DB::select($strsql);
+        //Authorization End
+
+        //Attachment
+
+
+
+        //Attachment End
     }
 
     public function mount()
