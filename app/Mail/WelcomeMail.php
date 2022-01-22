@@ -11,16 +11,16 @@ class WelcomeMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    protected $prno;
+    protected $detailMail;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($prno)
+    public function __construct($detailMail)
     {
-        $this->prno = $prno;
+        $this->detailMail = $detailMail;
     }
 
     /**
@@ -30,8 +30,16 @@ class WelcomeMail extends Mailable
      */
     public function build()
     {
-        return $this->markdown('emails.welcome',[
-            'prno' => $this->prno,
+        $template = "";
+        
+        if ($this->detailMail['template'] == "MAIL_PR02") {
+            $template = "emails.MAIL_PR02";
+        } else if ($this->detailMail['template'] == "MAIL_PR03") {
+            $template = "emails.MAIL_PR03";
+        }
+
+        return $this->markdown($template,[
+            'detailMail' => $this->detailMail,
         ]);
     }
 }

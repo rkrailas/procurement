@@ -2,14 +2,14 @@
 <script>
   window.addEventListener('delete-confirmation', event => {
     Swal.fire({
-      title: 'คุณต้องการลบ/ยกเลิก ?',
-      text: 'คุณจะไม่สามารถย้อนกลับได้!',
+      title: 'Do you want to delete / Cancel ?',
+      // text: 'คุณจะไม่สามารถย้อนกลับได้!',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'ตกลง',
-      cancelButtonText: 'ยกเลิก',
+      confirmButtonText: 'YES',
+      cancelButtonText: 'No',
     }).then((result) => {
       if (result.isConfirmed) {
         Livewire.emit('deleteConfirmed')

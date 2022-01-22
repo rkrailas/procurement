@@ -154,8 +154,8 @@ class PurchaseRequisitionList extends Component
             $xBuyer = "";
         }
 
-        $xWhere = "";
-        $xWhere = " WHERE prh.prno LIKE '%" . $this->prno . "%' 
+        $xWhere = " WHERE ISNULL(prh.deletion_flag, 0) <> 1  
+                    AND prh.prno LIKE '%" . $this->prno . "%' 
                     AND prh.ordertype LIKE '%" . $this->ordertype . "%'
                     AND prh.site LIKE '%" . $this->site . "%'
                     AND prh.request_date BETWEEN '" . $this->requestdate_from . "' AND '" . $this->requestdate_to . "'
@@ -166,13 +166,13 @@ class PurchaseRequisitionList extends Component
                     ORDER BY " . $this->sortBy . " " . $this->sortDirection;
 
         $strsql = "SELECT prh.prno, ort.description AS order_type
-                    , isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requested_for
+                    , ISNULL(req.name,'') + ' ' + ISNULL(req.lastname,'') AS requested_for
                     ,prh.site, pr_status.description AS status, prh.request_date
-                    , isnull(buyer.name,'') + ' ' + isnull(buyer.lastname,'') AS buyer
+                    , ISNULL(buyer.name,'') + ' ' + ISNULL(buyer.lastname,'') AS buyer
                     , pri.total_budget, pri.total_final_price
                     FROM pr_header prh
-                    LEFT JOIN (SELECT prno, sum(qty * unit_price) as total_budget
-                                , sum(final_price) as total_final_price 
+                    LEFT JOIN (SELECT prno, SUM(qty * unit_price) as total_budget
+                                , SUM(final_price) as total_final_price 
                                 FROM pr_item GROUP BY prno) pri ON pri.prno=prh.prno
                     LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
                     LEFT JOIN users req ON req.id=prh.requested_for

@@ -144,7 +144,7 @@
             </div>
             <div class="row mb-2">
                 <div class="col">
-                    <table class="table table-md table-hover">
+                    <table class="table table-md table-hover nissanTB">
                         <thead>
                             <th scope="col">#</th>
                             <th scope="col">PR No.
@@ -308,7 +308,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" wire:click.prevent="createPR">Create PR</button>
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

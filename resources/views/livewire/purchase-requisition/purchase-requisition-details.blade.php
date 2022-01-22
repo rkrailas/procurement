@@ -1,4 +1,6 @@
 <div>
+    <x-loading-indicator target="validatorDeciderApprove" />
+    <x-loading-indicator target="validatorDeciderReject" />
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -381,7 +383,7 @@
                             </div>
                             <div class="card-body my-card-body">
                                 <div class="row">
-                                    <div class="col-md-9">
+                                    <div class="col-md-6">
                                         <x-select2 id="decider-select2" wire:model.defer="decider">
                                             <option value="">--- Please Select ---</option>
                                             @foreach($decider_dd as $row)
@@ -395,6 +397,7 @@
                                         <button class="btn btn-sm btn-danger" {{ $deciderList ? 'disabled' : ''}} 
                                             wire:click.prevent="addDecider"><i class="fas fa-plus-square mr-1"></i>Confirm</button>
                                     </div>
+                                    <div class="col-md-3"></div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
@@ -416,8 +419,8 @@
                                                 <td scope="col">{{ $deciderList[$index]['status'] }}</td>
                                                 <td scope="col">
                                                     @if (auth()->user()->username == $deciderList[$index]['approver'] AND $isValidatorApprove)
-                                                    <button class="btn btn-sm btn-danger" wire:click.prevent="deciderApprove" >Approve</button>
-                                                    <button class="btn btn-sm btn-light" wire:click.prevent="deciderReject" >Reject</button>
+                                                    <button class="btn btn-sm btn-danger" wire:click.prevent="validatorDeciderApprove" >Approve</button>
+                                                    <button class="btn btn-sm btn-light" wire:click.prevent="validatorDeciderReject" >Reject</button>
                                                     @else
                                                     <button class="btn btn-sm btn-danger" disabled wire:click.prevent="" >Approve</button>
                                                     <button class="btn btn-sm btn-light" disabled wire:click.prevent="" >Reject</button>
@@ -453,7 +456,7 @@
                             </div>
                             <div class="card-body my-card-body">
                                 <div class="row">
-                                    <div class="col-md-9">
+                                    <div class="col-md-6">
                                         <x-select2 id="validator-select2" wire:model.defer="validator">
                                             <option value="">--- Please Select ---</option>
                                             @foreach($validator_dd as $row)
@@ -467,6 +470,7 @@
                                         <button class="btn btn-sm btn-danger"
                                             wire:click.prevent="addValidator"><i class="fas fa-plus-square mr-1"></i>Add</button>
                                     </div>
+                                    <div class="col-md-3"></div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
@@ -487,9 +491,9 @@
                                                     <td scope="col">{{ $validatorList[$index]['fullname'] }}</td>
                                                     <td scope="col">{{ $validatorList[$index]['status'] }}</td>
                                                     <td scope="col">
-                                                        @if (auth()->user()->username == $validatorList[$index]['approver'])
-                                                        <button class="btn btn-sm btn-danger" wire:click.prevent="validatorApprove" >Approve</button>
-                                                        <button class="btn btn-sm btn-light" wire:click.prevent="validatorReject" >Reject</button>
+                                                        @if (auth()->user()->username == $validatorList[$index]['approver'] AND $isValidatorApprove == false)
+                                                        <button class="btn btn-sm btn-danger" wire:click.prevent="validatorDeciderApprove" >Approve</button>
+                                                        <button class="btn btn-sm btn-light" wire:click.prevent="validatorDeciderReject" >Reject</button>
                                                         @else
                                                         <button class="btn btn-sm btn-danger" disabled wire:click.prevent="" >Approve</button>
                                                         <button class="btn btn-sm btn-light" disabled wire:click.prevent="" >Reject</button>
@@ -635,17 +639,26 @@
             <div class="col-md-12">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled><i class="fas fa-check mr-2"></i>Release for Sourcing</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled><i class="fas fa-check mr-2"></i>Release for PO</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled><i class="fas fa-print mr-2"></i>Print</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-light" disabled><i class="fas fa-times mr-2"></i>Cancel</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-light" disabled><i class="fas fa-trash-alt mr-2"></i>Delete</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled><i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled><i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
+                        <button wire:click.prevent="releaseSourcing" class="btn btn-sm btn-danger" {{ $prHeader['prno'] ? '' : 'disabled' }} >
+                            <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
+                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
+                            <i class="fas fa-check mr-2"></i>Release for PO</button>
+                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
+                            <i class="fas fa-print mr-2"></i>Print</button>
+                        <button wire:click.prevent="" class="btn btn-sm btn-light" disabled>
+                            <i class="fas fa-times mr-2"></i>Cancel</button>
+                        <button wire:click.prevent="confirmDelete('', 'deletePrHeader')" class="btn btn-sm btn-light" {{ $prHeader['prno'] ? '' : 'disabled' }}>
+                            <i class="fas fa-trash-alt mr-2"></i>Delete</button>
+                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
+                            <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
+                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
+                            <i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
                     </div>
                     <div>
-                        <button wire:click.prevent="backToPRList" class="btn btn-sm btn-light"><i class="fas fa-arrow-alt-circle-left mr-1"></i></i>Back</button>
-                        <button wire:click.prevent="savePR" class="btn btn-sm btn-danger"><i class="fas fa-save mr-1"></i>Save</button>
+                        <button wire:click.prevent="backToPRList" class="btn btn-sm btn-light">
+                            <i class="fas fa-arrow-alt-circle-left mr-1"></i></i>Back</button>
+                        <button wire:click.prevent="savePR" class="btn btn-sm btn-danger">
+                            <i class="fas fa-save mr-1"></i>Save</button>
                     </div>
                     
                 </div>

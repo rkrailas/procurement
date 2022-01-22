@@ -211,15 +211,15 @@
                     <div class="row mb-2">
                         <div class="col-md-12 d-flex justify-content-between">
                             <div>
-                                <button type="button" class="btn btn-sm btn-danger">
+                                <button type="button" class="btn btn-sm btn-light">
                                     <i class="fas fa-trash-alt mr-1"></i>Delete</button>
-                                <button type="button" class="btn btn-sm btn-warning">
+                                <button type="button" class="btn btn-sm btn-danger">
                                     <i class="fas fa-undo mr-1"></i>Revoke</button>
                             </div>
                             <div>
-                                <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">
+                                <button type="button" class="btn btn-sm btn-light" data-dismiss="modal">
                                     <i class="fa fa-times mr-1"></i>Close</button>
-                                <button type="submit" class="btn btn-sm btn-success">
+                                <button type="submit" class="btn btn-sm btn-danger">
                                     <i class="fa fa-save mr-1"></i>Confirm
                                 </button>
                             </div>

@@ -1,7 +1,8 @@
 @component('mail::message')
 # Introduction
-
-This is PR No. : {{ $prno }}
+Template : {{ $detailMail['template'] }}
+Dear : {{ $detailMail['dear'] }}
+This is PR No. : {{ $detailMail['docno'] }}
 
 
 @component('mail::button', ['url' => ''])
