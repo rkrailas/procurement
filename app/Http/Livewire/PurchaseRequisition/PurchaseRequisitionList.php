@@ -76,8 +76,8 @@ class PurchaseRequisitionList extends Component
     public function resetSearch()
     {
         $this->reset(['prno', 'ordertype', 'site', 'requestor', 'requested_for', 'buyer', 'status']);
-        $this->requestdate_from = date_format(Carbon::now('GMT+7'),'Y-m-d');
-        $this->requestdate_to = date_format(Carbon::now('GMT+7')->addMonth(+3),'Y-m-d');
+        $this->requestdate_from = date_format(Carbon::now(),'Y-m-d');
+        $this->requestdate_to = date_format(Carbon::now()->addMonth(+3),'Y-m-d');
         $this->dispatchBrowserEvent('clear-select2');
     }
 

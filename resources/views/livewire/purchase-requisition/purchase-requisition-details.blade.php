@@ -1,6 +1,9 @@
 <div>
     <x-loading-indicator target="validatorDeciderApprove" />
     <x-loading-indicator target="validatorDeciderReject" />
+    <x-loading-indicator target="addAttachment" />
+    <x-loading-indicator target="attachment_file" />
+    
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -118,7 +121,7 @@
                     <div class="col-md-3">
                         <label for="ordertype">Buyer</label>
                         <x-select2 id="buyer-select2" wire:model.defer="prHeader.buyer">
-                            <option value="">--- Please Select ---</option>
+                            <option value=" ">--- Please Select ---</option>
                             @foreach($buyer_dd as $row)
                             <option value="{{ $row->id }}">
                                 {{ $row->fullname }}
@@ -540,7 +543,7 @@
                             <select class="form-control form-control-sm" required wire:model.defer="attachment_lineid">
                                 <option value="">--- Please Select ---</option>
                                 <option value="0">0 : Level PR Header</option>
-                                @foreach($prLineNo_dd as $row)
+                                @foreach($prLineNoAtt_dd as $row)
                                 <option value="{{ $row->id }}">
                                     {{ $row->lineno }} : {{ $row->description }}
                                 </option>
@@ -553,6 +556,7 @@
                             <div class="custom-file">
                                 <input wire:model="attachment_file" type="file" class="custom-file-input"
                                     id="customFile">
+                                    @error('attachment_file') <span class="text-danger">{{ $message }}</span> @enderror
                                 <label class="custom-file-label" for="customFile">
                                     @if ($attachment_file)
                                     {{ $attachment_file->getClientOriginalName() }}
@@ -564,6 +568,7 @@
                         </div>
                         <div class="col-md-6 text-left">
                             <button type="submit" class="btn btn-danger"><i class="fas fa-plus-square mr-1"></i>Add Item</button>
+                             <span style="vertical-align:bottom; color:red">max file size 5 mb</span> 
                         </div>
                     </div>                
                 </form>
@@ -620,7 +625,48 @@
             
             {{-- Tab History --}}           
             <div class="tab-pane fade {{ $currentTab == 'history' ? 'show active' : '' }}" id="pills-history" role="tabpanel" aria-labelledby="pills-history-tab" wire:ignore.self>
-                History
+                <div class="row">
+                    <div class="col-md-12">
+                        <table class="table table-sm">
+                            <thead>
+                              <tr>
+                                <th scope="col">Action</th>
+                                <th scope="col">Where</th>
+                                <th scope="col">Line No.</th>
+                                <th scope="col">History Table</th>
+                                <th scope="col">History Ref</th>
+                                <th scope="col">Changed By</th>
+                                <th scope="col">Changed On</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($historylog as $row)
+                                <tr>
+                                    {{-- <td scope="col">{{ $row['action_type'] }} </td>
+                                    <td scope="col">{{ $row['action_where'] }} </td>
+                                    <td scope="col">{{ $row['line_no'] }} </td>
+                                    <td scope="col">{{ $row['history_table'] }} </td>
+                                    <td scope="col">{{ $row['history_ref'] }} </td>
+                                    <td scope="col">{{ $row['fname'] }} </td>
+                                    <td scope="col">{{ \Carbon\Carbon::parse($row['changed_on'])->format('d-M-Y H:i:s') }} </td> --}}
+                                    <td scope="col">{{ $row->action_type }} </td>
+                                    <td scope="col">{{ $row->action_where }} </td>
+                                    <td scope="col">{{ $row->line_no }} </td>
+                                    <td scope="col">{{ $row->history_table }} </td>
+                                    <td scope="col">{{ $row->history_ref }} </td>
+                                    <td scope="col">{{ $row->fname }} </td>
+                                    <td scope="col">{{ \Carbon\Carbon::parse($row->changed_on)->format('d-M-Y H:i:s') }} </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                          </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-1">
+                        {{ $historylog->links() }}
+                    </div>
+                </div>
             </div>
             {{-- Tab History End --}} 
 

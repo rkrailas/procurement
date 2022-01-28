@@ -38,15 +38,10 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link">
+              <a href="{{ route('purchase-requisition.requisitioninbox') }}" 
+                class="nav-link {{ request()->is('purchase-requisition/requisitioninbox') ? 'active' : '' }}">
                 <i class="far fa-circle nav-icon-submenu"></i>
-                <p>xxxxx</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="#" class="nav-link">
-                <i class="far fa-circle nav-icon-submenu"></i>
-                <p>xxxxx</p>
+                <p>Requisition Inbox</p>
               </a>
             </li>
           </ul>
