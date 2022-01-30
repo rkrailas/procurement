@@ -8,6 +8,9 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
+    <!-- Dropzone -->
+    <meta name='csrf-token' content="{{ csrf_token() }}">
+
     <title>P2P System</title>
 
     <!-- Font Awesome Icons -->
@@ -38,8 +41,8 @@
     <link rel="stylesheet" href="{{ asset('backend/plugins/tailwindcss1_9_2/tailwind.min.css') }}" />
 
     <!-- Dropzone -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css" integrity="sha512-jU/7UFiaW5UBGODEopEqnbIAHOI8fO6T99m7Tsmqs2gkdujByJfkCbbfPSN4Wlqlb9TGnsuC0YgUgWkRBK7B9A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
+    <link rel="stylesheet" href="{{ asset('backend/plugins/dropzone/dropzone.min.css') }}" type="text/css" />
+    
 <style>
         label {
             margin-bottom: 0px;
@@ -201,7 +204,7 @@
     <x-popup-image></x-popup-image>
 
     <!-- Dropzone -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js" integrity="sha512-U2WE1ktpMTuRBPoCFDzomoIorbOyUv0sP8B+INA3EzNAhehbzED1rOJg6bCqPf/Tuposxb5ja/MAUnC8THSbLQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="{{ asset('backend/plugins/dropzone/dropzone.min.js') }}"></script>
     
     <script>
         $(document).ready(function() {

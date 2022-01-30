@@ -23,30 +23,28 @@
                 <div class="row">
                     <div class="col-md-3">
                         <label for="prno">Purchase Requisition No.</label>
-                        <input class="form-control form-control-sm" type="text" id="prno" maxlength="100" required
+                        <input class="form-control" type="text" id="prno" maxlength="100" required
                             wire:model.defer="prno">
                     </div>
                     <div class="col-md-3">
                         <label for="ordertype">Order Type</label>
-                        <select class="form-control form-control-sm" id="ordertype" wire:model.defer="ordertype">
-                            <option value="">--- All ---</option>
+                        <x-select2-multiple id="ordertype-select2" wire:model.defer="ordertype">
                             @foreach($ordertype_dd as $row)
                             <option value="{{ $row->ordertype }}">
                                 {{ $row->ordertype }} : {{ $row->description }}
                             </option>
                             @endforeach
-                        </select>
+                        </x-select2-multiple>
                     </div>
                     <div class="col-md-2">
                         <label for="site">Site No</label>
-                        <select class="form-control form-control-sm" id="site" wire:model.defer="site">
-                            <option value="">--- All ---</option>
+                        <x-select2-multiple id="site-select2" wire:model.defer="site">
                             @foreach($site_dd as $row)
                             <option value="{{ $row->site }}">
                                 {{ $row->site }}
                             </option>
                             @endforeach
-                        </select>
+                        </x-select2-multiple>
                     </div>
                     <div class="col-2">
                         <label class="">Request Date From</label>
@@ -77,47 +75,43 @@
                 <div class="row">
                     <div class="col-3">
                         <label>Requestor</label>
-                        <x-select2 id="requestor-select2" wire:model.defer="requestor">
-                            <option value=" ">--- All ---</option>
+                        <x-select2-multiple id="requestor-select2" wire:model.defer="requestor">
                             @foreach($requestor_dd as $row)
                             <option value='{{ $row->id }}'>
                                 {{ $row->fullname }}
                             </option>
                             @endforeach
-                        </x-select2>
+                        </x-select2-multiple>
                     </div>
                     <div class="col-3">
                         <label>Requested For</label>
-                        <x-select2 id="requestedfor-select2" wire:model.defer="requested_for">
-                            <option value=" ">--- All ---</option>
+                        <x-select2-multiple id="requestedfor-select2" wire:model.defer="requested_for">
                             @foreach($requestedfor_dd as $row)
                             <option value='{{ $row->id }}'>
                                 {{ $row->fullname }}
                             </option>
                             @endforeach
-                        </x-select2>
+                        </x-select2-multiple>
                     </div>
                     <div class="col-3">
                         <label>Buyer</label>
-                        <x-select2 id="buyer-select2" wire:model.defer="buyer">
-                            <option value=" ">--- All ---</option>
+                        <x-select2-multiple id="buyer-select2" wire:model.defer="buyer">
                             @foreach($buyer_dd as $row)
                             <option value='{{ $row->id }}'>
                                 {{ $row->fullname }}
                             </option>
                             @endforeach
-                        </x-select2>
+                        </x-select2-multiple>
                     </div>
                     <div class="col-md-3">
-                        <label for="status">Staus</label>
-                        <select class="form-control form-control-sm" id="status" wire:model.defer="status">
-                            <option value="">--- All ---</option>
+                        <label>Staus</label>
+                        <x-select2-multiple id="status-select2" wire:model.defer="status" >
                             @foreach($status_dd as $row)
                             <option value="{{ $row->status }}">
                                 {{ $row->status }} : {{ $row->description }}
                             </option>
                             @endforeach
-                        </select>
+                        </x-select2-multiple>
                     </div>
                 </div>
 
@@ -332,6 +326,7 @@
         clearSelect2('requestor-select2');
         clearSelect2('requestedfor-select2');
         clearSelect2('buyer-select2');
+        clearSelect2('status-select2');
     })
 </script>
 

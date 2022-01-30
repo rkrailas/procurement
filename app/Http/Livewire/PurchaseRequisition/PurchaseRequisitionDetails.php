@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use App\Support\Collection;
 use Livewire\WithPagination;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class PurchaseRequisitionDetails extends Component
 {
@@ -79,6 +81,46 @@ class PurchaseRequisitionDetails extends Component
     //Share Function End
 
     //Action Button
+        // print_prform not work
+            // public function print_prform()
+            // {
+            //     $input = storage_path("app/public/reports/pr_form1.jrxml");
+            //     $name = "pr_form";
+            //     $filename = $name . time();
+            //     $output = base_path("public/reports/" . $filename);
+            //     $jdbc_dir = 'C:\xampp\htdocs\PHPJasper\vendor\geekcom\phpjasper\bin\jasperstarter\jdbc';
+            //     $options = [
+            //         'format' => ['pdf'],
+            //         'locale' => 'en',
+            //         'params' => ['prno' => 'NM22000027'],
+            //         'db_connection' => [
+            //             'driver'    => 'generic',
+            //             'host'      => env('DB_HOST'),
+            //             'port'      => env('DB_PORT'),
+            //             'username'  => env('DB_USERNAME'),
+            //             'password'  => env('DB_PASSWORD'),
+            //             'database'  => env('DB_DATABASE'),
+            //             'jdbc_driver' => 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+            //             'jdbc_url'  => 'jdbc:sqlserver://localhost:1433;databaseName='.env('DB_DATABASE'),
+            //             'jdbc_dir'  => $jdbc_dir 
+            //         ]
+            //     ];
+        
+            //     $jasper = new PHPJasper;
+        
+            //     //$jasper->compile($input)->execute();
+        
+            //     $jasper->process(
+            //             $input,
+            //             $output,
+            //             $options
+            //         )->execute();
+
+            //     //dd(response()->file($output . ".pdf"));
+            //     return response()->file($output . ".pdf")->deleteFileAfterSend(true);
+            // }
+        // print_prform not work End
+
         public function releaseSourcing()
         {
             //ตรวจสอบว่า Appvore หมดหรือยัง
@@ -229,6 +271,51 @@ class PurchaseRequisitionDetails extends Component
     //Action Button End
     
     //Attachment
+
+        //Test Dropzone not work with $this->prHeader['prno']
+            public function attactFilePR(Request $request)
+            {
+                $data = array();
+
+                $validator = Validator::make($request->all(),[
+                    'file' => 'required|mimes:png,jpg,jpeg,pdf|max:2048'
+                ]);
+        
+                if($validator->fails()){
+                    $data['success'] = 0;
+                    $data['error'] = $validator->errors()->first('file');
+                }else{
+                    $file = $request->file('file');
+                    $filename = time().'_'.$file->getClientOriginalName();
+        
+                    //File upload location in public folder
+                    $location = 'attachments';
+        
+                    $file->move($location, $filename);
+        
+                    $data['success'] = 1;
+                    $data['message'] = 'Uploaded Successfully';
+        
+                    // $strsql = "SELECT [lineno] FROM pr_item WHERE id=" . $this->attachment_lineid;
+                    // $data = DB::select($strsql);
+
+                    $xLineNo = "0";
+                    // if ($data) {
+                    //     $xLineNo = $data[0]->lineno;
+                    // }
+        
+                    DB::statement("INSERT INTO attactments (file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
+                        , ref_lineid, create_by, create_on)
+                    VALUES(?,?,?,?,?,?,?,?,?)"
+                    ,[$filename, $file->getClientOriginalName(), 'PR', 'xxxx', 0
+                    ,$xLineNo, 0, auth()->user()->id, Carbon::now()]);
+
+                    //return response()->json($data);
+                    return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=attachments");
+                }
+            }
+        //Test Dropzone End
+
         public function updatedAttachmentFileList($value, $key) //No Refresh
         {
             $data = explode("." , $key);
@@ -254,53 +341,81 @@ class PurchaseRequisitionDetails extends Component
         public function addAttachment()
         {
             if ($this->attachment_file) {
-                
+
                 $this->validate([
-                    'attachment_file' => 'max:5120', // 1MB Max
+                    'attachment_file.*' => 'max:5120', // 5MB Max
                 ]);
 
                 DB::transaction(function() 
                 {
-                    $attachments = $this->attachment_file->store('/', 'attachments');
+                    foreach ($this->attachment_file as $file) {
+                        $attachments = $file->store('/', 'attachments');
+                        ///$attachments = $file->storeAs('public/attachments', 'zzz.pdf'); //ยังไม่ Work
 
-                    $strsql = "SELECT [lineno] FROM pr_item WHERE id=" . $this->attachment_lineid;
-                    $data = DB::select($strsql);
-                    $xLineNo = "";
-                    if ($data) {
-                        $xLineNo = $data[0]->lineno;
+                        $strsql = "SELECT [lineno] FROM pr_item WHERE id=" . $this->attachment_lineid;
+                        $data = DB::select($strsql);
+                        $xLineNo = "";
+                        if ($data) {
+                            $xLineNo = $data[0]->lineno;
+                        }
+
+                        DB::statement("INSERT INTO attactments (file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
+                            , ref_lineid, create_by, create_on)
+                        VALUES(?,?,?,?,?,?,?,?,?)"
+                        ,[$attachments, $file->getClientOriginalName(), 'PR', $this->prHeader['prno'], $this->prHeader['id']
+                        ,$xLineNo, $this->attachment_lineid, auth()->user()->id, Carbon::now()]);
                     }
-
-                    DB::statement("INSERT INTO attactments (file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
-                        , ref_lineid, create_by, create_on)
-                    VALUES(?,?,?,?,?,?,?,?,?)"
-                    ,[$attachments, $this->attachment_file->getClientOriginalName(), 'PR', $this->prHeader['prno'], $this->prHeader['id']
-                    ,$xLineNo, $this->attachment_lineid, auth()->user()->id, Carbon::now()]);
-
                 });
+
+
+                //Single File 
+                    // $this->validate([
+                    //     'attachment_file' => 'max:5120', // 5MB Max
+                    // ]);
+
+                    // DB::transaction(function() 
+                    // {
+                    //     $attachments = $this->attachment_file->store('/', 'attachments');
+
+                    //     $strsql = "SELECT [lineno] FROM pr_item WHERE id=" . $this->attachment_lineid;
+                    //     $data = DB::select($strsql);
+                    //     $xLineNo = "";
+                    //     if ($data) {
+                    //         $xLineNo = $data[0]->lineno;
+                    //     }
+
+                    //     DB::statement("INSERT INTO attactments (file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
+                    //         , ref_lineid, create_by, create_on)
+                    //     VALUES(?,?,?,?,?,?,?,?,?)"
+                    //     ,[$attachments, $this->attachment_file->getClientOriginalName(), 'PR', $this->prHeader['prno'], $this->prHeader['id']
+                    //     ,$xLineNo, $this->attachment_lineid, auth()->user()->id, Carbon::now()]);
+
+                    // });
+                //Single File End 
                 
                 //History Log
-                // DB::transaction(function() 
-                // {
-                //     $xRandom = Str::random(20);
-                //     DB::statement(
-                //         "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
-                //         , changed_by, changed_on)
-                //     VALUES(?,?,?,?,?,?,?,?,?,?)",
-                //         [
-                //             'PR', $this->prHeader['prno'], 'Insert', 'Attachments', 0, 'history_attachments', $xRandom, auth()->user()->company
-                //             , auth()->user()->id, Carbon::now()
-                //         ]
-                //     );
+                    // DB::transaction(function() 
+                    // {
+                    //     $xRandom = Str::random(20);
+                    //     DB::statement(
+                    //         "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
+                    //         , changed_by, changed_on)
+                    //     VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    //         [
+                    //             'PR', $this->prHeader['prno'], 'Insert', 'Attachments', 0, 'history_attachments', $xRandom, auth()->user()->company
+                    //             , auth()->user()->id, Carbon::now()
+                    //         ]
+                    //     );
 
-                //     DB::statement(
-                //         "INSERT INTO history_attachments(history_ref, file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
-                //         , ref_lineid, create_by, create_on, changed_by, changed_on)
-                //         SELECT '" . $xRandom . "', file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
-                //         , ref_lineid, create_by, create_on, changed_by, changed_on
-                //         FROM attactments
-                //         WHERE ref_docno='" . $this->prHeader['prno'] . "' AND ref_lineid=" . $this->attachment_lineid
-                //     );
-                // });
+                    //     DB::statement(
+                    //         "INSERT INTO history_attachments(history_ref, file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
+                    //         , ref_lineid, create_by, create_on, changed_by, changed_on)
+                    //         SELECT '" . $xRandom . "', file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
+                    //         , ref_lineid, create_by, create_on, changed_by, changed_on
+                    //         FROM attactments
+                    //         WHERE ref_docno='" . $this->prHeader['prno'] . "' AND ref_lineid=" . $this->attachment_lineid
+                    //     );
+                    // });
                 //History Log End
 
                 $this->reset(['attachment_file']);

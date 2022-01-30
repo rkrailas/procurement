@@ -68,7 +68,8 @@ class PurchaseRequisitionList extends Component
     }
 
     public function updated($item){
-        if ($item == "requestor" or $item == "requested_for" or $item == "buyer") {
+        //ป้องกันการ Call Back
+        if ($item == "requestor" or $item == "requested_for" or $item == "buyer" or $item == "status" or $item == "ordertype" or $item == "site") {
             $this->skipRender();
         }
     }
@@ -140,30 +141,30 @@ class PurchaseRequisitionList extends Component
             ]);
         }
 
-        //Condition
-        $xRequestor = $this->requestor;
-        $xRequested_for = $this->requested_for;
-        $xBuyer = $this->buyer;
-        if ($xRequestor == " "){
-            $xRequestor = "";
-        }
-        if ($xRequested_for == " "){
-            $xRequested_for = "";
-        }
-        if ($xBuyer == " "){
-            $xBuyer = "";
-        }
-
         $xWhere = " WHERE ISNULL(prh.deletion_flag, 0) <> 1  
                     AND prh.prno LIKE '%" . $this->prno . "%' 
-                    AND prh.ordertype LIKE '%" . $this->ordertype . "%'
-                    AND prh.site LIKE '%" . $this->site . "%'
-                    AND prh.request_date BETWEEN '" . $this->requestdate_from . "' AND '" . $this->requestdate_to . "'
-                    AND prh.status LIKE '%" . $this->status . "%'
-                    AND prh.requestor LIKE '%" . $xRequestor . "%'
-                    AND prh.requested_for LIKE '%" . $xRequested_for . "%'
-                    AND prh.buyer LIKE '%" . $xBuyer. "%'
-                    ORDER BY " . $this->sortBy . " " . $this->sortDirection;
+                    AND prh.request_date BETWEEN '" . $this->requestdate_from . "' AND '" . $this->requestdate_to . "'";
+
+        if ($this->ordertype) {
+            $xWhere = $xWhere . "AND prh.ordertype IN (" . myWhereIn($this->ordertype) . ")";
+        }
+        if ($this->site) {
+            $xWhere = $xWhere . "AND prh.site IN (" . myWhereIn($this->site) . ")";
+        }
+        if ($this->requestor) {
+            $xWhere = $xWhere . "AND prh.requestor IN (" . myWhereIn($this->requestor) . ")";
+        }
+        if ($this->requested_for) {
+            $xWhere = $xWhere . "AND prh.requested_for IN (" . myWhereIn($this->requested_for) . ")";
+        }
+        if ($this->buyer) {
+            $xWhere = $xWhere . "AND prh.buyer IN (" . myWhereIn($this->buyer) . ")";
+        }
+        if ($this->status) {
+            $xWhere = $xWhere . "AND prh.status IN (" . myWhereIn($this->status) . ")";
+        }
+
+        $xWhere = $xWhere . " ORDER BY " . $this->sortBy . " " . $this->sortDirection;
 
         $strsql = "SELECT prh.prno, ort.description AS order_type
                     , ISNULL(req.name,'') + ' ' + ISNULL(req.lastname,'') AS requested_for

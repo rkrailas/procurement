@@ -534,10 +534,13 @@
             
             {{-- Tab Attachments --}}
             <div class="tab-pane fade {{ $currentTab == 'attachments' ? 'show active' : '' }}" id="pills-attachments" role="tabpanel" aria-labelledby="pills-attachments-tab" wire:ignore.self>
+                <form autocomplete="off" enctype="multipart/form-data"
+                    wire:submit.prevent="addAttachment">
+                    @csrf
                     <div class="row">
-                        <div class="col-md-5">
-                            <label>Attachment Level <span style="color: blue; font-weight: normal">(Please select before add new files.)</span></label>
-                            <select class="form-control form-control-sm" required wire:model="attachment_lineid">
+                        <div class="col-md-3">
+                            <label>Attachment Level</label>
+                            <select class="form-control form-control-sm" required wire:model.defer="attachment_lineid">
                                 <option value="">--- Please Select ---</option>
                                 <option value="0">0 : Level PR Header</option>
                                 @foreach($prLineNoAtt_dd as $row)
@@ -548,32 +551,27 @@
                             </select>
                         </div>
                     </div>
-                    @if ($this->attachment_lineid != '')
-                    <form autocomplete="off" enctype="multipart/form-data" wire:submit.prevent="addAttachment">
-                        @csrf
-                        <div class="row mb-3">
-                            <div class="col-md-9">
-                                <div class="custom-file">
-                                    <input wire:model="attachment_file" type="file" class="custom-file-input" id="customFile" multiple>
-                                        @error('attachment_file.*') <span class="text-danger">{{ $message }}</span> @enderror
-                                    <label class="custom-file-label" for="customFile">
-                                        @if ($attachment_file)
-                                        @foreach ($attachment_file as $file)
-                                        [{{$file->getClientOriginalName()}}] 
-                                        @endforeach                                    
-                                        @else
-                                        Browse Files
-                                        @endif                                
-                                    </label>
-                                </div>                        
-                            </div>
-                            <div class="col-md-3 text-left">
-                                <button type="submit" class="btn btn-danger"><i class="fas fa-plus-square mr-1"></i>Add Item</button>
-                                <span style="vertical-align:bottom; color:red">max file size 5 mb</span> 
-                            </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="custom-file">
+                                <input wire:model="attachment_file" type="file" class="custom-file-input"
+                                    id="customFile">
+                                    @error('attachment_file') <span class="text-danger">{{ $message }}</span> @enderror
+                                <label class="custom-file-label" for="customFile">
+                                    @if ($attachment_file)
+                                    {{ $attachment_file->getClientOriginalName() }}
+                                    @else
+                                    Browse Files
+                                    @endif                                
+                                </label>
+                            </div>                        
                         </div>
-                    </form>
-                    @endif
+                        <div class="col-md-6 text-left">
+                            <button type="submit" class="btn btn-danger"><i class="fas fa-plus-square mr-1"></i>Add Item</button>
+                             <span style="vertical-align:bottom; color:red">max file size 5 mb</span> 
+                        </div>
+                    </div>                
+                </form>
 
                 <div class="row">
                     <div class="col-md-12">
