@@ -45,7 +45,8 @@
                     <div class="row">
                         <div class="col-12">
                             <label>Description <span style="color: red">*</span></label>
-                            <input class="form-control form-control-sm" type="text" maxlength="250" required wire:model.defer="prItem.description">
+                            {{-- Change to readonly Ref. 18-Jan-2022: update editable and non-editable fields --}}
+                            <input class="form-control form-control-sm" type="text" readonly maxlength="250" required wire:model.defer="prItem.description">
                         </div>
                     </div>
 
@@ -56,19 +57,21 @@
                             <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.purchase_unit">
                         </div>
                         <div class="col-md-4">
-                            <label>Budget Price Per Unit <span style="color: red">*</span></label>
-                            <input class="form-control form-control-sm" type="number" step="0.01" required wire:model.defer="prItem.unit_price">
+                            {{-- Change to Not required & Readonly Ref. 18-Jan-2022: update editable and non-editable fields --}}
+                            <label>Budget Price Per Unit</label>
+                            <input class="form-control form-control-sm" type="number" readonly required step="0.01" wire:model.defer="prItem.unit_price">
                         </div>
                         <div class="col-md-4">
-                            <label>Currency <span style="color: red">*</span></label>
-                            <x-select2 id="currency-select2" required='true' wire:model.defer="prItem.currency">
-                                {{-- <option value=" ">--- Please Select ---</option> --}}
+                            {{-- Change to Not required & Readonly & input=text Ref. 18-Jan-2022: update editable and non-editable fields --}}
+                            <label>Currency</label>
+                            <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.currency">
+                            {{-- <x-select2 id="currency-select2" wire:model.defer="prItem.currency">
                                 @foreach($currency_dd as $row)
                                 <option value="{{ $row->currency }}">
                                     {{ $row->currency }}
                                 </option>
                                 @endforeach
-                            </x-select2>
+                            </x-select2> --}}
                         </div>
                     </div>
 
@@ -92,7 +95,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <label>QTY <span style="color: red">*</span></label>
-                            <input class="form-control form-control-sm" type="number" step="0.01" required wire:model.defer="prItem.qty">
+                            <input class="form-control form-control-sm" type="number" step="0.01" required wire:model.lazy="prItem.qty">
                         </div>
                         <div class="col-md-4">
                             <label>Requested Delivery Date <span style="color: red">*</span></label>

@@ -141,8 +141,9 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label for="prno">E-Decision No.</label>
-                        <input class="form-control form-control-sm" type="text" id="edecision" maxlength="100" wire:model.defer="prHeader.edecision">
+                        {{-- Remove ref 18-Jan-2022: e-decision at attachment level to support header and item level validation --}}
+                        {{-- <label for="prno">E-Decision No.</label>
+                        <input class="form-control form-control-sm" type="text" id="edecision" maxlength="100" wire:model.defer="prHeader.edecision"> --}}
                     </div>
                 </div>
             </div>
@@ -168,10 +169,11 @@
                             <x-datepicker wire:model.defer="prHeader.valid_until" id="valid_until"
                                 :error="'date'" required/>
                         </div>
-                    </div>
+                    </div>                    
                     <div class="col-md-3">
-                        <label for="date_to_notify">Days to Notify before BPO Expiry</label>
-                        <input class="form-control form-control-sm text-right" type="number" step="1" id="days_to_notify" wire:model.defer="prHeader.days_to_notify">
+                        {{-- Remove Ref. 18-Jan-2022: fix notification at D-30, D-15, D-7 before expiry. --}}
+                        {{-- <label for="date_to_notify">Days to Notify before BPO Expiry</label>
+                        <input class="form-control form-control-sm text-right" type="number" step="1" id="days_to_notify" wire:model.defer="prHeader.days_to_notify"> --}}
                     </div>
                     <div class="col-md-6">
                         <label>Notify when remaining value is below</label>
@@ -242,8 +244,8 @@
                             <thead>
                               <tr class="text-center">
                                 <th scope="col">Line No.</th>
-                                <th scope="col">Description</th>
                                 <th scope="col">Part</th>
+                                <th scope="col">Description</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Qty</th>
                                 <th scope="col">UoM</th>
@@ -258,9 +260,9 @@
                             @foreach ($itemList as $index => $row)
                             <tr>
                                 {{-- $bankDetails[$index]['taxref'] --}}
-                                <td scope="col">{{ $itemList[$index]['lineno'] }}</td> 
-                                <td scope="col">{{ $itemList[$index]['description'] }}</td>
+                                <td scope="col">{{ $itemList[$index]['lineno'] }}</td>
                                 <td scope="col">{{ $itemList[$index]['partno'] }}</td>
+                                <td scope="col">{{ $itemList[$index]['description'] }}</td>                                
                                 <td scope="col">{{ $itemList[$index]['status'] }}</td>
                                 <td scope="col" class="text-right pr-2">{{ number_format($itemList[$index]['qty'], 0) }}</td>
                                 <td scope="col" class="text-center">{{ $itemList[$index]['purchase_unit'] }}</td>
@@ -707,7 +709,7 @@
                     <div>
                         <button wire:click.prevent="backToPRList" class="btn btn-sm btn-light">
                             <i class="fas fa-arrow-alt-circle-left mr-1"></i></i>Back</button>
-                        <button wire:click.prevent="savePR" class="btn btn-sm btn-danger">
+                        <button wire:click.prevent="savePR" class="btn btn-sm btn-danger" class="btn btn-sm btn-light" {{ $prHeader['status'] > '10' ? 'disabled' : '' }}>
                             <i class="fas fa-save mr-1"></i>Save</button>
                     </div>
                     

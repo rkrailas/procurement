@@ -123,14 +123,38 @@ class PurchaseRequisitionDetails extends Component
 
         public function releaseSourcing()
         {
-            //ตรวจสอบว่า Appvore หมดหรือยัง
-            $strsql = "SELECT approver FROM dec_val_workflow 
-                    WHERE status <> 'APPROVED' AND ref_doc_id =" . $this->prHeader['id']; 
-
+            //2022-01-30 IF there is no Decider selected (Ref. P2P-PUR-001-FS-Purchase Requisition_(2022-01-28))
+            $strsql = "SELECT approver FROM dec_val_workflow WHERE ref_doc_no='" . $this->prHeader['prno'] . "' AND approval_type='DECIDER'";
             if (count(DB::select($strsql)) == 0) {
-                dd('Release for Sourcing');
+                $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='113' AND class='PURCHASE REQUISITION'";
+                $data = DB::select($strsql);
+                if (count($data) > 0) {
+                    $this->dispatchBrowserEvent('popup-alert', ['title' => $data[0]->msg_text]);
+                }
             } else {
-                $this->dispatchBrowserEvent('popup-alert', ['title' => "Please check the approval."]);
+                DB::transaction(function () {
+                    //2022-01-30  Set PR ITEM Status to 'RELEASED FOR SOURCING' (20), disable editting for the PR
+                    DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=?
+                    WHERE prno=?" 
+                    , ['20', auth()->user()->id, Carbon::now(), $this->prHeader['prno']]);
+
+                    //2022-01-30  Update the DEC_VAL WORKFLOW Status to Open (20) for all validators.
+                    DB::statement("UPDATE dec_val_workflow SET status=?, changed_by=?, changed_on=?
+                    WHERE ref_doc_no=?" 
+                    , ['20', auth()->user()->id, Carbon::now(), $this->prHeader['prno']]);
+                });
+
+                //2022-01-30 Update PR HEADER Status to 'RELEASED FOR SOURCING' (20)
+                $this->prHeader['status'] = '20';
+                $this->savePR();
+
+                $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='101' AND class='PURCHASE REQUISITION'";
+                $data = DB::select($strsql);
+                if (count($data) > 0) {
+                    $this->dispatchBrowserEvent('popup-success', [
+                        'title' => str_replace("<PR No.>", $this->prHeader['prno'], $data[0]->msg_text),
+                    ]);
+                }
             };
         }
 
@@ -160,7 +184,6 @@ class PurchaseRequisitionDetails extends Component
         public function savePR()
         {
             if ($this->isCreateMode) {
-
                 $this->prHeader['prno'] = $this->getNewPrNo();
                 $this->prHeader['status'] = '10';
                 
@@ -182,30 +205,31 @@ class PurchaseRequisitionDetails extends Component
                             ]
                     );
 
+                    //30-01-2022 Hold
                     //History Log
-                    $xRandom = Str::random(20);
-                    DB::statement(
-                        "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
-                        , changed_by, changed_on)
+                    // $xRandom = Str::random(20);
+                    // DB::statement(
+                    //     "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
+                    //     , changed_by, changed_on)
                         
-                        VALUES(?,?,?,?,?,?,?,?,?,?)",
-                        [
-                            'PR', $this->prHeader['prno'], 'Insert', 'Header', 0, 'history_prheader', $xRandom, auth()->user()->company
-                            , auth()->user()->id, Carbon::now()
-                        ]
-                    );
+                    //     VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    //     [
+                    //         'PR', $this->prHeader['prno'], 'Insert', 'Header', 0, 'history_prheader', $xRandom, auth()->user()->company
+                    //         , auth()->user()->id, Carbon::now()
+                    //     ]
+                    // );
 
-                    DB::statement(
-                        "INSERT INTO history_prheader(history_ref, prno, ordertype, status, requestor, requested_for, buyer, delivery_address
-                        , request_date, company, site, functions, department, division, section, cost_center, edecision, valid_until
-                        , days_to_notify, notify_below_10, notify_below_25, notify_below_35, create_by, create_on)
+                    // DB::statement(
+                    //     "INSERT INTO history_prheader(history_ref, prno, ordertype, status, requestor, requested_for, buyer, delivery_address
+                    //     , request_date, company, site, functions, department, division, section, cost_center, edecision, valid_until
+                    //     , days_to_notify, notify_below_10, notify_below_25, notify_below_35, create_by, create_on)
                         
-                        SELECT '" . $xRandom . "', prno, ordertype, status, requestor, requested_for, buyer, delivery_address
-                        , request_date, company, site, functions, department, division, section, cost_center, edecision, valid_until
-                        , days_to_notify, notify_below_10, notify_below_25, notify_below_35, create_by, create_on
-                        FROM pr_header
-                        WHERE prno='" . $this->prHeader['prno'] . "' AND company='" . auth()->user()->company . "'"
-                    );
+                    //     SELECT '" . $xRandom . "', prno, ordertype, status, requestor, requested_for, buyer, delivery_address
+                    //     , request_date, company, site, functions, department, division, section, cost_center, edecision, valid_until
+                    //     , days_to_notify, notify_below_10, notify_below_25, notify_below_35, create_by, create_on
+                    //     FROM pr_header
+                    //     WHERE prno='" . $this->prHeader['prno'] . "' AND company='" . auth()->user()->company . "'"
+                    // );
                     //History Log End
 
                 });
@@ -222,37 +246,38 @@ class PurchaseRequisitionDetails extends Component
 
             } else {
                 DB::transaction(function () {
-                    DB::statement("UPDATE pr_header SET requested_for=?, delivery_address=?, request_date=?
-                    , site=?, functions=?, department=?, division=?, section=?, buyer=?, cost_center=?, edecision=?
-                    , valid_until=?, days_to_notify=?, notify_below_10=?, notify_below_25=?, notify_below_35=?, changed_by=?, changed_on=?
+                    DB::statement("UPDATE pr_header SET requested_for=?, delivery_address=?, request_date=?, site=?, functions=?, department=?
+                    , division=?, section=?, buyer=?, cost_center=?, edecision=?, valid_until=?, days_to_notify=?, notify_below_10=?, notify_below_25=?
+                    , notify_below_35=?, status=?, changed_by=?, changed_on=?
                     where prno=?" 
                     , [$this->prHeader['requested_for'], $this->prHeader['delivery_address'], $this->prHeader['request_date']
                     , $this->prHeader['site'], $this->prHeader['functions'], $this->prHeader['department'], $this->prHeader['division'], $this->prHeader['section']
                     , $this->prHeader['buyer'], $this->prHeader['cost_center'], $this->prHeader['edecision'], $this->prHeader['valid_until']
                     , $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10'], $this->prHeader['notify_below_25'], $this->prHeader['notify_below_35']
-                    , auth()->user()->id, Carbon::now(), $this->prHeader['prno']]);
+                    , $this->prHeader['status'], auth()->user()->id, Carbon::now(), $this->prHeader['prno']]);
                 
+                    //30-01-2022 Hold
                     //History Log
-                    $xRandom = Str::random(20);
-                    DB::statement(
-                        "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
-                        , changed_by, changed_on)
-                    VALUES(?,?,?,?,?,?,?,?,?,?)",
-                        [
-                            'PR', $this->prHeader['prno'], 'Update', 'Header', 0, 'history_prheader', $xRandom, auth()->user()->company
-                            , auth()->user()->id, Carbon::now()
-                        ]
-                    );
+                    // $xRandom = Str::random(20);
+                    // DB::statement(
+                    //     "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
+                    //     , changed_by, changed_on)
+                    // VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    //     [
+                    //         'PR', $this->prHeader['prno'], 'Update', 'Header', 0, 'history_prheader', $xRandom, auth()->user()->company
+                    //         , auth()->user()->id, Carbon::now()
+                    //     ]
+                    // );
 
-                    DB::statement("INSERT INTO history_prheader(history_ref, prno, ordertype, status, requestor, requested_for, buyer, delivery_address
-                        , request_date, company, site, functions, department, division, section, cost_center, edecision, valid_until
-                        , days_to_notify, notify_below_10, notify_below_25, notify_below_35, create_by, create_on, changed_by, changed_on)
-                            SELECT '" . $xRandom . "', prno, ordertype, status, requestor, requested_for, buyer, delivery_address
-                        , request_date, company, site, functions, department, division, section, cost_center, edecision, valid_until
-                        , days_to_notify, notify_below_10, notify_below_25, notify_below_35, create_by, create_on, changed_by, changed_on
-                        FROM pr_header
-                        WHERE prno='" . $this->prHeader['prno'] . "' AND company='" . auth()->user()->company . "'"
-                    );
+                    // DB::statement("INSERT INTO history_prheader(history_ref, prno, ordertype, status, requestor, requested_for, buyer, delivery_address
+                    //     , request_date, company, site, functions, department, division, section, cost_center, edecision, valid_until
+                    //     , days_to_notify, notify_below_10, notify_below_25, notify_below_35, create_by, create_on, changed_by, changed_on)
+                    //         SELECT '" . $xRandom . "', prno, ordertype, status, requestor, requested_for, buyer, delivery_address
+                    //     , request_date, company, site, functions, department, division, section, cost_center, edecision, valid_until
+                    //     , days_to_notify, notify_below_10, notify_below_25, notify_below_35, create_by, create_on, changed_by, changed_on
+                    //     FROM pr_header
+                    //     WHERE prno='" . $this->prHeader['prno'] . "' AND company='" . auth()->user()->company . "'"
+                    // );
                     //History Log End
                 });
 
@@ -753,27 +778,28 @@ class PurchaseRequisitionDetails extends Component
                     $lineno = $data[0]->lineno;
                 } 
 
+                //30-01-2022
                 //History Log
-                $xRandom = Str::random(20);
-                DB::statement(
-                    "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
-                    , changed_by, changed_on)
-                VALUES(?,?,?,?,?,?,?,?,?,?)",
-                    [
-                        'PR', $this->prHeader['prno'], 'Delete', 'Line Item', $lineno, 'history_pritem', $xRandom, auth()->user()->company
-                        , auth()->user()->id, Carbon::now()
-                    ]
-                );
+                // $xRandom = Str::random(20);
+                // DB::statement(
+                //     "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
+                //     , changed_by, changed_on)
+                // VALUES(?,?,?,?,?,?,?,?,?,?)",
+                //     [
+                //         'PR', $this->prHeader['prno'], 'Delete', 'Line Item', $lineno, 'history_pritem', $xRandom, auth()->user()->company
+                //         , auth()->user()->id, Carbon::now()
+                //     ]
+                // );
 
-                DB::statement("INSERT INTO history_pritem(history_ref, prno, prno_id, [lineno], partno, description, purchase_unit, unit_price
-                , currency, exchange_rate,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
-                ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on, changed_by, changed_on)
-                SELECT '" . $xRandom . "', prno, prno_id, [lineno], partno, description, purchase_unit, unit_price
-                , currency, exchange_rate,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
-                ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on, changed_by, changed_on
-                FROM pr_item
-                WHERE id=" . $this->deleteID
-                );
+                // DB::statement("INSERT INTO history_pritem(history_ref, prno, prno_id, [lineno], partno, description, purchase_unit, unit_price
+                // , currency, exchange_rate,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
+                // ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on, changed_by, changed_on)
+                // SELECT '" . $xRandom . "', prno, prno_id, [lineno], partno, description, purchase_unit, unit_price
+                // , currency, exchange_rate,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
+                // ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on, changed_by, changed_on
+                // FROM pr_item
+                // WHERE id=" . $this->deleteID
+                // );
                 //History Log End
 
                 DB::statement("DELETE FROM pr_item where id=? " , [$this->deleteID]);
@@ -794,105 +820,156 @@ class PurchaseRequisitionDetails extends Component
 
         public function addLineItem()
         {
-            DB::transaction(function () {
-                //หา Line no
-                $strsql = "SELECT MAX([lineno]) as max_lineno FROM pr_item WHERE prno='". $this->prHeader['prno'] . "'";
-                $data = DB::select($strsql);
-                if ($data) {
-                    $lineno = $data[0]->max_lineno + 1;
-                } else {
-                    $lineno = 0;
-                }
+            $xCehck = true;
+            //2022-01-30 > IF PR ORDER TYPE = STANDARD PARTS or BLANKET PARTS AND PR ITEM.Req Date - Current Date < PART.Lead Time
+            //(Ref. P2P-PUR-001-FS-Purchase Requisition_(2022-01-28))
 
-                //Assign ค่าให้ Partno, account_group กรณีเป็น Free Text
-                if ($this->orderType == "11" or $this->orderType == "21"){
-                    $this->prItem['partno'] = "";
-                    $this->prItem['account_group'] = "";
-                }
-
-                DB::statement("INSERT INTO pr_item (prno, prno_id, [lineno], partno, description, purchase_unit, unit_price, currency, exchange_rate
-                ,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
-                ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-                ,[$this->prHeader['prno'], $this->prHeader['id'], $lineno, $this->prItem['partno'], $this->prItem['description']
-                , $this->prItem['purchase_unit'], $this->prItem['unit_price'], $this->prItem['currency'], $this->prItem['exchange_rate']
-                , $this->prItem['purchase_group'], $this->prItem['account_group'], $this->prItem['qty']
-                , $this->prItem['req_date'], $this->prItem['internal_order'] ,$this->prItem['budget_code'], $this->prItem['over_1_year_life']
-                , $this->prItem['snn_service'], $this->prItem['snn_production'] ,$this->prItem['nominated_supplier'], $this->prItem['remarks']
-                , $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr'], "10" ,auth()->user()->id, Carbon::now()
-                ]);
-
-                //History Log
-                $xRandom = Str::random(20);
-                DB::statement(
-                    "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
-                    , changed_by, changed_on)
-                VALUES(?,?,?,?,?,?,?,?,?,?)",
-                    [
-                        'PR', $this->prHeader['prno'], 'Insert', 'Line Item', $lineno, 'history_pritem', $xRandom, auth()->user()->company
-                        , auth()->user()->id, Carbon::now()
-                    ]
-                );
-
-                DB::statement("INSERT INTO history_pritem(history_ref, prno, prno_id, [lineno], partno, description, purchase_unit, unit_price
-                , currency, exchange_rate,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
-                ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on, changed_by, changed_on)
-                SELECT '" . $xRandom . "', prno, prno_id, [lineno], partno, description, purchase_unit, unit_price
-                , currency, exchange_rate,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
-                ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on, changed_by, changed_on
-                FROM pr_item
-                WHERE prno='" . $this->prHeader['prno'] . "' AND [lineno]=" .  $lineno
-                );
-                //History Log End
-
-                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
+            $interval = Carbon::now()->diff($this->prItem['req_date']);
+            $days = $interval->format('%a');
+            if (($this->prHeader['ordertype'] == '10' OR $this->prHeader['ordertype'] == '20') 
+                AND $days < $this->prItem['supplier_lead_time'] )
+            {
+                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='115' AND class='PURCHASE REQUISITION'";
                 $data = DB::select($strsql);
                 if (count($data) > 0) {
-                    $this->dispatchBrowserEvent('popup-success', [
-                        'title' => str_replace("<PR Line No.>", $lineno, $data[0]->msg_text),
+                    $this->dispatchBrowserEvent('popup-alert', [
+                        'title' => $data[0]->msg_text,
                     ]);
                 }
-            });
-
-            $this->reset(['prItem']);
-            return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
-        }
-
-        public function updatedPrItemCurrency()
-        {
-            if ($this->prItem['currency'] != " ") {
-                $strsql = "SELECT ratio_from FROM currency_trans_ratios WHERE from_currency='" . $this->prItem['currency'] . "'";
-                $data = DB::select($strsql);
-                if ($data) {
-                    $this->prItem['exchange_rate'] = $data[0]->ratio_from;
-                }
+                $xCehck = false;
             }
+
+            //2022-01-30 IF PR ORDER TYPE = STANDARD PARTS or BLANKET PARTS AND QTY < minimum order quantity 
+            //(Ref. P2P-PUR-001-FS-Purchase Requisition_(2022-01-28))
+            
+            if (($this->prHeader['ordertype'] == '10' OR $this->prHeader['ordertype'] == '20') 
+                AND $this->prItem['qty'] < $this->prItem['min_order_qty'] )
+            {
+                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='114' AND class='PURCHASE REQUISITION'";
+                $data = DB::select($strsql);
+                if (count($data) > 0) {
+                    $this->dispatchBrowserEvent('popup-alert', [
+                        'title' => str_replace("<PART.MOQ>", $this->prItem['min_order_qty'], $data[0]->msg_text),
+                    ]);
+                }
+                $xCehck = false;
+            }
+
+            if ($xCehck){
+                DB::transaction(function () {
+                    //หา Line no
+                    $strsql = "SELECT MAX([lineno]) as max_lineno FROM pr_item WHERE prno='". $this->prHeader['prno'] . "'";
+                    $data = DB::select($strsql);
+                    if ($data) {
+                        $lineno = $data[0]->max_lineno + 1;
+                    } else {
+                        $lineno = 0;
+                    }
+    
+                    //Assign ค่าให้ Partno, account_group กรณีเป็น Free Text
+                    if ($this->orderType == "11" or $this->orderType == "21"){
+                        $this->prItem['partno'] = "";
+                        $this->prItem['account_group'] = "";
+                    }
+    
+                    DB::statement("INSERT INTO pr_item (prno, prno_id, [lineno], partno, description, purchase_unit, unit_price, currency, exchange_rate
+                    ,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
+                    ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                    ,[$this->prHeader['prno'], $this->prHeader['id'], $lineno, $this->prItem['partno'], $this->prItem['description']
+                    , $this->prItem['purchase_unit'], $this->prItem['unit_price'], $this->prItem['currency'], $this->prItem['exchange_rate']
+                    , $this->prItem['purchase_group'], $this->prItem['account_group'], $this->prItem['qty']
+                    , $this->prItem['req_date'], $this->prItem['internal_order'] ,$this->prItem['budget_code'], $this->prItem['over_1_year_life']
+                    , $this->prItem['snn_service'], $this->prItem['snn_production'] ,$this->prItem['nominated_supplier'], $this->prItem['remarks']
+                    , $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr'], "10" ,auth()->user()->id, Carbon::now()
+                    ]);
+    
+                    //30-01-2022 Hold
+                    //History Log
+                    // $xRandom = Str::random(20);
+                    // DB::statement(
+                    //     "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
+                    //     , changed_by, changed_on)
+                    // VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    //     [
+                    //         'PR', $this->prHeader['prno'], 'Insert', 'Line Item', $lineno, 'history_pritem', $xRandom, auth()->user()->company
+                    //         , auth()->user()->id, Carbon::now()
+                    //     ]
+                    // );
+    
+                    // DB::statement("INSERT INTO history_pritem(history_ref, prno, prno_id, [lineno], partno, description, purchase_unit, unit_price
+                    // , currency, exchange_rate,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
+                    // ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on, changed_by, changed_on)
+                    // SELECT '" . $xRandom . "', prno, prno_id, [lineno], partno, description, purchase_unit, unit_price
+                    // , currency, exchange_rate,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
+                    // ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on, changed_by, changed_on
+                    // FROM pr_item
+                    // WHERE prno='" . $this->prHeader['prno'] . "' AND [lineno]=" .  $lineno
+                    // );
+                    //History Log End
+    
+                    $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
+                    $data = DB::select($strsql);
+                    if (count($data) > 0) {
+                        $this->dispatchBrowserEvent('popup-success', [
+                            'title' => str_replace("<PR Line No.>", $lineno, $data[0]->msg_text),
+                        ]);
+                    }
+                });
+    
+                $this->reset(['prItem']);
+                return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+            }
+            
         }
+
+        // Not use Ref. 18-Jan-2022: update editable and non-editable fields
+        // public function updatedPrItemCurrency()
+        // {
+        //     if ($this->prItem['currency'] != " ") {
+        //         $strsql = "SELECT ratio_from FROM currency_trans_ratios WHERE from_currency='" . $this->prItem['currency'] . "'";
+        //         $data = DB::select($strsql);
+        //         if ($data) {
+        //             $this->prItem['exchange_rate'] = $data[0]->ratio_from;
+        //         }
+        //     }
+        // }
 
         public function updatedPrItemPartno() 
         {
-            $strsql = "SELECT partno, part_name, purchase_uom, purchase_group, account_group, brand, model, skip_rfq, skip_doa, primary_supplier
-                    FROM part_master WHERE partno = '" . $this->prItem['partno'] . "'";
+            $strsql = "SELECT a.partno, a.part_name, a.purchase_uom, a.purchase_group, a.account_group, a.brand, a.model, a.skip_rfq, a.skip_doa
+                    , a.primary_supplier, a.base_price AS unit_price, a.currency, b.ratio_from AS exchange_rate, a.min_order_qty, a.supplier_lead_time
+                    FROM part_master a
+                    LEFT JOIN currency_trans_ratios b ON a.currency = b.from_currency
+                    WHERE partno = '" . $this->prItem['partno'] . "'";
             $data = DB::select($strsql);
-            
+
             if ($data) {
-                $this->prItem['description'] = $data[0]->part_name;
-                $this->prItem['purchase_unit'] = $data[0]->purchase_uom;
-                $this->prItem['purchase_group'] = $data[0]->purchase_group;
-                $this->prItem['account_group'] = $data[0]->account_group;
-                $this->prItem['brand'] = $data[0]->brand;
-                $this->prItem['model'] = $data[0]->model;
-                $this->prItem['skip_rfq'] = boolval($data[0]->skip_rfq);
-                $this->prItem['skip_doa'] = boolval($data[0]->skip_doa);
-                // $this->prItem['budget_code'] = ""; //???ยังไม่มีที่มา
-                // $this->prItem['snn_service'] = false; 
-                // $this->prItem['snn_production'] = false; 
-                $this->prItem['nominated_supplier'] = $data[0]->primary_supplier;
-                // $this->prItem['reference_pr'] = ""; //???ดึงมาจากไหน
-                // $this->prItem['over_1_year_life'] = false;
-                // $this->prItem['remarks'] = "";
+                if ($data[0]->min_order_qty) {
+                    $this->prItem['description'] = $data[0]->part_name;
+                    $this->prItem['purchase_unit'] = $data[0]->purchase_uom;
+                    $this->prItem['purchase_group'] = $data[0]->purchase_group;
+                    $this->prItem['account_group'] = $data[0]->account_group;
+                    $this->prItem['brand'] = $data[0]->brand;
+                    $this->prItem['model'] = $data[0]->model;
+                    $this->prItem['skip_rfq'] = boolval($data[0]->skip_rfq);
+                    $this->prItem['skip_doa'] = boolval($data[0]->skip_doa);
+                    $this->prItem['unit_price'] = round($data[0]->unit_price,2);
+                    $this->prItem['currency'] = $data[0]->currency;
+                    $this->prItem['exchange_rate'] = round($data[0]->exchange_rate,2);
+                    // $this->prItem['budget_code'] = ""; //???ยังไม่มีที่มา
+                    // $this->prItem['snn_service'] = false; 
+                    // $this->prItem['snn_production'] = false; 
+                    $this->prItem['nominated_supplier'] = $data[0]->primary_supplier;
+                    // $this->prItem['reference_pr'] = ""; //???ดึงมาจากไหน
+                    // $this->prItem['over_1_year_life'] = false;
+                    // $this->prItem['remarks'] = "";
+                    $this->prItem['min_order_qty'] = $data[0]->min_order_qty;
+                    $this->prItem['supplier_lead_time'] = $data[0]->supplier_lead_time;                    
+                }else{
+                    $this->dispatchBrowserEvent('popup-alert', ['title' => "Minimum order quantity in part master not config"]);
+                }
             }
-            
         }
     //Line Item End
 
@@ -959,7 +1036,7 @@ class PurchaseRequisitionDetails extends Component
                         , prh.requested_for, prh.delivery_address, FORMAT(prh.request_date,'yyy-MM-dd') AS request_date, prh.company, prh.site, prh.functions
                         , prh.department, prh.division, prh.section, reqf.email, reqf.phone , prh.buyer, prh.cost_center, prh.edecision
                         , pr_status.description AS statusname, FORMAT(prh.valid_until,'yyy-MM-dd') AS valid_until, prh.days_to_notify, prh.notify_below_10
-                        , prh.notify_below_25, prh.notify_below_35, company.name as company_name, prh.ordertype, prh.requestor
+                        , prh.notify_below_25, prh.notify_below_35, company.name as company_name, prh.ordertype, prh.requestor, prh.status
                         FROM pr_header prh
                         LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
                         LEFT JOIN users req ON req.id=prh.requestor
