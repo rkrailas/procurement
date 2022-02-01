@@ -15,15 +15,18 @@ class RequisitionInbox extends Component
     //Search
     public $doctype_dd, $status_dd, $doctype, $status;
 
-    //Grid
-    //for Grid
+    //In grid
     public $sortDirection = "desc";
     public $sortBy = "lastupdate";
     public $numberOfPage = 10;
 
+    public function approvePR($prno)
+    {
+        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $prno . "&tab=auth");
+    }
+
     public function resetSearch()
     {
-        first_function();
         $this->reset(['doctype', 'status']);
     }
 

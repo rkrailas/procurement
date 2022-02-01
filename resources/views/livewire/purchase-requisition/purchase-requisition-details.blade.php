@@ -45,7 +45,7 @@
                         <input class="form-control form-control-sm" type="text" id="requestor_name" readonly wire:model.defer="prHeader.requestor_name">
                     </div>
                     <div class="col-md-3">
-                        <label>Requested For</label>
+                        <label>Requested For <span style="color: red">*</span></label>
                         <x-select2 id="requestedfor-select2" wire:model.defer="prHeader.requested_for">
                             @foreach($requested_for_dd as $row)
                             <option value="{{ $row->id }}">
@@ -53,9 +53,15 @@
                             </option>
                             @endforeach
                         </x-select2>
+                        @error('requested_for') <span class="text-red">This field is required.</span> @enderror
+                        {{-- @error('requested_for')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror --}}
                     </div>
                     <div class="col-md-3">
-                        <label>Delivery Address</label>
+                        <label>Delivery Address <span style="color: red">*</span></label>
                         <select class="form-control form-control-sm" id="delivery_address" wire:model.defer="prHeader.delivery_address">
                             <option value="">--- Please Select ---</option>
                             @foreach($delivery_address_dd as $row)
@@ -64,6 +70,7 @@
                             </option>
                             @endforeach
                         </select>
+                        @error('delivery_address') <span class="text-red">This field is required.</span> @enderror
                     </div>
                     <div class="col-3">
                         <label class="">Request Date</label>
@@ -74,7 +81,7 @@
                                 </span>
                             </div>
                             <x-datepicker wire:model.defer="prHeader.request_date" id="request_date"
-                                :error="'date'" required/>
+                                :error="'date'"/>
                         </div>
                     </div>
                 </div>
@@ -119,18 +126,18 @@
         
                 <div class="row">
                     <div class="col-md-3">
-                        <label for="ordertype">Buyer</label>
+                        <label>Buyer <span style="color: red">*</span></label>
                         <x-select2 id="buyer-select2" wire:model.defer="prHeader.buyer">
-                            <option value=" ">--- Please Select ---</option>
                             @foreach($buyer_dd as $row)
                             <option value="{{ $row->id }}">
                                 {{ $row->fullname }}
                             </option>
                             @endforeach
                         </x-select2>
+                        @error('buyer') <span class="text-red">This field is required.</span> @enderror
                     </div>
                     <div class="col-md-6">
-                        <label for="ordertype">Cost Center (Department Code)</label>
+                        <label>Cost Center (Department Code) <span style="color: red">*</span></label>
                         <select class="form-control form-control-sm" id="cost_center" wire:model.defer="prHeader.cost_center">
                             <option value="">--- Please Select ---</option>
                             @foreach($cost_center_dd as $row)
@@ -139,6 +146,7 @@
                             </option>
                             @endforeach
                         </select>
+                        @error('cost_center') <span class="text-red">This field is required.</span> @enderror
                     </div>
                     <div class="col-md-3">
                         {{-- Remove ref 18-Jan-2022: e-decision at attachment level to support header and item level validation --}}
@@ -146,6 +154,26 @@
                         <input class="form-control form-control-sm" type="text" id="edecision" maxlength="100" wire:model.defer="prHeader.edecision"> --}}
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Budget Year</label>
+                        <select class="form-control form-control-sm" id="budget_year" wire:model.defer="prHeader.budget_year">
+                            <option value="">--- Please Select ---</option>
+                            @foreach($budgetyear_dd as $row)
+                            <option value="{{ $row['year'] }}">
+                                {{ $row['year'] }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-9">
+                        <label for="prno">Purpose of PR <span style="color: red">*</span></label>
+                        <input class="form-control form-control-sm" type="text" maxlength="250" wire:model.defer="prHeader.purpose_pr">
+                        @error('purpose_pr') <span class="text-red">This field is required.</span> @enderror
+
+                    </div>
+                </div>
+
             </div>
         </div>
         {{-- Header End--}}
@@ -167,7 +195,7 @@
                                 </span>
                             </div>
                             <x-datepicker wire:model.defer="prHeader.valid_until" id="valid_until"
-                                :error="'date'" required/>
+                                :error="'date'"/>
                         </div>
                     </div>                    
                     <div class="col-md-3">
@@ -272,8 +300,12 @@
                                 <td scope="col" class="text-right pr-2">{{ number_format($itemList[$index]['final_price'], 2) }} </td>
                                 <td scope="col">
                                     <center>
-                                        <a href="" wire:click.prevent="confirmDelete('{{ $itemList[$index]['id'] }}', 'item')">
+                                        {{-- 31-01-2022 > Change to edit button  --}}
+                                        {{-- <a href="" wire:click.prevent="confirmDelete('{{ $itemList[$index]['id'] }}', 'item')">
                                             <i class="fas fa-times text-center" style="color: red"></i>
+                                        </a> --}}
+                                        <a href="" wire:click.prevent="editLineItem('{{ $itemList[$index]['id'] }}')">
+                                            <i class="fa fa-edit mr-2"></i>
                                         </a>
                                     </center>
                                 </td>
@@ -317,7 +349,7 @@
                                 </span>
                             </div>
                             <x-datepicker wire:model.defer="prDeliveryPlan.delivery_date" id="plan_delivery_date_1"
-                                :error="'date'" required/>
+                                :error="'date'"/>
                         </div>
                     </div>
                 </div>
@@ -411,6 +443,8 @@
                                               <tr>
                                                 <th scope="col">User ID</th>
                                                 <th scope="col">Name</th>
+                                                <th scope="col">Company</th>
+                                                <th scope="col">Position</th>
                                                 <th scope="col">Status</th>
                                                 <th scope="col" style="width: 20%">Action</th>
                                                 <th scope="col"></th>
@@ -421,6 +455,8 @@
                                               <tr>
                                                 <td scope="col">{{ $deciderList[$index]['approver'] }}</td>
                                                 <td scope="col">{{ $deciderList[$index]['fullname'] }}</td>
+                                                <td scope="col">{{ $deciderList[$index]['company'] }}</td>
+                                                <td scope="col">{{ $deciderList[$index]['position'] }}</td>
                                                 <td scope="col">{{ $deciderList[$index]['status'] }}</td>
                                                 <td scope="col">
                                                     @if (auth()->user()->username == $deciderList[$index]['approver'] AND $isValidatorApprove)
@@ -484,6 +520,8 @@
                                                 <tr>
                                                 <th scope="col">User ID</th>
                                                 <th scope="col">Name</th>
+                                                <th scope="col">Company</th>
+                                                <th scope="col">Position</th>
                                                 <th scope="col">Status</th>
                                                 <th scope="col" style="width: 20%">Action</th>
                                                 <th scope="col"></th>
@@ -494,6 +532,8 @@
                                                 <tr>
                                                     <td scope="col">{{ $validatorList[$index]['approver'] }}</td>
                                                     <td scope="col">{{ $validatorList[$index]['fullname'] }}</td>
+                                                    <td scope="col">{{ $validatorList[$index]['company'] }}</td>
+                                                    <td scope="col">{{ $validatorList[$index]['position'] }}</td>
                                                     <td scope="col">{{ $validatorList[$index]['status'] }}</td>
                                                     <td scope="col">
                                                         @if (auth()->user()->username == $validatorList[$index]['approver'] AND $isValidatorApprove == false)
@@ -539,7 +579,7 @@
                     <div class="row">
                         <div class="col-md-5">
                             <label>Attachment Level <span style="color: blue; font-weight: normal">(Please select before add new files.)</span></label>
-                            <select class="form-control form-control-sm" required wire:model="attachment_lineid">
+                            <select class="form-control form-control-sm" wire:model="attachment_lineid">
                                 <option value="">--- Please Select ---</option>
                                 <option value="0">0 : Level PR Header</option>
                                 @foreach($prLineNoAtt_dd as $row)
@@ -646,13 +686,6 @@
                             <tbody>
                                 @foreach ($historylog as $row)
                                 <tr>
-                                    {{-- <td scope="col">{{ $row['action_type'] }} </td>
-                                    <td scope="col">{{ $row['action_where'] }} </td>
-                                    <td scope="col">{{ $row['line_no'] }} </td>
-                                    <td scope="col">{{ $row['history_table'] }} </td>
-                                    <td scope="col">{{ $row['history_ref'] }} </td>
-                                    <td scope="col">{{ $row['fname'] }} </td>
-                                    <td scope="col">{{ \Carbon\Carbon::parse($row['changed_on'])->format('d-M-Y H:i:s') }} </td> --}}
                                     <td scope="col">{{ $row->action_type }} </td>
                                     <td scope="col">{{ $row->action_where }} </td>
                                     <td scope="col">{{ $row->line_no }} </td>
@@ -694,12 +727,13 @@
                         <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
                             <i class="fas fa-check mr-2"></i>Release for PO</button>
                         <a href="PRForm/{{ $prHeader['prno'] }}" target="_blank">
-                            <button class="btn btn-sm btn-danger">
+                            <button class="btn btn-sm btn-danger" {{ $prHeader['prno'] ? '' : 'disabled' }}>
                                 <i class="fas fa-print mr-2"></i>Print</button>
                         </a>
                         <button wire:click.prevent="" class="btn btn-sm btn-light" disabled>
                             <i class="fas fa-times mr-2"></i>Cancel</button>
-                        <button wire:click.prevent="confirmDelete('', 'deletePrHeader')" class="btn btn-sm btn-light" {{ $prHeader['prno'] ? '' : 'disabled' }}>
+                        <button wire:click.prevent="confirmDelete('{{ $prHeader['prno'] }}', 'deletePrHeader')" 
+                            class="btn btn-sm btn-light" {{ $prHeader['prno'] ? '' : 'disabled' }}>
                             <i class="fas fa-trash-alt mr-2"></i>Delete</button>
                         <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
                             <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>

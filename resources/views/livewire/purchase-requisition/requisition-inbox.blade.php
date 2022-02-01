@@ -111,6 +111,7 @@
                                         class="fa fa-arrow-down {{ $sortBy === 'lastupdate' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
+                            <th scope="col"></th>
                         </thead>
                         <tbody>
                             @foreach ($workflow_list as $row)
@@ -121,6 +122,13 @@
                                 <td scope="col">{{ $row->status }} </td>
                                 <td scope="col">{{ $row->approval_type }} </td>
                                 <td scope="col" class="text-center">{{ \Carbon\Carbon::parse($row->lastupdate)->format('d-M-Y') }} </td>
+                                <td>
+                                    <center>
+                                        <a href="" wire:click.prevent="approvePR('{{ $row->ref_doc_no }}')">
+                                            <i class="fas fa-stamp"></i>
+                                        </a>
+                                    </center>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>

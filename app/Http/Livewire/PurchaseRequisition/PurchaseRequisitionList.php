@@ -12,7 +12,7 @@ class PurchaseRequisitionList extends Component
 {
     //for Pagination
     use WithPagination; 
-    //protected $paginationTheme = 'bootstrap'; 
+    //protected $paginationTheme = 'bootstrap';
 
     //for Grid
     public $sortDirection = "desc";
@@ -26,6 +26,7 @@ class PurchaseRequisitionList extends Component
     //for Dropdown
     public $ordertype_dd, $site_dd, $requestor_dd, $requestedfor_dd, $buyer_dd, $status_dd;
 
+    //In Modal
     public $selectedOrderType, $workAtCompany;
 
     public function edit($prno)
@@ -123,10 +124,8 @@ class PurchaseRequisitionList extends Component
     {
         $this->loadDropdownList();
         //แสดงรายการ PR >> $prno, $ordertype, $site, $requestdate_from, $requestdate_to, $requestor, $requested_for, $buyer, $status;
-        //???ยังไม่รู้ว่าเงื่อนไขตอน On Initialization ต้องเอาข้อมูลอะไรมาแสดงบ้าง
-        //Validate
-        
-        $isValidate = true;
+
+        //Validation
         if ($this->requestdate_from > $this->requestdate_to) {
             $strsql = "select msg_text from message_list where msg_no='112'";
             $data = DB::select($strsql);
@@ -135,15 +134,18 @@ class PurchaseRequisitionList extends Component
                     'title' => $data[0]->msg_text,
                 ]);
             }
-        }else if ($this->requestdate_from == "" or $this->requestdate_to == "")  {
+            $this->skipRender();
+
+        }else if ($this->requestdate_from == "" OR $this->requestdate_to == "")  {
             $this->dispatchBrowserEvent('popup-alert', [
                 'title' => "Please ensure From Date is not empty",
             ]);
+            $this->skipRender();
         }
 
         $xWhere = " WHERE ISNULL(prh.deletion_flag, 0) <> 1  
-                    AND prh.prno LIKE '%" . $this->prno . "%' 
-                    AND prh.request_date BETWEEN '" . $this->requestdate_from . "' AND '" . $this->requestdate_to . "'";
+        AND prh.prno LIKE '%" . $this->prno . "%' 
+        AND prh.request_date BETWEEN '" . $this->requestdate_from . "' AND '" . $this->requestdate_to . "'";
 
         if ($this->ordertype) {
             $xWhere = $xWhere . "AND prh.ordertype IN (" . myWhereIn($this->ordertype) . ")";
@@ -164,26 +166,29 @@ class PurchaseRequisitionList extends Component
             $xWhere = $xWhere . "AND prh.status IN (" . myWhereIn($this->status) . ")";
         }
 
-        $xWhere = $xWhere . " ORDER BY " . $this->sortBy . " " . $this->sortDirection;
+        $strsql = "SELECT prh.prno, ort.description AS order_type, ISNULL(req.name,'') + ' ' + ISNULL(req.lastname,'') AS requested_for
+                , pr_status.description AS status, prh.request_date, ISNULL(buyer.name,'') + ' ' + ISNULL(buyer.lastname,'') AS buyer
+                , pri.total_budget, pri.total_final_price, site.name as site
+                FROM pr_header prh
+                LEFT JOIN (SELECT prno, SUM(qty * unit_price_local) as total_budget
+                            , SUM(final_price_local) as total_final_price 
+                            FROM pr_item GROUP BY prno) pri ON pri.prno=prh.prno
+                LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
+                LEFT JOIN users req ON req.id=prh.requested_for
+                LEFT JOIN pr_status ON pr_status.status=prh.status
+                LEFT JOIN users buyer ON buyer.id=prh.buyer
+                LEFT JOIN site ON site.site=prh.site";
 
-        $strsql = "SELECT prh.prno, ort.description AS order_type
-                    , ISNULL(req.name,'') + ' ' + ISNULL(req.lastname,'') AS requested_for
-                    ,prh.site, pr_status.description AS status, prh.request_date
-                    , ISNULL(buyer.name,'') + ' ' + ISNULL(buyer.lastname,'') AS buyer
-                    , pri.total_budget, pri.total_final_price
-                    FROM pr_header prh
-                    LEFT JOIN (SELECT prno, SUM(qty * unit_price) as total_budget
-                                , SUM(final_price) as total_final_price 
-                                FROM pr_item GROUP BY prno) pri ON pri.prno=prh.prno
-                    LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
-                    LEFT JOIN users req ON req.id=prh.requested_for
-                    LEFT JOIN pr_status ON pr_status.status=prh.status
-                    LEFT JOIN users buyer ON buyer.id=prh.buyer";
         $strsql = $strsql . $xWhere;
+        $strsql = $strsql . " GROUP BY prh.prno, ort.description, req.name, req.lastname, pr_status.description, prh.request_date
+                        , buyer.name, buyer.lastname, pri.total_budget, pri.total_final_price, site.name";
+        $strsql = $strsql . " ORDER BY " . $this->sortBy . " " . $this->sortDirection;
+
         $pr_list = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
-        return view('livewire.purchase-requisition.purchase-requisition-list', [
-            'pr_list' => $pr_list
-        ]);
+        return view('livewire.purchase-requisition.purchase-requisition-list', 
+            [
+                'pr_list' => $pr_list
+            ]);
     }
 }
