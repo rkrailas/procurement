@@ -181,7 +181,7 @@ class PurchaseRequisitionList extends Component
 
         $strsql = $strsql . $xWhere;
         $strsql = $strsql . " GROUP BY prh.prno, ort.description, req.name, req.lastname, pr_status.description, prh.request_date
-                        , buyer.name, buyer.lastname, pri.total_budget, pri.total_final_price, site.name";
+                        , buyer.name, buyer.lastname, pri.total_budget, pri.total_final_price, site.name, prh.site, prh.status";
         $strsql = $strsql . " ORDER BY " . $this->sortBy . " " . $this->sortDirection;
 
         $pr_list = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);

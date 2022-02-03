@@ -102,7 +102,7 @@
                                     <i class="fas fa-calendar"></i>
                                 </span>
                             </div>
-                            <x-datepicker wire:model.defer="prItem.req_date" id="request_date1" :error="'date'"/>
+                            <x-datepicker autocomplete="off" wire:model.defer="prItem.req_date" id="request_date2" :error="'date'"/>
                         </div>
                         @error('req_date') <span class="text-red">This field is required.</span> @enderror
                     </div>

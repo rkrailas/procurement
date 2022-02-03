@@ -23,7 +23,7 @@
 
                 {{-- Part --}}
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-12">
                         <label>Part <span style="color: red">*</span></label>
                         <x-select2 id="partno-select2" wire:model.defer="prItem.partno">
                             @foreach($partno_dd as $row)
@@ -33,10 +33,6 @@
                             @endforeach
                         </x-select2>
                         @error('partno') <span class="text-red">This field is required.</span> @enderror
-                    </div>
-                    <div class="col-md-4">
-                    </div>
-                    <div class="col-md-4">
                     </div>
                 </div>
 
@@ -106,7 +102,7 @@
                                     <i class="fas fa-calendar"></i>
                                 </span>
                             </div>
-                            <x-datepicker wire:model.defer="prItem.req_date" id="request_date1" :error="'date'"/>
+                            <x-datepicker autocomplete="off" wire:model.defer="prItem.req_date" id="request_date1" :error="'date'"/>
                         </div>
                         @error('req_date') <span class="text-red">This field is required.</span> @enderror
                     </div>

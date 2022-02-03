@@ -1,10 +1,14 @@
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
   <!-- Brand Logo -->
-  <div class="brand-link">
+  {{-- <div class="brand-link">
     <img src="{{ asset('images/nissan_logo.png') }}" alt="AdminLTE Logo"
       class="brand-image img-rounded elevation-3" style="opacity: .8">
     <span class="brand-text" style="font-size: 18px; color: #c3002f;;font-weight: bold;">P2P System</span>
+  </div> --}}
+
+  <div class="brand-link d-flex justify-content-center" style="height:50px">
+    <img src="{{ asset('images/nissan.png') }}" alt="AdminLTE Logo" style=" height:30px;">
   </div>
 
   <!-- Sidebar -->

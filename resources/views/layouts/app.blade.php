@@ -44,6 +44,11 @@
     <link rel="stylesheet" href="{{ asset('backend/plugins/dropzone/dropzone.min.css') }}" type="text/css" />
     
 <style>
+        /* เปลี่ยนสี background ตรง Logo */
+        .brand-link{
+            background-color: #fff;
+        }
+
         label {
             margin-bottom: 0px;
         }

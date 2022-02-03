@@ -288,7 +288,13 @@
                             @foreach ($itemList as $index => $row)
                             <tr>
                                 {{-- $bankDetails[$index]['taxref'] --}}
-                                <td scope="col">{{ $itemList[$index]['lineno'] }}</td>
+                                <td>
+                                    <div d-inline ml-2>
+                                        <input wire:model="selectedRows" type="checkbox" value="{{ $itemList[$index]['id'] }}"
+                                            id="{{ $itemList[$index]['lineno'] }}">
+                                        <label for="{{ $itemList[$index]['lineno'] }}"></label>
+                                    </div>
+                                </td>
                                 <td scope="col">{{ $itemList[$index]['partno'] }}</td>
                                 <td scope="col">{{ $itemList[$index]['description'] }}</td>                                
                                 <td scope="col">{{ $itemList[$index]['status'] }}</td>
@@ -724,21 +730,28 @@
                     <div>
                         <button wire:click.prevent="releaseSourcing" class="btn btn-sm btn-danger" {{ $prHeader['prno'] ? '' : 'disabled' }} >
                             <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
+
                         <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
                             <i class="fas fa-check mr-2"></i>Release for PO</button>
+
                         <a href="PRForm/{{ $prHeader['prno'] }}" target="_blank">
                             <button class="btn btn-sm btn-danger" {{ $prHeader['prno'] ? '' : 'disabled' }}>
                                 <i class="fas fa-print mr-2"></i>Print</button>
                         </a>
-                        <button wire:click.prevent="" class="btn btn-sm btn-light" disabled>
+
+                        <button wire:click.prevent="cancel" class="btn btn-sm btn-light">
                             <i class="fas fa-times mr-2"></i>Cancel</button>
-                        <button wire:click.prevent="confirmDelete('{{ $prHeader['prno'] }}', 'deletePrHeader')" 
+
+                        <button wire:click.prevent="confirmDeletePrHeader_Detail" 
                             class="btn btn-sm btn-light" {{ $prHeader['prno'] ? '' : 'disabled' }}>
                             <i class="fas fa-trash-alt mr-2"></i>Delete</button>
-                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
+
+                        <button wire:click.prevent="reopen" class="btn btn-sm btn-danger">
                             <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
+
                         <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
                             <i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
+
                     </div>
                     <div>
                         <button wire:click.prevent="backToPRList" class="btn btn-sm btn-light">
@@ -782,6 +795,8 @@
     document.addEventListener("livewire:load", function() { 
         @this.setDefaultSelect2()
     });
+
+</script>
 
 </script>
 @endpush
