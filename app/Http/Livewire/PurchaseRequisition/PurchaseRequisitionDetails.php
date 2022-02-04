@@ -654,6 +654,12 @@ class PurchaseRequisitionDetails extends Component
     //Attachment End
 
     //Authorization
+        public function updatedDecider()
+        {
+            //???ถึงตรงนี้
+            dd('here');
+        }
+
         public function validatorDeciderApprove()
         {
             DB::statement("UPDATE dec_val_workflow SET status=?, changed_by=?, changed_on=?
@@ -1691,8 +1697,8 @@ class PurchaseRequisitionDetails extends Component
             $this->prHeader['ordertypename'] = $data[0]->ordertypename;
         }
 
-        $this->prHeader['status'] = "";
-        $this->prHeader['statusname'] = "";
+        $this->prHeader['status'] = "01";
+        $this->prHeader['statusname'] = "Draft";
 
         //requestor
         $this->prHeader['requestor'] = auth()->user()->id;
@@ -1712,7 +1718,7 @@ class PurchaseRequisitionDetails extends Component
             $this->prHeader['delivery_address'] = $data[0]->address_id;
         }
 
-        $this->prHeader['request_date'] = date_format(Carbon::now()->addMonth(+1), 'Y-m-d');
+        $this->prHeader['request_date'] = date_format(Carbon::now(), 'Y-m-d');
 
         //company
         $this->prHeader['company'] = auth()->user()->company;
