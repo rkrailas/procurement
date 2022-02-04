@@ -92,7 +92,7 @@
                     <div class="col-md-4">
                         <label>QTY <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="number" step="0.01" wire:model.lazy="prItem.qty">
-                        @error('qty') <span class="text-red">This field is required.</span> @enderror
+                        @error('qty') <span class="text-red">This field is required or Exceed Length.</span> @enderror
                     </div>
                     <div class="col-md-4">
                         <label>Requested Delivery Date <span style="color: red">*</span></label>
@@ -131,7 +131,7 @@
                         </x-select2>
                         @error('budget_code') <span class="text-red">This field is required.</span> @enderror
                     </div>
-                    <div class="col-md-4">p 
+                    <div class="col-md-4">
                         <label>Brand</label>
                         <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.brand">
                     </div>

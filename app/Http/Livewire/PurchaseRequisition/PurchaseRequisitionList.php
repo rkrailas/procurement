@@ -186,6 +186,8 @@ class PurchaseRequisitionList extends Component
 
         $pr_list = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
+        $this->resetPage();
+
         return view('livewire.purchase-requisition.purchase-requisition-list', 
             [
                 'pr_list' => $pr_list

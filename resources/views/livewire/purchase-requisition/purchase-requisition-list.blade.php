@@ -116,8 +116,8 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-12">
-                        <button wire:click.prevent="resetSearch" class="btn btn-sm btn-light">CLEAR</button>
+                    <div class="col-md-12 d-flex justify-content-end">
+                        <button wire:click.prevent="resetSearch" class="btn btn-sm btn-light mr-1">CLEAR</button>
                         <button wire:click.prevent="searchPR" class="btn btn-sm btn-danger">APPLY</button>
                     </div>
                 </div>
@@ -323,6 +323,8 @@
     })
 
     window.addEventListener('clear-select2', event => {
+        clearSelect2('ordertype-select2');
+        clearSelect2('site-select2');
         clearSelect2('requestor-select2');
         clearSelect2('requestedfor-select2');
         clearSelect2('buyer-select2');

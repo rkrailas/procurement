@@ -354,19 +354,27 @@ class PurchaseRequisitionDetails extends Component
                 'purpose_pr' => 'required',
             ])->validate();
 
-            //31-01-2022 Validate IF Order Type = Blanket Free Text & IF UoM <> PJ (Project) and PR Header.Valid Until > End of Fiscal Year
-            $xValidate = true;
-            $xYear = $this->prHeader['budget_year'] + 1;
-            $xEndFiscalYear = $xYear . '-03-31';
-            if ($this->prHeader['ordertype'] == '21' AND  $this->prHeader['valid_until'] > $xEndFiscalYear) {
-                $xValidate = false;
+            if ($this->prHeader['ordertype'] == '21') {
+                Validator::make($this->prHeader, [
+                    'budget_year' => 'required',
+                ])->validate();
+            }
 
-                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='116' AND class='PURCHASE REQUISITION'";
-                $data = DB::select($strsql);
-                if (count($data) > 0) {
-                    $this->dispatchBrowserEvent('popup-alert', [
-                        'title' => $data[0]->msg_text,
-                    ]);
+            $xValidate = true;
+            //31-01-2022 Validate IF Order Type = Blanket Free Text & IF UoM <> PJ (Project) and PR Header.Valid Until > End of Fiscal Year
+            if ($this->prHeader['ordertype'] == '21') {
+                $xYear = $this->prHeader['budget_year'] + 1;
+                $xEndFiscalYear = $xYear . '-03-31';
+                if ($this->prHeader['ordertype'] == '21' AND  $this->prHeader['valid_until'] > $xEndFiscalYear) {
+                    $xValidate = false;
+    
+                    $strsql = "SELECT msg_text FROM message_list WHERE msg_no='116' AND class='PURCHASE REQUISITION'";
+                    $data = DB::select($strsql);
+                    if (count($data) > 0) {
+                        $this->dispatchBrowserEvent('popup-alert', [
+                            'title' => $data[0]->msg_text,
+                        ]);
+                    }
                 }
             }
 
@@ -1193,7 +1201,7 @@ class PurchaseRequisitionDetails extends Component
                 Validator::make($this->prItem, [
                     'partno' => 'required',
                     'description' => 'required',
-                    'qty' => 'required',
+                    'qty' => 'required|numeric|min:0|max:99999999.99', 
                     'req_date' => 'required',
                     'budget_code' => 'required',
                 ])->validate();
@@ -1205,7 +1213,7 @@ class PurchaseRequisitionDetails extends Component
                     'exchange_rate' => 'required',
                     'purchase_unit' => 'required',
                     'unit_price' => 'required',
-                    'qty' => 'required',
+                    'qty' => 'required|numeric|min:0|max:99999999.99',
                     'req_date' => 'required',
                     'budget_code' => 'required',
                 ])->validate();
@@ -1533,7 +1541,7 @@ class PurchaseRequisitionDetails extends Component
 
         //Item List
             $strsql = "SELECT pri.id, pri.[lineno], pri.description, pri.partno, pri.[status] + ' : ' + sts.[description] AS [status]
-                    , pri.qty, pri.purchase_unit, pri.unit_price, pri.qty * pri.unit_price AS budgettotal, pri.req_date, pri.final_price
+                    , pri.qty, pri.purchase_unit, pri.unit_price, pri.qty * pri.unit_price AS budgettotal, pri.req_date, pri.final_price, pri.currency
                     FROM pr_item pri
                     LEFT JOIN pr_status sts ON sts.status=pri.[status]
                     WHERE pri.prno='" . $this->prHeader['prno'] . "'

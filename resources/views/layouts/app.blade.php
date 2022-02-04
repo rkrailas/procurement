@@ -59,7 +59,7 @@
         
         
         .nissanTB th {
-            white-space: nowrap;
+            /* white-space: nowrap; */
             background-color:#c3002f;
             color: white;
         }

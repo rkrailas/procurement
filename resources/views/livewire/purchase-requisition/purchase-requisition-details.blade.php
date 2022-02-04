@@ -165,10 +165,11 @@
                             </option>
                             @endforeach
                         </select>
+                        @error('budget_year') <span class="text-red">This field is required.</span> @enderror
                     </div>
                     <div class="col-9">
                         <label for="prno">Purpose of PR <span style="color: red">*</span></label>
-                        <input class="form-control form-control-sm" type="text" maxlength="250" wire:model.defer="prHeader.purpose_pr">
+                        <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.purpose_pr">
                         @error('purpose_pr') <span class="text-red">This field is required.</span> @enderror
 
                     </div>
@@ -268,19 +269,20 @@
                 </div>                
                 <div class="row m-0 p-0">
                     <div class="col-md-12">
-                        <table class="table table-sm">
+                        <table class="table table-sm nissanTB">
                             <thead>
                               <tr class="text-center">
                                 <th scope="col">Line No.</th>
-                                <th scope="col">Part</th>
+                                <th scope="col">Part No.</th>
                                 <th scope="col">Description</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Qty</th>
-                                <th scope="col">UoM</th>
-                                <th scope="col">Unit Price</th>
-                                <th scope="col">Total Price</th>
-                                <th scope="col">Req. Delivery</th>
+                                <th scope="col">Purchasing Unit</th>
+                                <th scope="col">Budget Unit Price</th>
+                                <th scope="col">Budget Total Price</th>
+                                <th scope="col">Requested Delivery Date</th>
                                 <th scope="col">Final Price</th>
+                                <th scope="col">Currency</th>
                                 <th scope="col"></th>
                               </tr>
                             </thead>
@@ -292,7 +294,7 @@
                                     <div d-inline ml-2>
                                         <input wire:model="selectedRows" type="checkbox" value="{{ $itemList[$index]['id'] }}"
                                             id="{{ $itemList[$index]['lineno'] }}">
-                                        <label for="{{ $itemList[$index]['lineno'] }}"></label>
+                                        <span>{{ $itemList[$index]['lineno'] }}</span>
                                     </div>
                                 </td>
                                 <td scope="col">{{ $itemList[$index]['partno'] }}</td>
@@ -304,6 +306,7 @@
                                 <td scope="col" class="text-right pr-2">{{ number_format( $itemList[$index]['budgettotal'], 2) }}</td>
                                 <td scope="col" class="text-center">{{ \Carbon\Carbon::parse( $itemList[$index]['req_date'])->format('d-M-Y') }} </td>
                                 <td scope="col" class="text-right pr-2">{{ number_format($itemList[$index]['final_price'], 2) }} </td>
+                                <td scope="col" class="text-center">{{ $itemList[$index]['currency'] }}</td>
                                 <td scope="col">
                                     <center>
                                         {{-- 31-01-2022 > Change to edit button  --}}
@@ -376,7 +379,7 @@
                 </div>
                 <div class="row m-0 p-0">
                     <div class="col-md-12">
-                        <table class="table table-sm">
+                        <table class="table table-sm nissanTB">
                             <thead>
                               <tr>
                                 <th scope="col">#</th>
@@ -625,7 +628,7 @@
 
                 <div class="row">
                     <div class="col-md-12">
-                        <table class="table table-sm">
+                        <table class="table table-sm nissanTB">
                             <thead>
                               <tr>
                                 <th scope="col">FileName</th>
@@ -677,7 +680,7 @@
             <div class="tab-pane fade {{ $currentTab == 'history' ? 'show active' : '' }}" id="pills-history" role="tabpanel" aria-labelledby="pills-history-tab" wire:ignore.self>
                 <div class="row">
                     <div class="col-md-12">
-                        <table class="table table-sm">
+                        <table class="table table-sm nissanTB">
                             <thead>
                               <tr>
                                 <th scope="col">Action</th>
