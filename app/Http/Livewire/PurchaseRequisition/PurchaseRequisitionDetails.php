@@ -1471,7 +1471,7 @@ class PurchaseRequisitionDetails extends Component
         $this->prItem['skip_rfq'] = false;
         $this->prItem['skip_doa'] = false;
 
-        $this->dispatchBrowserEvent('clear-select2');
+        $this->dispatchBrowserEvent('clear-select2-modal');
 
         if ($this->orderType == "10" or $this->orderType == "20" ) {
             $this->dispatchBrowserEvent('show-modelPartLineItem');
