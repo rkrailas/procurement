@@ -38,7 +38,8 @@ class PurchaseRequisitionDetails extends Component
     public $prDeliveryPlan, $prListDeliveryPlan = [];  //$prDeliveryPlan=ใน Tab, $prListDeliveryPlan=ใน Grid
 
     //Authorization > deciderList=in table, $decider=Dropdown, validatorList=in table, $validator=Dropdown
-    public $decider_dd, $deciderList = [], $decider, $isValidatorApprove = false, $validator_dd, $validatorList = [], $validator, $rejectReason;
+    public $decider_dd, $deciderList = [], $decider = [], $isValidatorApprove = false, $validator_dd, $validatorList = [], $validator = [], $rejectReason;
+    public $isValidator_Decider =false;
 
     //Attachment Dropdown ใช้ตัวแปรร่วมกับ prLineNo_dd
     public $prLineNoAtt_dd, $attachment_lineid, $attachment_file, $attachmentFileList;
@@ -96,7 +97,7 @@ class PurchaseRequisitionDetails extends Component
         {
             $this->reset(['prHeader', 'prItem', 'itemList', 'prListDeliveryPlan', 'deciderList', 'validatorList', 'attachmentFileList', 'historyLog'
                         , 'isCreateMode', 'editPRNo', 'isBlanket', 'orderType', 'deleteID', 'deleteType', 'currentTab', 'prDeliveryPlan'
-                        , 'decider', 'isValidatorApprove', 'validator', 'rejectReason', 'attachment_lineid', 'attachment_file']);
+                        , 'decider', 'isValidatorApprove', 'isValidator_Decider', 'validator', 'rejectReason', 'attachment_lineid', 'attachment_file']);
         }
 
     //Share Function End
@@ -654,10 +655,22 @@ class PurchaseRequisitionDetails extends Component
     //Attachment End
 
     //Authorization
-        public function updatedDecider()
+        public function updatedValidatorUsername()
         {
-            //???ถึงตรงนี้
-            dd('here');
+            $strsql = "SELECT username, company, department, position FROM users WHERE username='" . $this->validator['username'] . "'";
+            $data = DB::select($strsql);
+            if ($data) {
+                $this->validator = json_decode(json_encode($data[0]), true);
+            }
+        }
+
+        public function updatedDeciderUsername()
+        {
+            $strsql = "SELECT username, company, department, position FROM users WHERE username='" . $this->decider['username'] . "'";
+            $data = DB::select($strsql);
+            if ($data) {
+                $this->decider = json_decode(json_encode($data[0]), true);
+            }
         }
 
         public function validatorDeciderApprove()
@@ -665,6 +678,10 @@ class PurchaseRequisitionDetails extends Component
             DB::statement("UPDATE dec_val_workflow SET status=?, changed_by=?, changed_on=?
                 WHERE approver=? AND ref_doc_id=?" 
                 , ['30', auth()->user()->id, Carbon::now(), auth()->user()->username, $this->prHeader['id']]);
+
+            DB::statement("UPDATE dec_val_workflow_log SET status=?, completed_date=?, changed_by=?, changed_on=?
+            WHERE refdoc_id=? AND approver=?"
+            , ['30', Carbon::now(), auth()->user()->id, Carbon::now(), $this->prHeader['id'], auth()->user()->username]);
 
             $strsql = "SELECT approval_type FROM dec_val_workflow WHERE ref_doc_id =" . $this->prHeader['id'] . " AND approver='" . auth()->user()->username . "'";
             $data = DB::select($strsql);
@@ -768,6 +785,10 @@ class PurchaseRequisitionDetails extends Component
                         WHERE ref_doc_id=?" 
                         , ['10', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
 
+                    DB::statement("UPDATE dec_val_workflow_log SET status=?, reject_reason=?, completed_date=?, changed_by=?, changed_on=?
+                        WHERE refdoc_id=? AND approver=?"
+                        , ['10', $this->rejectReason, Carbon::now(), auth()->user()->id, Carbon::now(), $this->prHeader['id'], auth()->user()->username]);
+
                     DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=?
                         WHERE prno_id=?" 
                         , ['10', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
@@ -823,6 +844,8 @@ class PurchaseRequisitionDetails extends Component
                         }
                     }
 
+                    $this->reset(['rejectReason']);
+
                     return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
                 });
 
@@ -837,7 +860,14 @@ class PurchaseRequisitionDetails extends Component
 
         public function deleteValidator()
         {
-            DB::statement("DELETE FROM dec_val_workflow where approval_type='VALIDATOR' AND approver=? " , [$this->deleteID]);
+            DB::transaction(function() 
+            {
+                DB::statement("DELETE FROM dec_val_workflow where ref_doc_id=" . $this->prHeader['id'] . " AND approval_type='VALIDATOR' 
+                    AND approver=? " , [$this->deleteID]);
+
+                DB::statement("DELETE FROM dec_val_workflow_log where refdoc_id=" . $this->prHeader['id'] . " AND approval_type='VALIDATOR' 
+                    AND approver=? " , [$this->deleteID]);
+            });
 
             $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='105' AND class='DECIDER VALIDATOR'";
                 $data = DB::select($strsql);
@@ -861,7 +891,7 @@ class PurchaseRequisitionDetails extends Component
             } else {
                 DB::statement("INSERT INTO dec_val_workflow (approval_type, approver, status, ref_doc_type, ref_doc_no, ref_doc_id, create_by, create_on)
                 VALUES(?,?,?,?,?,?,?,?)"
-                ,['VALIDATOR', $this->validator, '10', '10', $this->prHeader['prno'], $this->prHeader['id'], auth()->user()->id, Carbon::now()]);
+                ,['VALIDATOR', $this->validator['username'], '10', '10', $this->prHeader['prno'], $this->prHeader['id'], auth()->user()->id, Carbon::now()]);
 
                 //History Log
                     // DB::transaction(function() 
@@ -888,6 +918,15 @@ class PurchaseRequisitionDetails extends Component
                     // });
                 //History Log End
 
+                //Approval History
+                    DB::statement("INSERT INTO dec_val_workflow_log (approval_type, approver, status, refdoc_type, refdoc_no, refdoc_id
+                    , submitted_date, submitted_by, create_by, create_on)
+                    VALUES(?,?,?,?,?,?,?,?,?,?)"
+                    ,['VALIDATOR', $this->validator['username'], '10', '10', $this->prHeader['prno'], $this->prHeader['id']
+                    , Carbon::now(), auth()->user()->id, auth()->user()->id, Carbon::now()]);
+                //Approval History End
+
+
                 $this->reset(['validator']);
                 $this->dispatchBrowserEvent('clear-select2');
                 return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
@@ -896,7 +935,14 @@ class PurchaseRequisitionDetails extends Component
 
         public function deleteDecider()
         {
-            DB::statement("DELETE FROM dec_val_workflow where approval_type='DECIDER' AND approver=? " , [$this->deleteID]);
+            DB::transaction(function() 
+            {
+                DB::statement("DELETE FROM dec_val_workflow WHERE ref_doc_id=" . $this->prHeader['id'] . " AND approval_type='DECIDER' 
+                    AND approver=? " , [$this->deleteID]);
+
+                DB::statement("DELETE FROM dec_val_workflow_log WHERE refdoc_id=" . $this->prHeader['id'] . " AND approval_type='DECIDER' 
+                    AND approver=? " , [$this->deleteID]);
+            });
 
             $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='105' AND class='DECIDER VALIDATOR'";
                 $data = DB::select($strsql);
@@ -920,7 +966,15 @@ class PurchaseRequisitionDetails extends Component
             } else {
                 DB::statement("INSERT INTO dec_val_workflow (approval_type, approver, status, ref_doc_type, ref_doc_no, ref_doc_id, create_by, create_on)
                 VALUES(?,?,?,?,?,?,?,?)"
-                ,['DECIDER', $this->decider, '10', '10', $this->prHeader['prno'], $this->prHeader['id'], auth()->user()->id, Carbon::now()]);
+                ,['DECIDER', $this->decider['username'], '10', '10', $this->prHeader['prno'], $this->prHeader['id'], auth()->user()->id, Carbon::now()]);
+
+                //Approval History
+                    DB::statement("INSERT INTO dec_val_workflow_log (approval_type, approver, status, refdoc_type, refdoc_no, refdoc_id
+                    , submitted_date, submitted_by, create_by, create_on)
+                    VALUES(?,?,?,?,?,?,?,?,?,?)"
+                    ,['DECIDER', $this->decider['username'], '10', '10', $this->prHeader['prno'], $this->prHeader['id']
+                    , Carbon::now(), auth()->user()->id, auth()->user()->id, Carbon::now()]);
+                //Approval History End
 
                 $this->reset(['decider']);
                 $this->dispatchBrowserEvent('clear-select2');
@@ -1382,7 +1436,7 @@ class PurchaseRequisitionDetails extends Component
                     , c.debit_gl as budget_code, a.supplier_id
                     FROM part_master a
                     LEFT JOIN currency_trans_ratios b ON a.currency = b.from_currency
-                    LEFT JOIN gl_mapping_inv c ON a.account_group = c.account_group
+                    LEFT JOIN gl_mapping c ON a.account_group = c.account_group
                     WHERE partno = '" . $this->prItem['partno'] . "'";
             $data = DB::select($strsql);
 
@@ -1584,6 +1638,14 @@ class PurchaseRequisitionDetails extends Component
                     WHERE dec.approval_type='VALIDATOR' AND dec.ref_doc_id =" . $this->prHeader['id'];
             $this->validatorList = json_decode(json_encode(DB::select($strsql)), true);
 
+            //ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่
+            $strsql = "SELECT approver FROM dec_val_workflow WHERE ref_doc_id=" . $this->prHeader['id'] . " 
+                AND approver = '" . auth()->user()->username . "'";
+            $data = DB::select($strsql);
+            if ($data) {
+                $this->isValidator_Decider = true;
+            }
+
             //ตรวจสอบว่าจะ Enable ปุ่ม ของ Decider ได้หรือไม่ ***ใช้ตัวล่างแทน
                 // $strsql = "SELECT approver FROM dec_val_workflow 
                 //             WHERE approval_type = 'VALIDATOR' AND ref_doc_id =" . $this->prHeader['id']; 
@@ -1605,7 +1667,7 @@ class PurchaseRequisitionDetails extends Component
 
             //ตรวจสอบว่า Decider Approve แล้วหรือไม่ ถ้า Approve จะ Disable ปุ่ม Approve ของ Validator
             $strsql = "SELECT approver FROM dec_val_workflow 
-            WHERE approval_type = 'DECIDER' AND status <> 'APPROVED' AND ref_doc_id =" . $this->prHeader['id']; 
+                WHERE approval_type = 'DECIDER' AND status <> 'APPROVED' AND ref_doc_id =" . $this->prHeader['id']; 
 
             if (count(DB::select($strsql)) == 0) {
                 $this->isValidatorApprove = false;
@@ -1862,15 +1924,23 @@ class PurchaseRequisitionDetails extends Component
             return view('livewire.purchase-requisition.purchase-requisition-details');
         }else{
             //ถ้าเป็น Edit ให้ Query History มาด้วย ที่อยู่ตรงนี้เพราะ pagination ไม่สามารถส่งค่าผ่ายตัวแปร $this->historylog ได้
-            $strsql = "SELECT a.*, b.name + ' ' + b.lastname as fname
-            FROM history_log a
-            JOIN users b ON b.id = a.changed_by
-            WHERE a.object_type = 'PR' AND a.object_id='" . $this->prHeader['prno'] . "' ORDER BY a.id";
-        
-            $historyLog = (new Collection(DB::select($strsql)))->paginate(10);
+            // $strsql = "SELECT a.*, b.name + ' ' + b.lastname as fname
+            // FROM history_log a
+            // JOIN users b ON b.id = a.changed_by
+            // WHERE a.object_type = 'PR' AND a.object_id='" . $this->prHeader['prno'] . "' ORDER BY a.id";
+            // $historyLog = (new Collection(DB::select($strsql)))->paginate(10);
+
+            $strsql = "SELECT a.approver, b.name + ' ' + b.lastname as fullname, a.approval_type, b.company, b.department, b.position
+                , c.description as status, a.reject_reason, FORMAT(a.submitted_date, 'dd-MMMM-yy') as submitted_date
+                , FORMAT(a.completed_date, 'dd-MMMM-yy') as completed_date
+                FROM dec_val_workflow_log a
+                LEFT JOIN users b ON a.approver = b.username
+                LEFT JOIN dec_val_status c ON a.status = c.status_no
+                WHERE a.refdoc_type='10' AND a.refdoc_id=" . $this->prHeader['id'];
+            $approval_history = (new Collection(DB::select($strsql)))->paginate(10);
 
             return view('livewire.purchase-requisition.purchase-requisition-details',[
-                'historylog' => $historyLog,
+                'approval_history' => $approval_history,
             ]);
         }
         

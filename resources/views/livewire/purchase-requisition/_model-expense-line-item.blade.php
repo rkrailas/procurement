@@ -246,7 +246,7 @@
         $('#modelExpenseLineItem').modal('hide');
     })
 
-    window.addEventListener('clear-select2', event => {
+    window.addEventListener('clear-select2-modal', event => {
         clearSelect2('purchase_unit-select2');
         clearSelect2('currency-select2');
         clearSelect2('purchase_group-select2');

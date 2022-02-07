@@ -87,11 +87,12 @@ class PurchaseRequisitionList extends Component
     {
         $this->resetSearch();
         //หา Company 
-        $strsql = "SELECT usr.company FROM users usr WHERE id=" . config('constants.USER_LOGIN');
-        $data = DB::select($strsql);
-        if (count($data)) {
-            $this->workAtCompany = $data[0]->company;
-        }
+        // $strsql = "SELECT usr.company FROM users usr WHERE id=" . config('constants.USER_LOGIN');
+        // $data = DB::select($strsql);
+        // if (count($data)) {
+        //     $this->workAtCompany = $data[0]->company;
+        // }
+        $this->workAtCompany = auth()->user()->company;
     }
 
     public function loadDropdownList()
@@ -143,7 +144,8 @@ class PurchaseRequisitionList extends Component
             $this->skipRender();
         }
 
-        $xWhere = " WHERE ISNULL(prh.deletion_flag, 0) <> 1  
+        $xWhere = " WHERE prh.company='" . $this->workAtCompany . "'
+        AND ISNULL(prh.deletion_flag, 0) <> 1  
         AND prh.prno LIKE '%" . $this->prno . "%' 
         AND prh.request_date BETWEEN '" . $this->requestdate_from . "' AND '" . $this->requestdate_to . "'";
 

@@ -428,10 +428,12 @@
                                         Decider
                                     </div>
                                     <div class="card-body my-card-body">
+                                        {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
+                                        @if ($isValidator_Decider <> true)
                                         <div class="row">
                                             <div class="col-md-3">
                                                 <label>Select Decider</label>
-                                                <x-select2 id="decider-select2" wire:model="decider">
+                                                <x-select2 id="decider-select2" wire:model.defer="decider.username">
                                                     <option value="">--- Please Select ---</option>
                                                     @foreach($decider_dd as $row)
                                                     <option value="{{ $row->username }}">
@@ -442,26 +444,35 @@
                                             </div>
                                             <div class="col-md-3">
                                                 <label>Company</label>
-                                                {{-- <input class="form-control form-control-sm" type="text" wire:model.defer="decider.company"> --}}
+                                                <input class="form-control form-control-sm" type="text" readonly wire:model.defer="decider.company">
                                             </div>
                                             <div class="col-md-3">
                                                 <label>Department</label>
-                                                {{-- <input class="form-control form-control-sm" type="text" wire:model.defer="decider.department"> --}}
+                                                <input class="form-control form-control-sm" type="text" readonly wire:model.defer="decider.department">
                                             </div>
                                             <div class="col-md-3">
                                                 <label>Position</label>
-                                                {{-- <input class="form-control form-control-sm" type="text" wire:model.defer="decider.position"> --}}
+                                                <input class="form-control form-control-sm" type="text" readonly wire:model.defer="decider.position">
                                             </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-md-9">
-
+                                                <b>Note:</b> <br/>
+                                                <div class="ml-3">
+                                                    <small style="color: blue">Request amount > 20,000 THB approved by GM or GM up</small> <br/>
+                                                    <small style="color: blue">Request amount <= 20,000 THB approved by AGM/DGM</small> <br/>
+                                                </div>
+                                                
                                             </div>
-                                            <div class="col-md-3 text-left">
+                                            <div class="col-md-3 text-right">
                                                 <button class="btn btn-sm btn-danger" {{ $deciderList ? 'disabled' : ''}} 
                                                     wire:click.prevent="addDecider"><i class="fas fa-plus-square mr-1"></i>Confirm</button>
                                             </div>
                                         </div>
+                                        @endif
+
+                                        {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
+                                        @if ($isValidator_Decider)
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <table class="table table-sm">
@@ -473,7 +484,6 @@
                                                         <th scope="col">Position</th>
                                                         <th scope="col">Status</th>
                                                         <th scope="col" style="width: 20%">Action</th>
-                                                        <th scope="col"></th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
@@ -493,6 +503,34 @@
                                                             <button class="btn btn-sm btn-light" disabled wire:click.prevent="" >Reject</button>
                                                             @endif
                                                         </td>
+                                                    </tr>
+                                                    @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        @else
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                    <tr>
+                                                        <th scope="col">User ID</th>
+                                                        <th scope="col">Name</th>
+                                                        <th scope="col">Company</th>
+                                                        <th scope="col">Position</th>
+                                                        <th scope="col">Status</th>
+                                                        <th scope="col"></th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    @foreach ($deciderList as $index => $row)
+                                                    <tr>
+                                                        <td scope="col">{{ $deciderList[$index]['approver'] }}</td>
+                                                        <td scope="col">{{ $deciderList[$index]['fullname'] }}</td>
+                                                        <td scope="col">{{ $deciderList[$index]['company'] }}</td>
+                                                        <td scope="col">{{ $deciderList[$index]['position'] }}</td>
+                                                        <td scope="col">{{ $deciderList[$index]['status'] }}</td>
                                                         <td scope="col">
                                                             <center>
                                                                 <a href="" wire:click.prevent="confirmDelete('{{ $deciderList[$index]['approver'] }}', 'decider')">
@@ -506,13 +544,13 @@
                                                 </table>
                                             </div>
                                         </div>
+                                        @endif
+
                                     </div>
                                 </div>
                             </div>
                         </div>
                     {{-- Decider End--}}
-
-                    <br>
 
                     {{-- Validator --}}
                         <div class="row">
@@ -522,9 +560,13 @@
                                         Validator
                                     </div>
                                     <div class="card-body my-card-body">
+
+                                        {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
+                                        @if ($isValidator_Decider <> true)
                                         <div class="row">
-                                            <div class="col-md-6">
-                                                <x-select2 id="validator-select2" wire:model.defer="validator">
+                                            <div class="col-md-3">
+                                                <label>Select Validator</label>
+                                                <x-select2 id="validator-select2" wire:model.defer="validator.username">
                                                     <option value="">--- Please Select ---</option>
                                                     @foreach($validator_dd as $row)
                                                     <option value="{{ $row->username }}">
@@ -533,12 +575,29 @@
                                                     @endforeach
                                                 </x-select2>
                                             </div>
-                                            <div class="col-md-3 text-left">
+                                            <div class="col-md-3">
+                                                <label>Company</label>
+                                                <input class="form-control form-control-sm" type="text" readonly wire:model.defer="validator.company">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label>Department</label>
+                                                <input class="form-control form-control-sm" type="text" readonly wire:model.defer="validator.department">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label>Position</label>
+                                                <input class="form-control form-control-sm" type="text" readonly wire:model.defer="validator.position">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12 text-right">
                                                 <button class="btn btn-sm btn-danger"
                                                     wire:click.prevent="addValidator"><i class="fas fa-plus-square mr-1"></i>Add</button>
                                             </div>
-                                            <div class="col-md-3"></div>
                                         </div>
+                                        @endif
+
+                                        {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
+                                        @if ($isValidator_Decider)
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <table class="table table-sm">
@@ -550,7 +609,6 @@
                                                         <th scope="col">Position</th>
                                                         <th scope="col">Status</th>
                                                         <th scope="col" style="width: 20%">Action</th>
-                                                        <th scope="col"></th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -570,6 +628,34 @@
                                                                 <button class="btn btn-sm btn-light" disabled wire:click.prevent="" >Reject</button>
                                                                 @endif
                                                             </td>
+                                                        </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        @else
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                        <th scope="col">User ID</th>
+                                                        <th scope="col">Name</th>
+                                                        <th scope="col">Company</th>
+                                                        <th scope="col">Position</th>
+                                                        <th scope="col">Status</th>
+                                                        <th scope="col"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach ($validatorList as $index => $row)
+                                                        <tr>
+                                                            <td scope="col">{{ $validatorList[$index]['approver'] }}</td>
+                                                            <td scope="col">{{ $validatorList[$index]['fullname'] }}</td>
+                                                            <td scope="col">{{ $validatorList[$index]['company'] }}</td>
+                                                            <td scope="col">{{ $validatorList[$index]['position'] }}</td>
+                                                            <td scope="col">{{ $validatorList[$index]['status'] }}</td>
                                                             <td scope="col">
                                                                 <center>
                                                                     <a href="" wire:click.prevent="confirmDelete('{{ $validatorList[$index]['approver'] }}', 'validator')">
@@ -583,18 +669,76 @@
                                                 </table>
                                             </div>
                                         </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
                         </div>
                     {{-- Validator End--}}
 
-                    <div class="row">
+                    {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
+                    @if ($isValidator_Decider)
+                    <div class="row mb-3">
                         <div class="col-md-12">
                             <label>Rejection Reason</label>
                             <textarea class="form-control form-control-sm" rows="2" maxlength="250" wire:model.defer="rejectReason"></textarea>
                         </div>
                     </div>
+                    @endif
+
+                    {{-- Approval History --}}
+                        <div class="card shadow-none border rounded">
+                            <div class="card-header my-card-header">
+                                Approval History
+                            </div>
+                            <div class="card-body my-card-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                <th scope="col">Seq</th>
+                                                <th scope="col">User ID</th>
+                                                <th scope="col">Name</th>
+                                                <th scope="col">Type</th>
+                                                <th scope="col">Company</th>
+                                                <th scope="col">Department</th>
+                                                <th scope="col">Position</th>
+                                                <th scope="col">Status</th>
+                                                <th scope="col">Reject Reason</th>
+                                                <th scope="col">Submitted Date</th>
+                                                <th scope="col">Completed Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($approval_history as $row)
+                                                <tr>
+                                                    <td scope="col">{{ $loop->iteration + $approval_history->firstitem()-1  }}</td>
+                                                    <td scope="col">{{ $row->approver }}</td>
+                                                    <td scope="col">{{ $row->fullname }}</td>
+                                                    <td scope="col">{{ $row->approval_type }}</td>
+                                                    <td scope="col">{{ $row->company }}</td>
+                                                    <td scope="col">{{ $row->department }}</td>
+                                                    <td scope="col">{{ $row->position }}</td>
+                                                    <td scope="col">{{ $row->status }}</td>
+                                                    <td scope="col">{{ $row->reject_reason }}</td>
+                                                    <td scope="col">{{ $row->submitted_date }}</td>
+                                                    <td scope="col">{{ $row->completed_date }}</td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mb-1">
+                                        {{ $approval_history->links() }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {{-- Approval History End --}}
+
                 </div>
             {{-- Tab Authorization End --}}  
             
@@ -707,7 +851,7 @@
                                     <th scope="col">Changed On</th>
                                 </tr>
                                 </thead>
-                                <tbody>
+                                {{-- <tbody>
                                     @foreach ($historylog as $row)
                                     <tr>
                                         <td scope="col">{{ $row->action_type }} </td>
@@ -719,15 +863,15 @@
                                         <td scope="col">{{ \Carbon\Carbon::parse($row->changed_on)->format('d-M-Y H:i:s') }} </td>
                                     </tr>
                                     @endforeach
-                                </tbody>
+                                </tbody> --}}
                             </table>
                         </div>
                     </div>
-                    <div class="row">
+                    {{-- <div class="row">
                         <div class="col-md-12 mb-1">
                             {{ $historylog->links() }}
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             {{-- Tab History End --}} 
 

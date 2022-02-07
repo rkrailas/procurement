@@ -125,7 +125,7 @@
                                 <td>
                                     <center>
                                         <a href="" wire:click.prevent="approvePR('{{ $row->ref_doc_no }}')">
-                                            <i class="fas fa-stamp"></i>
+                                            <i class="fa fa-edit mr-2"></i>
                                         </a>
                                     </center>
                                 </td>

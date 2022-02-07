@@ -179,7 +179,7 @@
         <!-- /.content-wrapper -->
 
         <!-- Main Footer -->
-        @include('layouts.partials.footer')
+        {{-- @include('layouts.partials.footer') --}}
     </div>
     <!-- ./wrapper -->
 
