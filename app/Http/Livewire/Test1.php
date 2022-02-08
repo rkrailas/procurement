@@ -10,6 +10,7 @@ class Test1 extends Component
 {
     public function myRandom()
     {
+        $this->dispatchBrowserEvent('disable-prdetail');
         //dd(Str::random(20));
         //dd(Carbon::now());
     }

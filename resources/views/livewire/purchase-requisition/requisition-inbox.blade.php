@@ -33,6 +33,7 @@
                         </select>
                     </div>
                     <div class="col-md-3">
+                        {{-- 8/2/2022 > Hide by CR No.4
                         <label for="site">Status</label>
                         <select class="form-control form-control-sm" id="site" wire:model.defer="status">
                             <option value="">--- All ---</option>
@@ -41,14 +42,9 @@
                                 {{ $row->status_no }} : {{ $row->description }}
                             </option>
                             @endforeach
-                        </select>
+                        </select> --}}
                     </div>
-                    <div class="col-6">
-                        
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-6 text-right my-auto">
                         <button wire:click.prevent="resetSearch" class="btn btn-sm btn-light">CLEAR</button>
                         <button wire:click.prevent="search" class="btn btn-sm btn-danger">APPLY</button>
                     </div>
@@ -84,6 +80,33 @@
                                         class="fa fa-arrow-down {{ $sortBy === 'a.ref_doc_no' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
+                            <th scope="col">Requester
+                                <span wire:click="sortBy('d.requestor')" class="float-right text-sm"
+                                    style="cursor: pointer;">
+                                    <i
+                                        class="fa fa-arrow-up {{ $sortBy === 'd.requestor' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
+                                    <i
+                                        class="fa fa-arrow-down {{ $sortBy === 'd.requestor' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
+                                </span>
+                            </th>
+                            <th scope="col">Requested For
+                                <span wire:click="sortBy('d.requested_for')" class="float-right text-sm"
+                                    style="cursor: pointer;">
+                                    <i
+                                        class="fa fa-arrow-up {{ $sortBy === 'd.requested_for' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
+                                    <i
+                                        class="fa fa-arrow-down {{ $sortBy === 'd.requested_for' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
+                                </span>
+                            </th>
+                            <th scope="col">Requested For Company
+                                <span wire:click="sortBy('d.company')" class="float-right text-sm"
+                                    style="cursor: pointer;">
+                                    <i
+                                        class="fa fa-arrow-up {{ $sortBy === 'd.company' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
+                                    <i
+                                        class="fa fa-arrow-down {{ $sortBy === 'd.company' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
+                                </span>
+                            </th>
                             <th scope="col">Status
                                 <span wire:click="sortBy('c.status_no')" class="float-right text-sm"
                                     style="cursor: pointer;">
@@ -102,13 +125,13 @@
                                         class="fa fa-arrow-down {{ $sortBy === 'a.approval_type' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
-                            <th scope="col">Last Updated On
-                                <span wire:click="sortBy('lastupdate')" class="float-right text-sm"
+                            <th scope="col">Submitted Date
+                                <span wire:click="sortBy('a.create_on')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
-                                        class="fa fa-arrow-up {{ $sortBy === 'lastupdate' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
+                                        class="fa fa-arrow-up {{ $sortBy === 'a.create_on' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
                                     <i
-                                        class="fa fa-arrow-down {{ $sortBy === 'lastupdate' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
+                                        class="fa fa-arrow-down {{ $sortBy === 'a.create_on' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
                             <th scope="col"></th>
@@ -116,12 +139,15 @@
                         <tbody>
                             @foreach ($workflow_list as $row)
                             <tr>
-                                <td scope="col">{{ $loop->iteration + $workflow_list->firstitem()-1 }}</td>
-                                <td scope="col">{{ $row->ref_doc_no }} </td>
+                                <td scope="col">{{ $loop->iteration + $workflow_list->firstitem()-1 }}</td>                                
                                 <td scope="col">{{ $row->doctype }} </td>
+                                <td scope="col">{{ $row->ref_doc_no }} </td>
+                                <td scope="col">{{ $row->requestor }} </td>
+                                <td scope="col">{{ $row->requested_for }} </td>
+                                <td scope="col">{{ $row->company }} </td>
                                 <td scope="col">{{ $row->status }} </td>
                                 <td scope="col">{{ $row->approval_type }} </td>
-                                <td scope="col" class="text-center">{{ \Carbon\Carbon::parse($row->lastupdate)->format('d-M-Y') }} </td>
+                                <td scope="col" class="text-center">{{ \Carbon\Carbon::parse($row->create_on)->format('d-M-Y') }} </td>
                                 <td>
                                     <center>
                                         <a href="" wire:click.prevent="approvePR('{{ $row->ref_doc_no }}')">

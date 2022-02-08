@@ -31,15 +31,15 @@ class PurchaseRequisitionDetails extends Component
     public $prHeader, $requested_for_dd, $delivery_address_dd, $buyer_dd, $cost_center_dd, $budget_year; 
 
     //Line Items > $itemList=in table, $prItem=ใน Modal, 
-    public $prItem = [], $itemList = [], $partno_dd, $currency_dd, $internal_order_dd, $budget_code, $purchaseunit_dd
-        , $purchasegroup_dd, $budgetcode_dd, $prLineNo_dd, $isCreateLineItem; 
+    public $prItem = [], $itemList = [], $partno_dd, $currency_dd, $internal_order_dd, $budget_code, $purchaseunit_dd, $purchasegroup_dd
+        , $budgetcode_dd, $prLineNo_dd, $isCreateLineItem; 
 
     //DeliveryPlan
     public $prDeliveryPlan, $prListDeliveryPlan = [];  //$prDeliveryPlan=ใน Tab, $prListDeliveryPlan=ใน Grid
 
     //Authorization > deciderList=in table, $decider=Dropdown, validatorList=in table, $validator=Dropdown
-    public $decider_dd, $deciderList = [], $decider = [], $isValidatorApprove = false, $validator_dd, $validatorList = [], $validator = [], $rejectReason;
-    public $isValidator_Decider =false;
+    public $decider_dd, $deciderList = [], $decider = [], $isValidatorApprove = false, $validator_dd, $validatorList = [], $validator = [], $rejectReason
+        , $isValidator_Decider =false;
 
     //Attachment Dropdown ใช้ตัวแปรร่วมกับ prLineNo_dd
     public $prLineNoAtt_dd, $attachment_lineid, $attachment_file, $attachmentFileList;
@@ -353,6 +353,7 @@ class PurchaseRequisitionDetails extends Component
                 'buyer' => 'required',
                 'cost_center' => 'required',
                 'purpose_pr' => 'required',
+                'budget_year' => 'required',
             ])->validate();
 
             if ($this->prHeader['ordertype'] == '21') {
@@ -1058,6 +1059,30 @@ class PurchaseRequisitionDetails extends Component
     //Delivery Plan End
 
     //Line Item
+        public function revokeLineItem()
+        {
+            if (($this->prItem['status'] == "20" OR $this->prItem['status'] == "21" OR $this->prItem['status'] == "30")
+                AND $this->prHeader['requestor'] == auth()->user()->id){
+
+                DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=? where id=?"
+                 , ['10',auth()->user()->id, Carbon::now(), $this->prItem['id']]);
+
+                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
+                $data = DB::select($strsql);
+                if (count($data) > 0) {
+                    $this->dispatchBrowserEvent('popup-success', [
+                        'title' => str_replace("<PR Line No.>", $this->prItem['lineno'], $data[0]->msg_text),
+                    ]);
+                }
+
+                $this->reset(['prItem']);
+                return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+            }else{
+                $this->dispatchBrowserEvent('popup-alert', [
+                    'title' => 'Cannot Revoke',]);
+            }
+        }
+
         public function closedModal()
         {
             $this->reset(['prItem']);
@@ -1178,11 +1203,13 @@ class PurchaseRequisitionDetails extends Component
 
             $strsql = "SELECT a.id, a.[lineno], a.partno, a.description, a.purchase_unit, a.unit_price, a.currency, a.exchange_rate
                 , a.purchase_group, a.account_group, a.qty, a.internal_order, FORMAT(a.req_date,'yyyy-MM-dd') AS req_date, a.budget_code, a.over_1_year_life
-                , a.snn_service, a.snn_production, b.name1 as nominated_supplier, a.remarks, a.skip_rfq, a.skip_doa, a.final_price
+                , a.snn_service, a.snn_production, b.name1 AS nominated_supplier, a.remarks, a.skip_rfq, a.skip_doa, a.final_price
                 , FORMAT(a.quotation_expiry_date,'yyyy-MM-dd') AS quotation_expiry_date, a.reference_pr, c.min_order_qty, c.supplier_lead_time
+                , d.status + ':' + d.description AS status_des, d.status
                 FROM pr_item a
                 LEFT JOIN supplier b ON b.vendor_code = a.nominated_supplier
                 LEFT JOIN part_master c ON c.partno = a.partno
+                LEFT JOIN pr_status d ON d.status = a.status
                 WHERE a.id ='" . $lineItemId . "'";
             $data = DB::select($strsql);
             if (count($data)) {
@@ -1564,6 +1591,15 @@ class PurchaseRequisitionDetails extends Component
         $this->skipRender();
     }
 
+    //???ยังติดตรงนี้
+    // public function disablePRDetail()
+    // {
+    //     //Disable PR Detail Where status > 10 AND < 30
+    //     if ($this->prHeader['status'] > '10' AND $this->prHeader['status'] < '30') {
+    //         $this->dispatchBrowserEvent('disable-prdetail');
+    //     }
+    // }
+
     public function editPR()
     {
         //PR Header
@@ -1595,7 +1631,7 @@ class PurchaseRequisitionDetails extends Component
                 }
 
                 //ถ้าไม่เป็น Array จะใช้ Valdation ไม่ได้
-                $this->prHeader = json_decode(json_encode($this->prHeader), true); 
+                $this->prHeader = json_decode(json_encode($this->prHeader), true);
             }
         //PR Header End
 
@@ -1723,24 +1759,60 @@ class PurchaseRequisitionDetails extends Component
         }
     }
 
+    // public function getNewPrNo()
+    // {
+    //     $newPRNo = "";
+    //     $strsql = "SELECT pr_prefix1, pr_prefix2, pr_runno FROM company WHERE company='" . auth()->user()->company . "'";
+    //     $data = DB::select($strsql);
+
+    //     if ($data){
+    //         if ($data[0]->pr_prefix2 < date_format(now(),"y")) {
+    //             DB::statement("UPDATE company SET pr_prefix2=?, pr_runno=? where company=?"
+    //              , [date_format(now(),"y"), 1, auth()->user()->company]);
+
+    //             $newPRNo = $data[0]->pr_prefix1 . date_format(now(),"y") . sprintf("%06d", 1);
+
+    //         } else if ($data[0]->pr_prefix2 == date_format(now(),"y")) {
+    //             DB::statement("UPDATE company SET pr_runno=? where company=?"
+    //             , [$data[0]->pr_runno + 1, auth()->user()->company]);
+
+    //             $newPRNo = $data[0]->pr_prefix1 . $data[0]->pr_prefix2 . sprintf("%06d", $data[0]->pr_runno + 1);
+    //         }
+    //     }
+
+    //     return $newPRNo;
+    // }
+
     public function getNewPrNo()
     {
         $newPRNo = "";
-        $strsql = "SELECT pr_prefix1, pr_prefix2, pr_runno FROM company WHERE company='" . auth()->user()->company . "'";
-        $data = DB::select($strsql);
 
-        if ($data){
-            if ($data[0]->pr_prefix2 < date_format(now(),"y")) {
-                DB::statement("UPDATE company SET pr_prefix2=?, pr_runno=? where company=?"
-                 , [date_format(now(),"y"), 1, auth()->user()->company]);
+        if ($this->orderType == '10' OR $this->orderType == '11'){
+            $strsql = "SELECT lastnumber FROM tran_type_number WHERE tran_type='PR' 
+                    AND calendar_year='" . $this->prHeader['budget_year'] . "' AND last_calendar_year='". $this->prHeader['budget_year'] . "'";
+            $data = DB::select($strsql);
 
-                $newPRNo = $data[0]->pr_prefix1 . date_format(now(),"y") . sprintf("%06d", 1);
+            if ($data){
+                DB::statement("UPDATE tran_type_number SET lastnumber=?, changed_by=?, changed_on=? 
+                            WHERE tran_type=? AND calendar_year=? AND last_calendar_year=?"
+                 , [$data[0]->lastnumber + 1, auth()->user()->id, Carbon::now()
+                 , 'PR', $this->prHeader['budget_year'], $this->prHeader['budget_year']]);
 
-            } else if ($data[0]->pr_prefix2 == date_format(now(),"y")) {
-                DB::statement("UPDATE company SET pr_runno=? where company=?"
-                , [$data[0]->pr_runno + 1, auth()->user()->company]);
+                 $newPRNo = 'PR' . substr($this->prHeader['budget_year'], 2, 2) . sprintf("%06d", $data[0]->lastnumber + 1);
+            }
 
-                $newPRNo = $data[0]->pr_prefix1 . $data[0]->pr_prefix2 . sprintf("%06d", $data[0]->pr_runno + 1);
+        }else if ($this->orderType == '20' OR $this->orderType == '21'){
+            $strsql = "SELECT lastnumber FROM tran_type_number WHERE tran_type='BPR' 
+                    AND calendar_year='" . $this->prHeader['budget_year'] . "' AND last_calendar_year='". $this->prHeader['budget_year'] . "'";
+            $data = DB::select($strsql);
+
+            if ($data){
+                DB::statement("UPDATE tran_type_number SET lastnumber=?, changed_by=?, changed_on=? 
+                            WHERE tran_type=? AND calendar_year=? AND last_calendar_year=?"
+                 , [$data[0]->lastnumber + 1, auth()->user()->id, Carbon::now()
+                 , 'BPR', $this->prHeader['budget_year'], $this->prHeader['budget_year']]);
+
+                 $newPRNo = 'BPR' . substr($this->prHeader['budget_year'], 2, 2) . sprintf("%05d", $data[0]->lastnumber + 1);
             }
         }
 

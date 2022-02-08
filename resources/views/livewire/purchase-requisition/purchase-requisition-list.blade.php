@@ -150,7 +150,7 @@
                                         class="fa fa-arrow-down {{ $sortBy === 'prh.prno' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
-                            <th scope="col">Type
+                            <th scope="col">Order Type
                                 <span wire:click="sortBy('ort.description')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
@@ -159,13 +159,22 @@
                                         class="fa fa-arrow-down {{ $sortBy === 'ort.description' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
-                            <th scope="col">Req. For
+                            <th scope="col">Requestor
                                 <span wire:click="sortBy('req.name')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
                                         class="fa fa-arrow-up {{ $sortBy === 'req.name' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
                                     <i
                                         class="fa fa-arrow-down {{ $sortBy === 'req.name' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
+                                </span>
+                            </th>
+                            <th scope="col">Requested For
+                                <span wire:click="sortBy('req_f.name')" class="float-right text-sm"
+                                    style="cursor: pointer;">
+                                    <i
+                                        class="fa fa-arrow-up {{ $sortBy === 'req_f.name' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
+                                    <i
+                                        class="fa fa-arrow-down {{ $sortBy === 'req_f.name' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
                             <th scope="col">Site
@@ -186,7 +195,7 @@
                                         class="fa fa-arrow-down {{ $sortBy === 'prh.status' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
-                            <th scope="col">T. Budget
+                            <th scope="col">Total Base Price
                                 <span wire:click="sortBy('pri.total_budget')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
@@ -195,7 +204,7 @@
                                         class="fa fa-arrow-down {{ $sortBy === 'pri.total_budget' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
-                            <th scope="col">T. Final
+                            <th scope="col">Total Final Price 
                                 <span wire:click="sortBy('pri.total_final_price')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
@@ -204,7 +213,7 @@
                                         class="fa fa-arrow-down {{ $sortBy === 'pri.total_final_price' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
-                            <th scope="col">Req. Date
+                            <th scope="col">Requested Date
                                 <span wire:click="sortBy('prh.request_date')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
@@ -230,6 +239,7 @@
                                 <td scope="col">{{ $loop->iteration + $pr_list->firstitem()-1 }}</td>
                                 <td scope="col">{{ $row->prno }} </td>
                                 <td scope="col">{{ $row->order_type }} </td>
+                                <td scope="col">{{ $row->requestor }} </td>
                                 <td scope="col">{{ $row->requested_for }} </td>
                                 <td scope="col">{{ $row->site }} </td>
                                 <td scope="col">{{ $row->status }} </td>

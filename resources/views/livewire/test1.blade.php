@@ -1,6 +1,30 @@
 <div>
     <section style="padding-top: 60px;">
         <div class="container">
+            <div class="row" id="test555">
+                <div class="col">
+                    <label for="prno">Requestor</label>
+                    <input class="form-control form-control-sm" type="text" id="requestor_name">
+                </div>
+                <div class="col">
+                    <label class="">Request Date</label>
+                    <div class="input-group mb-1">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">
+                                <i class="fas fa-calendar"></i>
+                            </span>
+                        </div>
+                        <x-datepicker wire:model.defer="prHeader.request_date" id="request_date"
+                            :error="'date'"/>
+                    </div>
+                </div>
+                <div class="col">
+                    <label>Delivery Address <span style="color: red">*</span></label>
+                    <select class="form-control form-control-sm" id="delivery_address">
+                        <option value="">--- Please Select ---</option>
+                    </select>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-12">
                     <div class="card">
@@ -74,6 +98,14 @@
             if(response.success == 0){
                 alert(response.error);
             }
+        });
+
+
+        $("#test555 :input").attr("disabled", true);
+
+        window.addEventListener('disable-prdetail', event => {
+            alert('3333333');
+            //$("#PR_Detail :input").attr("disabled", true)
         });
 </script>
 

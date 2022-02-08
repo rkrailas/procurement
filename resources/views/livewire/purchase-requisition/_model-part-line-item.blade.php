@@ -10,10 +10,10 @@
                 <div class="row">
                     <div class="col-md-12 d-flex justify-content-between mb-2">
                         <div>
-                            <label>PR Line No : </label>
+                            <label>PR Line No : </label> <input type="text" wire:model.defer="prItem.lineno">
                         </div>
                         <div>
-                            <label>Status :</label>
+                            <label>Status :</label> <input type="text" wire:model.defer="prItem.status_des">
                         </div>
                     </div>
                 </div>
@@ -238,7 +238,7 @@
                         <div>
                             <button type="button" class="btn btn-sm btn-light" wire:click.prevent="deleteLineItem">
                                 <i class="fas fa-trash-alt mr-1"></i>Delete</button>
-                            <button type="button" class="btn btn-sm btn-danger">
+                            <button type="button" class="btn btn-sm btn-danger" wire:click.prevent="revokeLineItem">
                                 <i class="fas fa-undo mr-1"></i>Revoke</button>
                         </div>
                         <div>

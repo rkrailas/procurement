@@ -128,7 +128,7 @@ class PurchaseRequisitionList extends Component
 
         //Validation
         if ($this->requestdate_from > $this->requestdate_to) {
-            $strsql = "select msg_text from message_list where msg_no='112'";
+            $strsql = "SELECT msg_text FROM message_list WHERE msg_no='112'";
             $data = DB::select($strsql);
             if (count($data) > 0) {
                 $this->dispatchBrowserEvent('popup-alert', [
@@ -144,10 +144,24 @@ class PurchaseRequisitionList extends Component
             $this->skipRender();
         }
 
-        $xWhere = " WHERE prh.company='" . $this->workAtCompany . "'
-        AND ISNULL(prh.deletion_flag, 0) <> 1  
-        AND prh.prno LIKE '%" . $this->prno . "%' 
-        AND prh.request_date BETWEEN '" . $this->requestdate_from . "' AND '" . $this->requestdate_to . "'";
+        $xWhere = " WHERE prh.company='" . $this->workAtCompany . "' AND ISNULL(prh.deletion_flag, 0) <> 1";
+
+        //ตรวจสอบว่าเป็น Buyer หรือไม่
+        $strsql = "SELECT username FROM buyer WHERE username='" . auth()->user()->username . "'";
+        $data = DB::select($strsql);
+        if (count($data) > 0) {
+            
+        }else{
+            $xWhere = $xWhere . " AND (prh.requestor=" . auth()->user()->id . 
+                                    " OR prh.requested_for=" . auth()->user()->id . 
+                                    " OR (prh.id IN (SELECT ref_doc_id FROM dec_val_workflow WHERE approver='" . auth()->user()->username . "')
+                                            AND prh.status>='20'
+                                         )
+                                )"; //Decider & Validator can view the PR/MR since the PR Released for Sourcing
+        }
+        
+        $xWhere = $xWhere . " AND prh.prno LIKE '%" . $this->prno . "%' 
+            AND prh.request_date BETWEEN '" . $this->requestdate_from . "' AND '" . $this->requestdate_to . "'";
 
         if ($this->ordertype) {
             $xWhere = $xWhere . "AND prh.ordertype IN (" . myWhereIn($this->ordertype) . ")";
@@ -168,22 +182,25 @@ class PurchaseRequisitionList extends Component
             $xWhere = $xWhere . "AND prh.status IN (" . myWhereIn($this->status) . ")";
         }
 
-        $strsql = "SELECT prh.prno, ort.description AS order_type, ISNULL(req.name,'') + ' ' + ISNULL(req.lastname,'') AS requested_for
+        $strsql = "SELECT prh.prno, ort.description AS order_type, ISNULL(req_f.name,'') + ' ' + ISNULL(req_f.lastname,'') AS requested_for
                 , pr_status.description AS status, prh.request_date, ISNULL(buyer.name,'') + ' ' + ISNULL(buyer.lastname,'') AS buyer
                 , pri.total_budget, pri.total_final_price, site.name as site
+                , ISNULL(req.name,'') + ' ' + ISNULL(req.lastname,'') AS requestor
                 FROM pr_header prh
                 LEFT JOIN (SELECT prno, SUM(qty * unit_price_local) as total_budget
                             , SUM(final_price_local) as total_final_price 
                             FROM pr_item GROUP BY prno) pri ON pri.prno=prh.prno
                 LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
-                LEFT JOIN users req ON req.id=prh.requested_for
+                LEFT JOIN users req_f ON req_f.id=prh.requested_for
+                LEFT JOIN users req ON req.id=prh.requestor
                 LEFT JOIN pr_status ON pr_status.status=prh.status
                 LEFT JOIN users buyer ON buyer.id=prh.buyer
                 LEFT JOIN site ON site.site=prh.site";
 
         $strsql = $strsql . $xWhere;
-        $strsql = $strsql . " GROUP BY prh.prno, ort.description, req.name, req.lastname, pr_status.description, prh.request_date
-                        , buyer.name, buyer.lastname, pri.total_budget, pri.total_final_price, site.name, prh.site, prh.status";
+        $strsql = $strsql . " GROUP BY prh.prno, ort.description, req_f.name, req_f.lastname, pr_status.description, prh.request_date
+                        , buyer.name, buyer.lastname, pri.total_budget, pri.total_final_price, site.name, prh.site, prh.status
+                        , req.name, req.lastname";
         $strsql = $strsql . " ORDER BY " . $this->sortBy . " " . $this->sortDirection;
 
         $pr_list = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
