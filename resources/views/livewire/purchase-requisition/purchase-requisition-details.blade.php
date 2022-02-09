@@ -89,7 +89,7 @@
                 <div class="row">
                     <div class="col-md-3">
                         <label for="prno">Company</label>
-                        <input class="form-control form-control-sm" type="text" id="company" maxlength="100" readonly wire:model="prHeader.company_name">
+                        <input class="form-control form-control-sm" type="text" id="company" maxlength="100" readonly wire:model.defer="prHeader.company_name">
                     </div>
                     <div class="col-md-3">
                         <label for="prno">Site</label>
@@ -198,7 +198,8 @@
                             <x-datepicker wire:model.defer="prHeader.valid_until" id="valid_until"
                                 :error="'date'"/>
                         </div>
-                    </div>                    
+                        @error('valid_until') <span class="text-red">This field is required.</span> @enderror
+                    </div>
                     <div class="col-md-3">
                         {{-- Remove Ref. 18-Jan-2022: fix notification at D-30, D-15, D-7 before expiry. --}}
                         {{-- <label for="date_to_notify">Days to Notify before BPO Expiry</label>

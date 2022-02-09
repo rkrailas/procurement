@@ -16,7 +16,7 @@ class PurchaseRequisitionList extends Component
 
     //for Grid
     public $sortDirection = "desc";
-    public $sortBy = "prh.prno";
+    public $sortBy = "prh.request_date";
     public $numberOfPage = 10;
     public $searchTerm = null;
 

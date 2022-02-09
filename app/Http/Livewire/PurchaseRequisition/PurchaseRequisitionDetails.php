@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\File;
 use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\Mail;
 use App\Support\Collection;
+use DateInterval;
+use DateTime;
 use Livewire\WithPagination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -359,6 +361,11 @@ class PurchaseRequisitionDetails extends Component
             if ($this->prHeader['ordertype'] == '21') {
                 Validator::make($this->prHeader, [
                     'budget_year' => 'required',
+                    'valid_until' => 'required',
+                ])->validate();
+            } else if ($this->prHeader['ordertype'] == '20') {
+                Validator::make($this->prHeader, [
+                    'valid_until' => 'required',
                 ])->validate();
             }
 
@@ -676,40 +683,106 @@ class PurchaseRequisitionDetails extends Component
 
         public function validatorDeciderApprove()
         {
-            DB::statement("UPDATE dec_val_workflow SET status=?, changed_by=?, changed_on=?
-                WHERE approver=? AND ref_doc_id=?" 
-                , ['30', auth()->user()->id, Carbon::now(), auth()->user()->username, $this->prHeader['id']]);
+            //dec_val_workflow & dec_val_workflow_log
+                DB::transaction(function() 
+                {
+                    DB::statement("UPDATE dec_val_workflow SET status=?, changed_by=?, changed_on=?
+                        WHERE approver=? AND ref_doc_id=?" 
+                        , ['30', auth()->user()->id, Carbon::now(), auth()->user()->username, $this->prHeader['id']]);
 
-            DB::statement("UPDATE dec_val_workflow_log SET status=?, completed_date=?, changed_by=?, changed_on=?
-            WHERE refdoc_id=? AND approver=?"
-            , ['30', Carbon::now(), auth()->user()->id, Carbon::now(), $this->prHeader['id'], auth()->user()->username]);
+                    DB::statement("UPDATE dec_val_workflow_log SET status=?, completed_date=?, changed_by=?, changed_on=?
+                        WHERE refdoc_id=? AND approver=?"
+                        , ['30', Carbon::now(), auth()->user()->id, Carbon::now(), $this->prHeader['id'], auth()->user()->username]);
+                });
 
-            $strsql = "SELECT approval_type FROM dec_val_workflow WHERE ref_doc_id =" . $this->prHeader['id'] . " AND approver='" . auth()->user()->username . "'";
-            $data = DB::select($strsql);
-            $xApproval_type = '';
-            if ($data) {
-                $xApproval_type = $data[0]->approval_type;
-            }
+                $strsql = "SELECT approval_type FROM dec_val_workflow WHERE ref_doc_id =" . $this->prHeader['id'] . " AND approver='" . auth()->user()->username . "'";
+                $data = DB::select($strsql);
+                $xApproval_type = '';
+                if ($data) {
+                    $xApproval_type = $data[0]->approval_type;
+                }
+            //dec_val_workflow & dec_val_workflow_log End
 
-           
-            if ($xApproval_type == 'VALIDATOR'){
-                DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=?
-                WHERE prno_id=?" 
-                , ['21', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+            //pr_item, pr_header
+                if ($xApproval_type == 'VALIDATOR'){
+                    DB::transaction(function() 
+                    {
+                        DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=?
+                            WHERE prno_id=?" 
+                            , ['21', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
 
-                DB::statement("UPDATE pr_header SET status=?, changed_by=?, changed_on=?
-                WHERE id=?" 
-                , ['21', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+                        DB::statement("UPDATE pr_header SET status=?, changed_by=?, changed_on=?
+                            WHERE id=?" 
+                            , ['21', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+                    });
 
-            } else if ($xApproval_type == 'DECIDER'){
-                DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=?
-                WHERE prno_id=?" 
-                , ['30', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+                } else if ($xApproval_type == 'DECIDER'){
+                    DB::transaction(function() 
+                    {
+                        DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=?
+                            WHERE prno_id=?" 
+                            , ['30', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
 
-                DB::statement("UPDATE pr_header SET status=?, changed_by=?, changed_on=?
-                WHERE id=?" 
-                , ['30', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
-            }
+                        //9-2-2022 for CR No.9
+                        DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=?
+                            WHERE prno_id=? AND skip_rfq=?" 
+                            , ['40', auth()->user()->id, Carbon::now(), $this->prHeader['id'], 1]);
+
+                        //9-2-2022 Add pr_authorized_date
+                        DB::statement("UPDATE pr_header SET status=?, pr_authorized_date=?, changed_by=?, changed_on=?
+                            WHERE id=?" 
+                            , ['30', Carbon::now(), auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+
+                        //9-2-2022 Remind for CR No. 9
+                        if ( $this->prHeader['valid_until'] AND ($this->prHeader['ordertype'] == '20' OR $this->prHeader['ordertype'] == '21') ){
+                            $interval = Carbon::now()->diff($this->prHeader['valid_until']);
+                            $days = $interval->format('%a');
+
+                            $reminder1 = new DateTime($this->prHeader['valid_until']);
+                            $reminder2 = new DateTime($this->prHeader['valid_until']);
+                            $reminder3 = new DateTime($this->prHeader['valid_until']);
+
+                            if ($days >= 30){
+                                $interval = new DateInterval('P30D');
+                                $reminder1 = $reminder1->sub($interval);
+    
+                                $interval = new DateInterval('P15D');
+                                $reminder2 = $reminder2->sub($interval);
+    
+                                $interval = new DateInterval('P7D');
+                                $reminder3 = $reminder3->sub($interval);
+
+                                DB::statement("UPDATE pr_header SET reminder1=?, reminder2=?, reminder3=?
+                                    WHERE id=?" 
+                                    , [$reminder1, $reminder2, $reminder3, $this->prHeader['id']]);
+    
+                            }else if ($days < 30 AND $days >= 15){
+                                $date = new DateTime($this->prHeader['valid_until']);
+    
+                                $interval = new DateInterval('P15D');
+                                $reminder1 = $reminder1->sub($interval);
+    
+                                $interval = new DateInterval('P7D');
+                                $reminder2 = $reminder2->sub($interval);
+
+                                DB::statement("UPDATE pr_header SET reminder1=?, reminder2=?
+                                    WHERE id=?" 
+                                    , [$reminder1, $reminder2, $this->prHeader['id']]);
+    
+                            }else if ($days < 15 AND $days >= 7){
+                                $date = new DateTime($this->prHeader['valid_until']);
+    
+                                $interval = new DateInterval('P7D');
+                                $reminder1 = $reminder1->sub($interval);
+
+                                DB::statement("UPDATE pr_header SET reminder1=?
+                                    WHERE id=?" 
+                                    , [$reminder1, $this->prHeader['id']]);
+                            }
+                        }
+                    });
+                }
+            //pr_item, pr_header End
 
             $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='100' AND class='DECIDER VALIDATOR'";
             $data = DB::select($strsql);
@@ -722,51 +795,52 @@ class PurchaseRequisitionDetails extends Component
                 ]);
             }
 
-            //ส่งเมล์
-            if (config('app.sendmail') == "Yes") {
-                
-                //requester
-                $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                    WHERE company = '" . auth()->user()->company . "' 
-                    AND id=" . $this->prHeader['requestor'];
-                $data = DB::select($strsql);
-                if ($data) {
-                    $requester_fullname = $data[0]->fullname;
-                    $requester_email = $data[0]->email;
-                }
+            //Send Mail
+                if (config('app.sendmail') == "Yes") {
+                    
+                    //requester
+                    $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                        WHERE company = '" . auth()->user()->company . "' 
+                        AND id=" . $this->prHeader['requestor'];
+                    $data = DB::select($strsql);
+                    if ($data) {
+                        $requester_fullname = $data[0]->fullname;
+                        $requester_email = $data[0]->email;
+                    }
 
-                //requested_for
-                $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                    WHERE company = '" . auth()->user()->company . "' 
-                    AND id=" . $this->prHeader['requested_for'];
-                $data = DB::select($strsql);
-                if ($data) {
-                    $requested_for_fullname = $data[0]->fullname;
-                    $requested_for_email = $data[0]->email;
-                }
+                    //requested_for
+                    $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                        WHERE company = '" . auth()->user()->company . "' 
+                        AND id=" . $this->prHeader['requested_for'];
+                    $data = DB::select($strsql);
+                    if ($data) {
+                        $requested_for_fullname = $data[0]->fullname;
+                        $requested_for_email = $data[0]->email;
+                    }
 
-                //approver
-                $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                    WHERE company = '" . auth()->user()->company . "' 
-                    AND id=" . auth()->user()->id;
-                $data = DB::select($strsql);
-                if ($data) {
-                    $approver_fullname = $data[0]->fullname;
-                    $approver_email = $data[0]->email;
-                }
+                    //approver
+                    $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                        WHERE company = '" . auth()->user()->company . "' 
+                        AND id=" . auth()->user()->id;
+                    $data = DB::select($strsql);
+                    if ($data) {
+                        $approver_fullname = $data[0]->fullname;
+                        $approver_email = $data[0]->email;
+                    }
 
-                //เนื้อหาใน Mail
-                if ($data) {
-                    $detailMail = [
-                        'template' => 'MAIL_PR02',
-                        'dear' => $requester_fullname,
-                        'docno' => $this->prHeader['prno'],
-                        'actionby' => $approver_fullname,
-                    ];
+                    //เนื้อหาใน Mail
+                    if ($data) {
+                        $detailMail = [
+                            'template' => 'MAIL_PR02',
+                            'dear' => $requester_fullname,
+                            'docno' => $this->prHeader['prno'],
+                            'actionby' => $approver_fullname,
+                        ];
 
-                    Mail::to($approver_email)->cc([$requester_email, $requested_for_email])->send(New WelcomeMail($detailMail));
+                        Mail::to($approver_email)->cc([$requester_email, $requested_for_email])->send(New WelcomeMail($detailMail));
+                    }
                 }
-            }
+            //Send Mail End
 
             return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
         }
@@ -1061,11 +1135,19 @@ class PurchaseRequisitionDetails extends Component
     //Line Item
         public function revokeLineItem()
         {
+            //8-2-2022 Change for CR No. 6
             if (($this->prItem['status'] == "20" OR $this->prItem['status'] == "21" OR $this->prItem['status'] == "30")
                 AND $this->prHeader['requestor'] == auth()->user()->id){
 
-                DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=? where id=?"
-                 , ['10',auth()->user()->id, Carbon::now(), $this->prItem['id']]);
+                DB::transaction(function() 
+                {
+                    DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=? where id=?"
+                    , ['10',auth()->user()->id, Carbon::now(), $this->prItem['id']]);
+
+                    DB::statement("UPDATE pr_header SET status=?, changed_by=?, changed_on=? where id=?"
+                    , ['10',auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+                });
+                
 
                 $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
                 $data = DB::select($strsql);
@@ -1200,6 +1282,9 @@ class PurchaseRequisitionDetails extends Component
         {
             //Get Line Item
             $this->isCreateLineItem = false;
+
+            //การ Disable aelect2 ยังไม่ได้ใช้ตอนนี้
+            //$this->dispatchBrowserEvent('disable-partno-select2');
 
             $strsql = "SELECT a.id, a.[lineno], a.partno, a.description, a.purchase_unit, a.unit_price, a.currency, a.exchange_rate
                 , a.purchase_group, a.account_group, a.qty, a.internal_order, FORMAT(a.req_date,'yyyy-MM-dd') AS req_date, a.budget_code, a.over_1_year_life
@@ -1459,7 +1544,7 @@ class PurchaseRequisitionDetails extends Component
         public function updatedPrItemPartno() 
         {
             $strsql = "SELECT a.partno, a.part_name, a.purchase_uom, a.purchase_group, a.account_group, a.brand, a.model, a.skip_rfq, a.skip_doa
-                    , a.primary_supplier, a.base_price AS unit_price, a.currency, b.ratio_from AS exchange_rate, a.min_order_qty, a.supplier_lead_time
+                    , a.primary_supplier, a.base_price, a.final_price, a.currency, b.ratio_from AS exchange_rate, a.min_order_qty, a.supplier_lead_time
                     , c.debit_gl as budget_code, a.supplier_id
                     FROM part_master a
                     LEFT JOIN currency_trans_ratios b ON a.currency = b.from_currency
@@ -1477,14 +1562,23 @@ class PurchaseRequisitionDetails extends Component
                     $this->prItem['model'] = $data[0]->model;
                     $this->prItem['skip_rfq'] = boolval($data[0]->skip_rfq);
                     $this->prItem['skip_doa'] = boolval($data[0]->skip_doa);
-                    $this->prItem['unit_price'] = round($data[0]->unit_price,2);
                     $this->prItem['currency'] = $data[0]->currency;
                     $this->prItem['exchange_rate'] = round($data[0]->exchange_rate,2);
+
+                    //9-2-2022 ตรวจสอบตาม CR No.11
+                    $strsql = "SELECT partno FROM part_master
+                        WHERE ISNULL(account_group,'') <> '' AND ISNULL(skip_rfq,0) = 1 AND partno='" . $this->prItem['partno'] . "'";
+                    $data2 = DB::select($strsql);
+                    if ($data2){
+                        $this->prItem['unit_price'] = round($data[0]->final_price,2);
+                    }else{
+                        $this->prItem['unit_price'] = round($data[0]->base_price,2);
+                    }
 
                     if ($data[0]->budget_code) {
                         $this->prItem['budget_code'] = $data[0]->budget_code;
 
-                        //Default budgetcode-select2 ให้
+                        //Default budgetcode-select2
                         $newOption = "<option value=' '>--- Please Select ---</option>";
                         $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
                         foreach ($xBudgetcode_dd as $row) {
@@ -1497,7 +1591,7 @@ class PurchaseRequisitionDetails extends Component
                         $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
 
                     }else{
-                        //Get ค่าใน budgetcode_dd ใหม่                        
+                        //Get ค่าใน budgetcode_dd ใหม่
                         $this->budgetcode_dd = [];
                         $strsql = "select c.account, c.description
                             FROM pr_header a
@@ -1532,6 +1626,7 @@ class PurchaseRequisitionDetails extends Component
             }
         }
     //Line Item End
+
 
     public function showAddItem()
     {
@@ -1747,6 +1842,9 @@ class PurchaseRequisitionDetails extends Component
                 $this->prHeader['phone'] = $data[0]->phone;
             }
 
+            //9-2-2022 Update partno for CR No.10
+            $this->loadDD_partno_dd(true);
+
         } else {
             $this->prHeader['company'] = "";
             $this->prHeader['site'] = "";
@@ -1890,6 +1988,24 @@ class PurchaseRequisitionDetails extends Component
         $this->prHeader['notify_below_35'] =  false;
     }
 
+    public function loadDD_partno_dd($render=false)
+    {
+        $this->partno_dd = [];
+        $strsql = "SELECT partno, part_name FROM part_master 
+            WHERE ISNULL(block,0) = 0 AND ISNULL(flag_deletion,0) = 0 AND ( GETDATE() BETWEEN valid_from AND valid_until )
+            AND site = '" . $this->prHeader['site'] . "' ORDER BY partno";
+        $this->partno_dd = DB::select($strsql);
+
+        if ($render){
+            $newOption = "<option value=' '>--- Please Select ---</option>";
+            $xpartno_dd = json_decode(json_encode($this->partno_dd), true);
+            foreach ($xpartno_dd as $row) {
+                $newOption = $newOption . "<option value='" . $row['partno'] . "'>" . $row['partno'] . " : " . $row['part_name'] . "</option>";
+            }
+            $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#partno-select2']);
+        }
+    }
+
     public function loadDropdownList()
     {
         //Herder
@@ -1915,9 +2031,7 @@ class PurchaseRequisitionDetails extends Component
 
         //Line Items
             //partno
-            $this->partno_dd = [];
-            $strsql = "SELECT partno, part_name FROM part_master WHERE site = '" . $this->prHeader['site'] . "' ORDER BY partno";
-            $this->partno_dd = DB::select($strsql);
+            $this->loadDD_partno_dd();
 
             //currency
             $this->currency_dd = [];

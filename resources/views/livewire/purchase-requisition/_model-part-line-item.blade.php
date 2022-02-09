@@ -33,6 +33,13 @@
                             @endforeach
                         </x-select2>
                         @error('partno') <span class="text-red">This field is required.</span> @enderror
+                       
+                        {{-- @if ($isCreateLineItem)
+
+                        @else
+                        <label>Part <span style="color: red">*</span></label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.partno">
+                        @endif --}}
                     </div>
                 </div>
 
@@ -276,6 +283,11 @@
     //     $(event.detail.selectName).html(" ");
     //     $(event.detail.selectName).append(event.detail.newOption);
     // })
+
+    // การ Disable aelect2 ยังไม่ได้ใช้ตอนนี้
+    // window.addEventListener('disable-partno-select2', event => {
+    //     $("#partno-select2").attr("disabled", true);
+    // });
 
     document.addEventListener("livewire:load", function() { 
         @this.setDefaultSelect2InModelLineItem()
