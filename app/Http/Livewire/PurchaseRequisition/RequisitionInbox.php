@@ -67,13 +67,13 @@ class RequisitionInbox extends Component
     {
         $this->loadDropdownList();
 
-        $xWhere = " WHERE a.approver='" . auth()->user()->username . "'";
+        $xWhere = " WHERE a.status='20' AND a.approver='" . auth()->user()->username . "'";
 
         if ($this->doctype) {
             $xWhere = $xWhere . " AND a.ref_doc_type = '" . $this->doctype . "'";
         }
 
-        // 8/2/2022 > Hide by CR No.4
+        // 8/2/2022 > Not use CR No.4
         // if ($this->status) {
         //     $xWhere = $xWhere . " AND a.status = '" . $this->status . "'";
         // }

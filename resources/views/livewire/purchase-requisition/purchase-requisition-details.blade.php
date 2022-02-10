@@ -493,9 +493,10 @@
                                                             <td scope="col">{{ $deciderList[$index]['fullname'] }}</td>
                                                             <td scope="col">{{ $deciderList[$index]['company'] }}</td>
                                                             <td scope="col">{{ $deciderList[$index]['position'] }}</td>
-                                                            <td scope="col">{{ $deciderList[$index]['status'] }}</td>
+                                                            <td scope="col">{{ $deciderList[$index]['statusname'] }}</td>
                                                             <td scope="col">
-                                                                @if (auth()->user()->username == $deciderList[$index]['approver'] AND $isValidatorApprove)
+                                                                @if (auth()->user()->username == $deciderList[$index]['approver'] 
+                                                                    AND $deciderList[$index]['status'] == '20')
                                                                 <button class="btn btn-sm btn-danger" wire:click.prevent="validatorDeciderApprove" >Approve</button>
                                                                 <button class="btn btn-sm btn-light" wire:click.prevent="validatorDeciderReject" >Reject</button>
                                                                 @else
@@ -530,7 +531,7 @@
                                                             <td scope="col">{{ $deciderList[$index]['fullname'] }}</td>
                                                             <td scope="col">{{ $deciderList[$index]['company'] }}</td>
                                                             <td scope="col">{{ $deciderList[$index]['position'] }}</td>
-                                                            <td scope="col">{{ $deciderList[$index]['status'] }}</td>
+                                                            <td scope="col">{{ $deciderList[$index]['statusname'] }}</td>
                                                             <td scope="col">
                                                                 <center>
                                                                     <a href="" wire:click.prevent="confirmDelete('{{ $deciderList[$index]['approver'] }}', 'decider')">
@@ -618,9 +619,10 @@
                                                                 <td scope="col">{{ $validatorList[$index]['fullname'] }}</td>
                                                                 <td scope="col">{{ $validatorList[$index]['company'] }}</td>
                                                                 <td scope="col">{{ $validatorList[$index]['position'] }}</td>
-                                                                <td scope="col">{{ $validatorList[$index]['status'] }}</td>
+                                                                <td scope="col">{{ $validatorList[$index]['statusname'] }}</td>
                                                                 <td scope="col">
-                                                                    @if (auth()->user()->username == $validatorList[$index]['approver'] AND $isValidatorApprove == false)
+                                                                    @if (auth()->user()->username == $validatorList[$index]['approver'] 
+                                                                        AND $validatorList[$index]['status'] == '20')
                                                                     <button class="btn btn-sm btn-danger" wire:click.prevent="validatorDeciderApprove" >Approve</button>
                                                                     <button class="btn btn-sm btn-light" wire:click.prevent="validatorDeciderReject" >Reject</button>
                                                                     @else
@@ -640,6 +642,7 @@
                                                     <table class="table table-sm">
                                                         <thead>
                                                             <tr>
+                                                            <th scope="col">Seq</th>
                                                             <th scope="col">User ID</th>
                                                             <th scope="col">Name</th>
                                                             <th scope="col">Company</th>
@@ -651,11 +654,12 @@
                                                         <tbody>
                                                             @foreach ($validatorList as $index => $row)
                                                             <tr>
+                                                                <td scope="col">{{ $validatorList[$index]['seqno'] }}</td>
                                                                 <td scope="col">{{ $validatorList[$index]['approver'] }}</td>
                                                                 <td scope="col">{{ $validatorList[$index]['fullname'] }}</td>
                                                                 <td scope="col">{{ $validatorList[$index]['company'] }}</td>
                                                                 <td scope="col">{{ $validatorList[$index]['position'] }}</td>
-                                                                <td scope="col">{{ $validatorList[$index]['status'] }}</td>
+                                                                <td scope="col">{{ $validatorList[$index]['statusname'] }}</td>
                                                                 <td scope="col">
                                                                     <center>
                                                                         <a href="" wire:click.prevent="confirmDelete('{{ $validatorList[$index]['approver'] }}', 'validator')">
@@ -890,10 +894,15 @@
             <div class="col-md-12">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <button wire:click.prevent="releaseSourcing" class="btn btn-sm btn-danger" {{ $prHeader['prno'] ? '' : 'disabled' }} >
+                        @if ( $prHeader['status'] < '20' )
+                        <button wire:click.prevent="releaseForSourcing" class="btn btn-sm btn-danger">
                             <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
+                        @else
+                        <button wire:click.prevent="releaseForSourcing" class="btn btn-sm btn-danger" disabled>
+                            <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
+                        @endif
 
-                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
+                        <button wire:click.prevent="releaseForPO" class="btn btn-sm btn-danger">
                             <i class="fas fa-check mr-2"></i>Release for PO</button>
 
                         <a href="PRForm/{{ $prHeader['prno'] }}" target="_blank">
@@ -901,7 +910,7 @@
                                 <i class="fas fa-print mr-2"></i>Print</button>
                         </a>
 
-                        <button wire:click.prevent="cancel" class="btn btn-sm btn-light">
+                        <button wire:click.prevent="cancelPR" class="btn btn-sm btn-light">
                             <i class="fas fa-times mr-2"></i>Cancel</button>
 
                         <button wire:click.prevent="confirmDeletePrHeader_Detail" 
@@ -918,7 +927,9 @@
                     <div>
                         <button wire:click.prevent="backToPRList" class="btn btn-sm btn-light">
                             <i class="fas fa-arrow-alt-circle-left mr-1"></i></i>Back</button>
-                        <button wire:click.prevent="savePR" class="btn btn-sm btn-danger" class="btn btn-sm btn-light" {{ $prHeader['status'] > '10' ? 'disabled' : '' }}>
+                        <button wire:click.prevent="savePR" class="btn btn-sm btn-danger" class="btn btn-sm btn-light" 
+                            {{-- {{ $prHeader['status'] > '10' ? 'disabled' : '' }} --}}
+                            >
                             <i class="fas fa-save mr-1"></i>Save</button>
                     </div>
                     
@@ -948,7 +959,7 @@
     });
 
     window.addEventListener('clear-select2', event => {
-        clearSelect2('buyer-select2');
+        //clearSelect2('buyer-select2');
         clearSelect2('decider-select2');
         clearSelect2('validator-select2');
     });
