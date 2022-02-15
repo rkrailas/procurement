@@ -155,7 +155,7 @@ class PurchaseRequisitionList extends Component
             $xWhere = $xWhere . " AND (prh.requestor=" . auth()->user()->id . 
                                     " OR prh.requested_for=" . auth()->user()->id . 
                                     " OR (prh.id IN (SELECT ref_doc_id FROM dec_val_workflow WHERE approver='" . auth()->user()->username . "')
-                                            AND prh.status>='20'
+                                            AND prh.status >= '20'
                                          )
                                 )"; //Decider & Validator can view the PR/MR since the PR Released for Sourcing
         }

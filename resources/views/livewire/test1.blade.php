@@ -46,6 +46,11 @@
                     </a>
                 </div>
             </div>
+            <div class="row">
+                <div class="col">
+                    {{ $this->callFromBlade() }} 
+                </div>
+            </div>
         </div>
     </section>
 </div>

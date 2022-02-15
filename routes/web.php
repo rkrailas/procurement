@@ -6,12 +6,14 @@ use App\Http\Livewire\PurchaseRequisition\PurchaseRequisitionDetails;
 use App\Http\Livewire\PurchaseRequisition\RequisitionInbox;
 use App\Http\Livewire\admin\ChangePassword;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\DropzoneController;
 use App\Http\Controllers\Form\PRForm;
 
 //for Test
 use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Livewire\Test1;
+use App\Http\Livewire\Test2;
 use App\Http\Controllers\PHPJasperController;
 use App\Http\Controllers\PageController;
 
@@ -45,8 +47,12 @@ Route::post('logout', [ClientController::class, 'logout'])->name('logout');
 
 //for Test
 Route::get('test1', Test1::class)->name('test1');
-Route::post('/dropzone-store', [Test1::class,'dropzoneStore'])->name('dropzone.store');
+Route::get('test2', Test2::class)->name('test2');
+//Route::post('/dropzone-store', [Test1::class,'dropzoneStore'])->name('dropzone.store');
 Route::get('PHPJasper/{prno}', [PHPJasperController::class,'genReport'])->name('PHPJasper');
+
+Route::get('/dropzone', [DropzoneController::class,'dropzone']);
+Route::post('/dropzone-store', [DropzoneController::class,'dropzoneStore'])->name('dropzone.store');
 
 //Test Dropzone
 Route::post('attactFilePR',[PurchaseRequisitionDetails::class,'attactFilePR'])->name('attactFilePR'); 

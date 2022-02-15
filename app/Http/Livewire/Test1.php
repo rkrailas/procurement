@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Redirect;
 
 class Test1 extends Component
 {
+    public function callFromBlade()
+    {
+        return ('55555555555');
+    }
+
     public function myRandom()
     {
         $xMonth = date_format(Carbon::now(),'m');

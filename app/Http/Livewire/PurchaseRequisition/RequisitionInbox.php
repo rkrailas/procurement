@@ -85,11 +85,11 @@ class RequisitionInbox extends Component
             LEFT JOIN dec_val_status c ON a.status = c.status_no 
             LEFT JOIN pr_header d ON a.ref_doc_id = d.id
             LEFT JOIN users e ON d.requestor = e.id 
-            LEFT JOIN users f ON d.requested_for = f.id "            
+            LEFT JOIN users f ON d.requested_for = f.id "
             . $xWhere . "
             ORDER BY " . $this->sortBy . " " . $this->sortDirection;
 
-                $workflow_list = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
+            $workflow_list = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
         return view('livewire.purchase-requisition.requisition-inbox',[
             'workflow_list' => $workflow_list,

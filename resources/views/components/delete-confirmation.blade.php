@@ -20,7 +20,8 @@
   window.addEventListener('delete-confirmation', function(e) {
       Swal.fire({
       title: e.detail.title,
-      // text: 'คุณจะไม่สามารถย้อนกลับได้!',
+      text: e.detail.text,
+      html: e.detail.text,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',

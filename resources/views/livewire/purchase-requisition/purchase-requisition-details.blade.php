@@ -42,35 +42,15 @@
                 <div class="row">
                     <div class="col-md-3">
                         <label for="prno">Requestor</label>
-                        <input class="form-control form-control-sm" type="text" id="requestor_name" readonly wire:model.defer="prHeader.requestor_name">
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.requestor_name">
                     </div>
                     <div class="col-md-3">
-                        <label>Requested For <span style="color: red">*</span></label>
-                        <x-select2 id="requestedfor-select2" wire:model.defer="prHeader.requested_for">
-                            @foreach($requested_for_dd as $row)
-                            <option value="{{ $row->id }}">
-                                {{ $row->fullname }}
-                            </option>
-                            @endforeach
-                        </x-select2>
-                        @error('requested_for') <span class="text-red">This field is required.</span> @enderror
-                        {{-- @error('requested_for')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
-                        @enderror --}}
+                        <label for="prno">Phone (Requestor)</label>
+                        <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.phone">
                     </div>
                     <div class="col-md-3">
-                        <label>Delivery Address <span style="color: red">*</span></label>
-                        <select class="form-control form-control-sm" id="delivery_address" wire:model.defer="prHeader.delivery_address">
-                            <option value="">--- Please Select ---</option>
-                            @foreach($delivery_address_dd as $row)
-                            <option value="{{ $row->address_id }}">
-                                {{ $row->address_id }} : {{ $row->address }}
-                            </option>
-                            @endforeach
-                        </select>
-                        @error('delivery_address') <span class="text-red">This field is required.</span> @enderror
+                        <label for="prno">Ext. (Requestor)</label>
+                        <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.extention">
                     </div>
                     <div class="col-3">
                         <label class="">Request Date</label>
@@ -85,45 +65,79 @@
                         </div>
                     </div>
                 </div>
-        
+
                 <div class="row">
                     <div class="col-md-3">
-                        <label for="prno">Company</label>
-                        <input class="form-control form-control-sm" type="text" id="company" maxlength="100" readonly wire:model.defer="prHeader.company_name">
+                        <label>Requested For <span style="color: red">*</span></label>
+                        <x-select2 id="requestedfor-select2" wire:model.defer="prHeader.requested_for">
+                            @foreach($requested_for_dd as $row)
+                            <option value="{{ $row->id }}">
+                                {{ $row->fullname }}
+                            </option>
+                            @endforeach
+                        </x-select2>
+                        @error('requested_for') <span class="text-red">This field is required.</span> @enderror
                     </div>
                     <div class="col-md-3">
-                        <label for="prno">Site</label>
-                        <input class="form-control form-control-sm" type="text" id="site" maxlength="100" readonly wire:model="prHeader.site">
+                        <label>Phone (Requestor For)</label>
+                        <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.phone_reqf">
                     </div>
                     <div class="col-md-3">
-                        <label for="prno">Function</label>
-                        <input class="form-control form-control-sm" type="text" id="functions" maxlength="100" readonly wire:model.defer="prHeader.functions">
+                        <label>Ext. (Requestor For)</label>
+                        <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.extention_reqf">
                     </div>
                     <div class="col-md-3">
-                        <label for="prno">Department</label>
-                        <input class="form-control form-control-sm" type="text" id="department" maxlength="100" readonly wire:model.defer="prHeader.department">
+                        <label>Email (Requestor For)</label>
+                        <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.email_reqf">
                     </div>
                 </div>
-        
+
                 <div class="row">
                     <div class="col-md-3">
-                        <label for="prno">Division</label>
-                        <input class="form-control form-control-sm" type="text" id="division" maxlength="100" readonly wire:model.defer="prHeader.division">
+                        <label>Company</label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.company_name">
                     </div>
                     <div class="col-md-3">
-                        <label for="prno">Section</label>
-                        <input class="form-control form-control-sm" type="text" id="section" maxlength="100" readonly wire:model.defer="prHeader.section">
+                        <label>Site</label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model="prHeader.site">
                     </div>
                     <div class="col-md-3">
-                        <label for="prno">Email</label>
-                        <input class="form-control form-control-sm" type="text" id="email" maxlength="100" readonly wire:model.defer="prHeader.email">
+                        <label>Function</label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.functions">
                     </div>
                     <div class="col-md-3">
-                        <label for="prno">Phone</label>
-                        <input class="form-control form-control-sm" type="text" id="phone" maxlength="100" readonly wire:model.defer="prHeader.phone">
+                        <label>Department</label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.department">
                     </div>
                 </div>
-        
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Division</label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.division">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Section</label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.section">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Cost Center (Department Code) <span style="color: red">*</span></label>
+                        <select class="form-control form-control-sm" id="cost_center" wire:model="prHeader.cost_center">
+                            <option value="">--- Please Select ---</option>
+                            @foreach($cost_center_dd as $row)
+                            <option value="{{ $row->cost_center }}">
+                                {{ $row->cost_center }}
+                            </option>
+                            @endforeach
+                        </select>
+                        @error('cost_center') <span class="text-red">This field is required.</span> @enderror
+                    </div>
+                    <div class="col-md-3">
+                        <label>Cost Center Description</label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.costcenter_desc">
+                    </div>
+                </div>
+
                 <div class="row">
                     <div class="col-md-3">
                         <label>Buyer <span style="color: red">*</span></label>
@@ -136,25 +150,18 @@
                         </x-select2>
                         @error('buyer') <span class="text-red">This field is required.</span> @enderror
                     </div>
-                    <div class="col-md-6">
-                        <label>Cost Center (Department Code) <span style="color: red">*</span></label>
-                        <select class="form-control form-control-sm" id="cost_center" wire:model.defer="prHeader.cost_center">
+                    <div class="col-md-3">
+                        <label>Delivery Address <span style="color: red">*</span></label>
+                        <select class="form-control form-control-sm" id="delivery_address" wire:model="prHeader.delivery_address">
                             <option value="">--- Please Select ---</option>
-                            @foreach($cost_center_dd as $row)
-                            <option value="{{ $row->cost_center }}">
-                                {{ $row->cost_center }} : {{ $row->description }}
+                            @foreach($delivery_address_dd as $row)
+                            <option value="{{ $row->address_id }}">
+                                {{ $row->address_id }} : {{ $row->address }}
                             </option>
                             @endforeach
                         </select>
-                        @error('cost_center') <span class="text-red">This field is required.</span> @enderror
+                        @error('delivery_address') <span class="text-red">This field is required.</span> @enderror
                     </div>
-                    <div class="col-md-3">
-                        {{-- Remove ref 18-Jan-2022: e-decision at attachment level to support header and item level validation --}}
-                        {{-- <label for="prno">E-Decision No.</label>
-                        <input class="form-control form-control-sm" type="text" id="edecision" maxlength="100" wire:model.defer="prHeader.edecision"> --}}
-                    </div>
-                </div>
-                <div class="row">
                     <div class="col-md-3">
                         <label>Budget Year <span style="color: red">*</span></label>
                         <select class="form-control form-control-sm" id="budget_year" wire:model.defer="prHeader.budget_year">
@@ -167,14 +174,12 @@
                         </select>
                         @error('budget_year') <span class="text-red">This field is required.</span> @enderror
                     </div>
-                    <div class="col-9">
+                    <div class="col-3">
                         <label for="prno">Purpose of PR <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.purpose_pr">
                         @error('purpose_pr') <span class="text-red">This field is required.</span> @enderror
-
                     </div>
                 </div>
-
             </div>
         </div>
         {{-- Header End--}}
@@ -749,20 +754,34 @@
                 {{-- Tab Attachments --}}
                     <div class="tab-pane fade {{ $currentTab == 'attachments' ? 'show active' : '' }}" id="pills-attachments" role="tabpanel" aria-labelledby="pills-attachments-tab" wire:ignore.self>
                             <div class="row">
-                                <div class="col-md-5">
+                                <div class="col-md-4">
                                     <label>Attachment Level <span style="color: blue; font-weight: normal">(Please select before add new files.)</span></label>
-                                    <select class="form-control form-control-sm" wire:model="attachment_lineid">
+                                    <select class="form-control form-control-sm" wire:model="attachment_lineno">
                                         <option value="">--- Please Select ---</option>
                                         <option value="0">0 : Level PR Header</option>
                                         @foreach($prLineNoAtt_dd as $row)
-                                        <option value="{{ $row->id }}">
+                                        <option value="{{ $row->lineno }}">
                                             {{ $row->lineno }} : {{ $row->description }}
                                         </option>
                                         @endforeach
                                     </select>
                                 </div>
+                                <div class="col-md-4">
+                                    <label>Document Type</label>
+                                    <select class="form-control form-control-sm" wire:model="attachment_filetype">
+                                        <option value="">--- Please Select ---</option>
+                                        <option value="General_Documents">General Documents</option>
+                                        <option value="eDecision">eDecision</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label>eDecision No.</label>
+                                    <input class="form-control form-control-sm" type="text" {{ $attachment_filetype == 'eDecision' ? '' : 'readonly' }}
+                                        wire:model="attachment_edecisionno">
+                                </div>
                             </div>
-                            @if ($this->attachment_lineid != '')
+
+                            @if ($this->attachment_lineno != '')
                             <form autocomplete="off" enctype="multipart/form-data" wire:submit.prevent="addAttachment">
                                 @csrf
                                 <div class="row mb-3">
@@ -770,19 +789,27 @@
                                         <div class="custom-file">
                                             <input wire:model="attachment_file" type="file" class="custom-file-input" id="customFile" multiple>
                                                 @error('attachment_file.*') <span class="text-danger">{{ $message }}</span> @enderror
-                                            <label class="custom-file-label" for="customFile">
+                                            {{-- <label class="custom-file-label" for="customFile">
                                                 @if ($attachment_file)
                                                 @foreach ($attachment_file as $file)
-                                                [{{$file->getClientOriginalName()}}] 
-                                                @endforeach                                    
+                                                {{ $file->getClientOriginalName() }} ({{ $this->formatSizeUnits($file->getSize()) }}) <br/>
+                                                @endforeach
                                                 @else
                                                 Browse Files
-                                                @endif                                
-                                            </label>
-                                        </div>                        
+                                                @endif
+                                            </label> --}}
+                                            <label class="custom-file-label" for="customFile">Browse Files</label>
+
+                                            @if ($attachment_file)
+                                                @foreach ($attachment_file as $file)
+                                                {{ $file->getClientOriginalName() }} ({{ $this->formatSizeUnits($file->getSize()) }}) <br/>
+                                                @endforeach
+                                            @endif
+                                            
+                                        </div>
                                     </div>
                                     <div class="col-md-3 text-left">
-                                        <button type="submit" class="btn btn-danger"><i class="fas fa-plus-square mr-1"></i>Add Item</button>
+                                        <button type="submit" class="btn btn-danger"><i class="fas fa-cloud-upload-alt mr-1"></i>Upload</button>
                                         <span style="vertical-align:bottom; color:red">max file size 5 mb</span> 
                                     </div>
                                 </div>
@@ -794,11 +821,14 @@
                                 <table class="table table-sm nissanTB">
                                     <thead>
                                     <tr>
-                                        <th scope="col">FileName</th>
-                                        <th scope="col">File Type</th>
-                                        <th scope="col">Ref Doc Type</th>
+                                        <th scope="col">File Name</th>
+                                        <th scope="col">Document Type</th>
+                                        <th scope="col">eDecision No.</th>
                                         <th scope="col">Ref Document</th>
+                                        <th scope="col">Ref Document No.</th>
                                         <th scope="col">Line No.</th>
+                                        <th scope="col">Attached By</th>
+                                        <th scope="col">Attached Date/Time</th>
                                         <th scope="col"></th>
                                     </tr>
                                     </thead>
@@ -806,27 +836,27 @@
                                     @foreach ($attachmentFileList as $index => $row)
                                     <tr>
                                         <td scope="col">{{ $attachmentFileList[$index]['file_name'] }}</td>
-                                        <td scope="col">
-                                            <select class="form-control form-control-sm" wire:model="attachmentFileList.{{$index}}.file_type"
-                                                {{-- wire:change="selectedFileType('{{ $attachmentFileList[$index]['id'] }}','{{ $attachmentFileList[$index]['file_type']}}')" --}}
-                                                >
-                                                <option value="">--- Please Select ---</option>
-                                                <option value="General_Documents">General Documents</option>
-                                                <option value="eDecision">eDecision</option>
-                                            </select>
-                                        </td>
+                                        <td scope="col">{{ $attachmentFileList[$index]['file_type'] }}</td>
+                                        <td scope="col">{{ $attachmentFileList[$index]['edecision_no'] }}</td>
                                         <td scope="col">{{ $attachmentFileList[$index]['ref_doctype'] }}</td>
                                         <td scope="col">{{ $attachmentFileList[$index]['ref_docno'] }}</td>
                                         <td scope="col">{{ $attachmentFileList[$index]['ref_lineno'] }}</td>
+                                        <td scope="col">{{ $attachmentFileList[$index]['create_by'] }}</td>
+                                        <td scope="col">{{ $attachmentFileList[$index]['create_on'] }}</td>
                                         <td scope="col" class="d-flex justify-content-between">
                                             <div>
-                                                <a href="" wire:click.prevent="confirmDelete('{{ $attachmentFileList[$index]['id'] }}', 'attachment')">
-                                                    <i class="fas fa-times text-center" style="color: red"></i>
+                                                <a href="" wire:click.prevent="editAttachment('{{ $attachmentFileList[$index]['id'] }}')">
+                                                    <i class="fa fa-edit mr-2"></i>
                                                 </a>
                                             </div>
                                             <div>
                                                 <a href="{{url('storage/attachments/' . $attachmentFileList[$index]['file_path'] )}}">
-                                                    <i class="fas fa-download"></i>
+                                                    <i class="fas fa-download mr-1"></i>
+                                                </a>
+                                            </div>
+                                            <div>
+                                                <a href="" wire:click.prevent="confirmDelete('{{ $attachmentFileList[$index]['id'] }}', 'attachment')">
+                                                    <i class="fas fa-times text-center mr-1" style="color: red"></i>
                                                 </a>
                                             </div>
                                         </td>
@@ -946,34 +976,88 @@
         @include('livewire.purchase-requisition._model-expense-line-item')
     @endif
 
+    {{-- Modal Edit Attachment --}}
+    <div class="modal" id="modelEditAttachment" tabindex="-1" role="dialog" data-backdrop="static" wire:ignore.self>
+        <div class="modal-dialog" role="document" style="max-width: 60%;">
+            <div class="modal-content ">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel" style="font-size: 20px;">
+                        Edit File Detail
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label>File Name</label>
+                            <input class="form-control form-control-sm" type="text" maxlength="200" wire:model.defer="editAttachment.file_name">
+                        </div>
+                        <div class="col-md-6">
+                            <label>Attachment Level</label>
+                            <select class="form-control form-control-sm" wire:model="editAttachment.ref_lineno">
+                                <option value="">--- Please Select ---</option>
+                                <option value="0">0 : Level PR Header</option>
+                                @foreach($prLineNoAtt_dd as $row)
+                                <option value="{{ $row->lineno }}">
+                                    {{ $row->lineno }} : {{ $row->description }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label>Document Type</label>
+                            <select class="form-control form-control-sm" wire:model="editAttachment.file_type">
+                                <option value="">--- Please Select ---</option>
+                                <option value="General_Documents">General Documents</option>
+                                <option value="eDecision">eDecision</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label>eDecision No.</label>
+                            @if( isset($editAttachment['file_type']))
+                            <input class="form-control form-control-sm" type="text" {{ $editAttachment['file_type'] == 'eDecision' ? '' : 'readonly' }}
+                                wire:model.defer="editAttachment.edecision_no">
+                            @endif
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label>Attachment By</label>
+                            <input class="form-control form-control-sm" type="text" readonly wire:model="editAttachment.create_by">
+                        </div>
+                        <div class="col-md-6">
+                            <label>Last Modified</label>
+                            <input class="form-control form-control-sm" type="text" readonly wire:model="editAttachment.last_modified">
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-12 d-flex justify-content-end">
+                            <div>
+                                <button type="button" class="btn btn-sm btn-light" data-dismiss="modal" wire:click.prevent="closedModal">
+                                    <i class="fa fa-times mr-1"></i>Cancel</button>
+                                <button type="button" class="btn btn-sm btn-danger" wire:click.prevent="editAttachment_Save">
+                                    <i class="fa fa-save mr-1"></i>Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('js')
 <script>
-    window.addEventListener('bindToSelect2', event => {
-        // $( document ).ready(function() {
-        //     alert( "ready!" );
-        // });
-        $(event.detail.selectName).html(" ");
-        $(event.detail.selectName).append(event.detail.newOption);
-    });
 
-    window.addEventListener('clear-select2', event => {
-        //clearSelect2('buyer-select2');
-        clearSelect2('decider-select2');
-        clearSelect2('validator-select2');
-    });
+window.addEventListener('show-modelEditAttachment', event => {
+        $('#modelEditAttachment').modal('show');
+    })
 
-    //Disable PR Detail Where status > 10 AND < 30
-    // window.addEventListener('disable-prdetail', event => {
-    //     $("#PR_Detail :input").attr("disabled", true);
-    // });
-
-    //Action after page load
-    document.addEventListener("livewire:load", function() { 
-        @this.setDefaultSelect2();
-        //@this.disablePRDetail(); //Check PR Status > 10 AND < 30 Disable
-    });
+    window.addEventListener('hide-modelEditAttachment', event => {
+        $('#modelEditAttachment').modal('hide');
+    })
 
 </script>
 @endpush
