@@ -756,7 +756,7 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <label>Attachment Level <span style="color: blue; font-weight: normal">(Please select before add new files.)</span></label>
-                                    <select class="form-control form-control-sm" wire:model="attachment_lineno">
+                                    {{-- <select class="form-control form-control-sm" wire:model="attachment_lineno">
                                         <option value="">--- Please Select ---</option>
                                         <option value="0">0 : Level PR Header</option>
                                         @foreach($prLineNoAtt_dd as $row)
@@ -764,7 +764,15 @@
                                             {{ $row->lineno }} : {{ $row->description }}
                                         </option>
                                         @endforeach
-                                    </select>
+                                    </select> --}}
+                                    <x-select2-multiple id="attachment_lineno-select2" wire:model.defer="attachment_lineno">
+                                        <option value="0">0 : Level PR Header</option>
+                                        @foreach($prLineNoAtt_dd as $row)
+                                        <option value="{{ $row->lineno }}">
+                                            {{ $row->lineno }} : {{ $row->description }}
+                                        </option>
+                                        @endforeach
+                                    </x-select2-multiple>
                                 </div>
                                 <div class="col-md-4">
                                     <label>Document Type</label>
@@ -781,28 +789,30 @@
                                 </div>
                             </div>
 
-                            @if ($this->attachment_lineno != '')
                             <form autocomplete="off" enctype="multipart/form-data" wire:submit.prevent="addAttachment">
                                 @csrf
                                 <div class="row mb-3">
                                     <div class="col-md-9">
                                         <div class="custom-file">
                                             <input wire:model="attachment_file" type="file" class="custom-file-input" id="customFile" multiple>
-                                                @error('attachment_file.*') <span class="text-danger">{{ $message }}</span> @enderror
-                                            {{-- <label class="custom-file-label" for="customFile">
-                                                @if ($attachment_file)
-                                                @foreach ($attachment_file as $file)
-                                                {{ $file->getClientOriginalName() }} ({{ $this->formatSizeUnits($file->getSize()) }}) <br/>
-                                                @endforeach
-                                                @else
-                                                Browse Files
-                                                @endif
-                                            </label> --}}
+                                            @error('attachment_file.*')
+                                            <div class="alert alert-danger" role="alert">
+                                                The attachment file must not be greater than 5 mb.
+                                            </div>
+                                            @enderror
                                             <label class="custom-file-label" for="customFile">Browse Files</label>
 
+                                            {{-- ตรวจสอบขนาดไฟล์ และแสดงรายชื่อไฟล์ --}}
                                             @if ($attachment_file)
-                                                @foreach ($attachment_file as $file)
-                                                {{ $file->getClientOriginalName() }} ({{ $this->formatSizeUnits($file->getSize()) }}) <br/>
+                                                @foreach ($attachment_file as $k => $file)
+                                                {{ $file->getClientOriginalName() }} ({{ $this->formatSizeUnits($file->getSize()) }}) 
+                                                <a href="" wire:click.prevent="deleteAttachmentFile('{{ $k }}')">
+                                                    <i class="fas fa-times text-center mr-1" style="color: red"></i>
+                                                </a>
+                                                @if ($file->getSize() > $maxSize)
+                                                <span class="text-danger">File size is too large.</span>
+                                                @endif
+                                                <br/>
                                                 @endforeach
                                             @endif
                                             
@@ -810,11 +820,10 @@
                                     </div>
                                     <div class="col-md-3 text-left">
                                         <button type="submit" class="btn btn-danger"><i class="fas fa-cloud-upload-alt mr-1"></i>Upload</button>
-                                        <span style="vertical-align:bottom; color:red">max file size 5 mb</span> 
+                                        <span style="vertical-align:bottom; color:red">max file size 5 mb.</span> 
                                     </div>
                                 </div>
                             </form>
-                            @endif
 
                         <div class="row">
                             <div class="col-md-12">
@@ -840,7 +849,7 @@
                                         <td scope="col">{{ $attachmentFileList[$index]['edecision_no'] }}</td>
                                         <td scope="col">{{ $attachmentFileList[$index]['ref_doctype'] }}</td>
                                         <td scope="col">{{ $attachmentFileList[$index]['ref_docno'] }}</td>
-                                        <td scope="col">{{ $attachmentFileList[$index]['ref_lineno'] }}</td>
+                                        <td scope="col">{{ str_replace('[', '', (str_replace(']', '', (str_replace('"', '', $attachmentFileList[$index]['ref_lineno']))))) }}</td>
                                         <td scope="col">{{ $attachmentFileList[$index]['create_by'] }}</td>
                                         <td scope="col">{{ $attachmentFileList[$index]['create_on'] }}</td>
                                         <td scope="col" class="d-flex justify-content-between">
@@ -993,15 +1002,9 @@
                         </div>
                         <div class="col-md-6">
                             <label>Attachment Level</label>
-                            <select class="form-control form-control-sm" wire:model="editAttachment.ref_lineno">
-                                <option value="">--- Please Select ---</option>
-                                <option value="0">0 : Level PR Header</option>
-                                @foreach($prLineNoAtt_dd as $row)
-                                <option value="{{ $row->lineno }}">
-                                    {{ $row->lineno }} : {{ $row->description }}
-                                </option>
-                                @endforeach
-                            </select>
+                            <x-select2-multiple id="editattachment_lineno-select2" wire:model.defer="editAttachment.ref_lineno">
+                                {{-- รอค่าจากการ Bind --}}
+                            </x-select2-multiple>
                         </div>
                     </div>
                     <div class="row">
@@ -1048,16 +1051,37 @@
     </div>
 </div>
 
+{{-- @push('styles')
+<style>
+    input[type="file"]{
+        height:500px;
+    }
+
+    input[type="file"]::-webkit-file-upload-button{
+        height:500px;
+  }
+</style>
+@endpush --}}
+
 @push('js')
 <script>
 
-window.addEventListener('show-modelEditAttachment', event => {
+    window.addEventListener('show-modelEditAttachment', event => {
         $('#modelEditAttachment').modal('show');
     })
 
     window.addEventListener('hide-modelEditAttachment', event => {
         $('#modelEditAttachment').modal('hide');
     })
+
+    window.addEventListener('clear-select2', event => {
+        clearSelect2('attachment_lineno-select2');
+    })
+
+    window.addEventListener('bindToSelect2', event => {
+        $(event.detail.selectName).html(" ");
+        $(event.detail.selectName).append(event.detail.newOption);
+    });
 
 </script>
 @endpush

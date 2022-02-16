@@ -53,7 +53,6 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
         ],
 
-        
         'attachments' => [
             'driver' => 'local',
             'root' => storage_path('app/public/attachments'),

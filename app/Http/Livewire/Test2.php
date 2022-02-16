@@ -4,10 +4,39 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use Livewire\WithFileUploads;
 
 class Test2 extends Component
 {
+    use WithFileUploads;
+
     public $testSelect2, $choice_dd;
+    public $attachment_file, $maxSize;
+
+    public function updatedAttachmentFile()
+    {
+        // $this->validate([
+        //     'attachment_file.*' => 'max:320', // 5MB Max 5120
+        // ]);
+    }
+    
+    public function addAttachment()
+    {
+        $this->validate([
+            'attachment_file.*' => 'max:5120', // 5MB Max 
+        ]);
+    }
+
+    public function confirmDelete($index)
+    {
+        unset($this->attachment_file[$index]);
+    }
+
+    public function formatSizeUnits($fileSize)
+    {
+        //Call Golbal Function
+        return formatSizeUnits($fileSize);
+    }
 
     public function getVar()
     {
@@ -44,6 +73,11 @@ class Test2 extends Component
                 json_encode($this->testSelect2),
             ]
         );
+    }
+
+    public function mount()
+    {
+        $this->maxSize = config('constants.maxAttachmentSize');
     }
 
     public function render()

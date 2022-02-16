@@ -45,7 +45,7 @@ class PurchaseRequisitionDetails extends Component
 
     //Attachment Dropdown ใช้ตัวแปรร่วมกับ prLineNo_dd
     public $attachmentFileList;
-    public $editAttachment, $attachmentDocType_dd;
+    public $editAttachment, $attachmentDocType_dd, $maxSize;
     public $prLineNoAtt_dd, $attachment_lineno, $attachment_filetype, $attachment_edecisionno, $attachment_file; //Header
 
     //History Log
@@ -552,55 +552,16 @@ class PurchaseRequisitionDetails extends Component
     //Action Button End
     
     //Attachment
-        //Test Dropzone not work with $this->prHeader['prno']
-            // public function attactFilePR(Request $request)
-            // {
-            //     $data = array();
-
-            //     $validator = Validator::make($request->all(),[
-            //         'file' => 'required|mimes:png,jpg,jpeg,pdf|max:2048'
-            //     ]);
-        
-            //     if($validator->fails()){
-            //         $data['success'] = 0;
-            //         $data['error'] = $validator->errors()->first('file');
-            //     }else{
-            //         $file = $request->file('file');
-            //         $filename = time().'_'.$file->getClientOriginalName();
-        
-            //         //File upload location in public folder
-            //         $location = 'attachments';
-        
-            //         $file->move($location, $filename);
-        
-            //         $data['success'] = 1;
-            //         $data['message'] = 'Uploaded Successfully';
-        
-            //         // $strsql = "SELECT [lineno] FROM pr_item WHERE id=" . $this->attachment_lineno;
-            //         // $data = DB::select($strsql);
-
-            //         $xLineNo = "0";
-            //         // if ($data) {
-            //         //     $xLineNo = $data[0]->lineno;
-            //         // }
-        
-            //         DB::statement("INSERT INTO attactments (file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
-            //             , ref_lineid, create_by, create_on)
-            //         VALUES(?,?,?,?,?,?,?,?,?)"
-            //         ,[$filename, $file->getClientOriginalName(), '10', 'xxxx', 0
-            //         ,$xLineNo, 0, auth()->user()->id, Carbon::now()]);
-
-            //         //return response()->json($data);
-            //         //return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=attachments");
-            //     }
-            // }
-        //Test Dropzone End
+        public function deleteAttachmentFile($index)
+        {
+            unset($this->attachment_file[$index]);
+        }
 
         public function updatedAttachmentFile()
         {
-            $this->validate([
-                'attachment_file.*' => 'max:5120', // 5MB Max 
-            ]);
+            // $this->validate([
+            //     'attachment_file.*' => 'max:5120', // 5MB Max 
+            // ]);
         }
 
         public function formatSizeUnits($fileSize)
@@ -618,7 +579,7 @@ class PurchaseRequisitionDetails extends Component
         public function editAttachment_Save()
         {
             //ตรวจสอบว่าเป็น Header หรือไม่
-            if ($this->editAttachment['ref_lineno'] == '0' ) {
+            if (in_array("0", $this->editAttachment['ref_lineno'])) {
                 $isHeader = true;
             }else{
                 $isHeader = false;
@@ -626,7 +587,7 @@ class PurchaseRequisitionDetails extends Component
 
             DB::statement("UPDATE attactments SET file_name=?, ref_lineno=?, file_type=?, edecision_no=?, isheader_level=?, changed_by=?, changed_on=?
                 WHERE id=?" 
-                , [$this->editAttachment['file_name'], $this->editAttachment['ref_lineno'], $this->editAttachment['file_type']
+                , [$this->editAttachment['file_name'], json_encode($this->editAttachment['ref_lineno']), $this->editAttachment['file_type']
                 , $this->editAttachment['edecision_no'], $isHeader, auth()->user()->id, Carbon::now(), $this->editAttachment['id']]);
 
             $strsql = "SELECT msg_text FROM message_list WHERE msg_no='100' AND class='FILE ATTACHMENT'";
@@ -643,6 +604,7 @@ class PurchaseRequisitionDetails extends Component
 
         public function editAttachment($rowID)
         {
+            //แสดง Modal สำหรับ Edit
             $strsql = "SELECT a.id, a.file_name, a.ref_lineno, a.file_type, a.edecision_no
                 ,b.name + ' ' + b.lastname as create_by
                 , CASE 
@@ -656,18 +618,41 @@ class PurchaseRequisitionDetails extends Component
 
             if ($data) {
                 $this->editAttachment = json_decode(json_encode($data[0]), true);
+
+                $xPrLineNoAtt_dd = $this->prLineNoAtt_dd;
+                // Add Level 0
+                array_push($xPrLineNoAtt_dd, ["id" => "", "lineno" => "0", "description" => "Level PR Header",]);
+                sort($xPrLineNoAtt_dd);
+
+                //Bind ค่า editattachment_lineno-select2
+                $xRef_lineno = json_decode($this->editAttachment['ref_lineno']);
+                $newOption = '';
+                foreach ($xPrLineNoAtt_dd as $row) {
+                    $newOption = $newOption . "<option value='" . $row['lineno'] . "' ";
+                    if ( !is_null($xRef_lineno) ) {
+                        for ($i=0; $i < count($xRef_lineno); $i++){
+                            if ($row['lineno'] == $xRef_lineno[$i]) {
+                                $newOption = $newOption . "selected='selected'";
+                            }
+                        }
+                    }                    
+                    $newOption = $newOption . ">" . $row['lineno'] . ': ' . $row['description'] . "</option>";
+                }
+
+                $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#editattachment_lineno-select2']);
             }
 
             $this->dispatchBrowserEvent('show-modelEditAttachment');
         }
 
-        public function updatedAttachmentFileList($value, $key) //No Refresh
-        {
-            $data = explode("." , $key);
-            DB::statement("UPDATE attactments SET file_type=?, changed_by=?, changed_on=?
-                WHERE id=?" 
-                , [$value, auth()->user()->id, Carbon::now(), $this->attachmentFileList[$data[0]]['id']]);
-        }
+        // Not use ไปใช้เป็น Modal แทน
+        // public function updatedAttachmentFileList($value, $key) //No Refresh
+        // {
+        //     $data = explode("." , $key);
+        //     DB::statement("UPDATE attactments SET file_type=?, changed_by=?, changed_on=?
+        //         WHERE id=?" 
+        //         , [$value, auth()->user()->id, Carbon::now(), $this->attachmentFileList[$data[0]]['id']]);
+        // }
 
         public function deleteAttachment()
         {
@@ -701,11 +686,16 @@ class PurchaseRequisitionDetails extends Component
                 DB::transaction(function() 
                 {
                     foreach ($this->attachment_file as $file) {
-                        $attachments = $file->store('/', 'attachments');
-                        ///$attachments = $file->storeAs('public/attachments', 'zzz.pdf'); //ยังไม่ Work
+                        //$attachments = $file->store('/', 'attachments'); //Work
+                        //เปลี่ยนชื่อไฟล์เป็น ชื่อเดิม + เวลา
+                        $newFileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '_' . time();
+                        $newFileName = $newFileName . '.' . pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION);
+
+                        //Save ลงที่ public\storage\attachments
+                        $attachments = $file->storeAs('/public/attachments', $newFileName);
 
                         //ตรวจสอบว่าเป็น Header หรือไม่
-                        if ($this->attachment_lineno == 0 ) {
+                        if (in_array("0", $this->attachment_lineno)) {
                             $isHeader = true;
                         }else{
                             $isHeader = false;
@@ -714,37 +704,11 @@ class PurchaseRequisitionDetails extends Component
                         DB::statement("INSERT INTO attactments ([file_name], file_type, file_path, ref_doctype, ref_docid, ref_docno
                             , edecision_no, isheader_level, ref_lineno, create_by, create_on)
                         VALUES(?,?,?,?,?,?,?,?,?,?,?)"
-                        ,[$file->getClientOriginalName(), $this->attachment_filetype, $attachments, '10'
+                        ,[$file->getClientOriginalName(), $this->attachment_filetype, $newFileName, '10'
                         , $this->prHeader['id'], $this->prHeader['prno'], $this->attachment_edecisionno, $isHeader
-                        ,$this->attachment_lineno, auth()->user()->id, Carbon::now()]);
+                        ,json_encode($this->attachment_lineno), auth()->user()->id, Carbon::now()]);
                     }
                 });
-
-
-                //Single File 
-                    // $this->validate([
-                    //     'attachment_file' => 'max:5120', // 5MB Max
-                    // ]);
-
-                    // DB::transaction(function() 
-                    // {
-                    //     $attachments = $this->attachment_file->store('/', 'attachments');
-
-                    //     $strsql = "SELECT [lineno] FROM pr_item WHERE id=" . $this->attachment_lineno;
-                    //     $data = DB::select($strsql);
-                    //     $xLineNo = "";
-                    //     if ($data) {
-                    //         $xLineNo = $data[0]->lineno;
-                    //     }
-
-                    //     DB::statement("INSERT INTO attactments (file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
-                    //         , ref_lineid, create_by, create_on)
-                    //     VALUES(?,?,?,?,?,?,?,?,?)"
-                    //     ,[$attachments, $this->attachment_file->getClientOriginalName(), 'PR', $this->prHeader['prno'], $this->prHeader['id']
-                    //     ,$xLineNo, $this->attachment_lineno, auth()->user()->id, Carbon::now()]);
-
-                    // });
-                //Single File End 
                 
                 //History Log
                     // DB::transaction(function() 
@@ -772,6 +736,7 @@ class PurchaseRequisitionDetails extends Component
                 //History Log End
 
                 $this->reset(['attachment_lineno', 'attachment_filetype', 'attachment_edecisionno', 'attachment_file']);
+                $this->dispatchBrowserEvent('clear-select2');
 
             } else {
                 $this->dispatchBrowserEvent('popup-alert', ['title' => "Please select a file"]);
@@ -2267,6 +2232,8 @@ class PurchaseRequisitionDetails extends Component
             $this->editPR();
             //$this->isBlanket, $this->orderType Assign ค่าใน Function editPR
         }
+
+        $this->maxSize = config('constants.maxAttachmentSize');
     }
 
     public function render()

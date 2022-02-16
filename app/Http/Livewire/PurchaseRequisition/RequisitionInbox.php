@@ -48,7 +48,7 @@ class RequisitionInbox extends Component
     public function loadDropdownList(){
         $strsql = "SELECT b.doc_type_no, b.description 
                 FROM dec_val_workflow a
-                JOIN document_type b ON a.ref_doc_type = b.doc_type_no
+                JOIN document_file_type b ON a.ref_doc_type = b.doc_type_no
                 WHERE a.approver='" . auth()->user()->username . "'
                 GROUP BY b.doc_type_no, b.description";
         $this->doctype_dd = DB::select($strsql);
@@ -81,7 +81,7 @@ class RequisitionInbox extends Component
         $strsql = "SELECT b.description AS doctype, a.ref_doc_no, e.name + ' ' + e.lastname AS requestor, f.name + ' ' + f.lastname AS requested_for 
             , d.company, c.description AS status, a.approval_type, a.create_on 
             FROM dec_val_workflow a 
-            LEFT JOIN document_type b ON a.ref_doc_type = b.doc_type_no 
+            LEFT JOIN document_file_type b ON a.ref_doc_type = b.doc_type_no 
             LEFT JOIN dec_val_status c ON a.status = c.status_no 
             LEFT JOIN pr_header d ON a.ref_doc_id = d.id
             LEFT JOIN users e ON d.requestor = e.id 
