@@ -15,29 +15,25 @@
 
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="{{ asset('backend/plugins/fontawesome-free/css/all.min.css') }}">
+
     <!-- Theme style -->
     <link rel="stylesheet" href="{{ asset('backend/dist/css/adminlte.min.css') }}">
+
     <!-- Google Font: Source Sans Pro -->
-    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+    {{-- <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet"> --}}
+    <link rel="stylesheet" href="{{ asset('backend/plugins/google/google-font.css') }}">
+
     <!-- toastr Alert -->
     <link rel="stylesheet" type="text/css" href="{{ asset('backend/plugins/toastr/toastr.min.css') }}">
+
     <!-- Pickup Date-Time -->
     <link rel="stylesheet" type="text/css"
         href="{{ asset('backend/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css') }}">
- 
-    <!-- DataTables -->
-    {{-- <link rel="stylesheet" href="{{ asset('backend/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-    <link rel="stylesheet"
-        href="{{ asset('backend/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('backend/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
-
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script> --}}
 
     <!-- iCheck -->
     <link rel="stylesheet" href="{{ asset('backend/plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
 
     <!-- for pagination -->
-    {{-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/1.9.2/tailwind.min.css" /> --}}
     <link rel="stylesheet" href="{{ asset('backend/plugins/tailwindcss1_9_2/tailwind.min.css') }}" />
 
     <!-- Dropzone -->
@@ -185,24 +181,23 @@
 
     <!-- jQuery -->
     <script src="{{ asset('backend/plugins/jquery/jquery.min.js') }}"></script>
+
     <!-- Bootstrap 4 -->
     <script src="{{ asset('backend/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
     <!-- AdminLTE App -->
     <script src="{{ asset('backend/dist/js/adminlte.min.js') }}"></script>
+
     <!-- toastr alert -->
     <script type="text/javascript" src=" {{ asset('backend/plugins/toastr/toastr.min.js') }}"></script>
 
     <!-- Pickup Date-Time -->
-    {{-- <script type="text/javascript" src="https://unpkg.com/moment"></script> --}}
     <script type="text/javascript" src=" {{ asset('backend/plugins/tempusdominus-bootstrap-4/js/moment.js') }}"></script>
     <script type="text/javascript" src=" {{ asset('backend/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js') }}"></script>
 
-    {{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.2/bootstrap3-typeahead.min.js"
-        integrity="sha512-HWlJyU4ut5HkEj0QsK/IxBCY55n5ZpskyjVlAoV9Z7XQwwkqXoYdCIC93/htL3Gu5H3R4an/S0h2NXfbZk3g7w=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script> --}}
-
     <!-- sweetalert2 -->
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {{-- <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script> --}}
+    <script type="text/javascript" src=" {{ asset('backend/plugins/sweetalert2/sweetalert2@11.js') }}"></script>
     <x-popup-alert></x-popup-alert>
     <x-popup-success></x-popup-success>
     <x-delete-confirmation></x-delete-confirmation>
