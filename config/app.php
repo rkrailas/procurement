@@ -15,8 +15,8 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
-    // Create by pawe
-    'sendmail' => env('APP_SENDMAIL', 'No'),
+    // Create by pawe get value form ".env"
+    'sendmail' => env('APP_SENDMAIL', 'Yes'),
 
     /*
     |--------------------------------------------------------------------------

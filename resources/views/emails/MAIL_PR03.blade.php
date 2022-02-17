@@ -4,6 +4,7 @@
 Please be informed that your Purchase Requisition No: {{ $detailMail['docno'] }} has been rejected by {{ $detailMail['actionby'] }} for the following reasons:
 {{ $detailMail['reasons'] }}
 
+Link : <a href="{{ $detailMail["link_url"] }}">{{ $detailMail['docno'] }}</a>
 
 Please review Purchase Requisition No: {{ $detailMail['docno'] }} before reopening this request.
 

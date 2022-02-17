@@ -1,9 +1,10 @@
 <div>
     <x-loading-indicator target="validatorDeciderApprove" />
     <x-loading-indicator target="validatorDeciderReject" />
+    <x-loading-indicator target="releaseForSourcing" />
     <x-loading-indicator target="addAttachment" />
     <x-loading-indicator target="attachment_file" />
-    
+
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -142,6 +143,7 @@
                     <div class="col-md-3">
                         <label>Buyer <span style="color: red">*</span></label>
                         <x-select2 id="buyer-select2" wire:model.defer="prHeader.buyer">
+                            <option value=" ">--- Please Select ---</option>
                             @foreach($buyer_dd as $row)
                             <option value="{{ $row->id }}">
                                 {{ $row->fullname }}
@@ -691,6 +693,10 @@
                             <div class="col-md-12">
                                 <label>Rejection Reason</label>
                                 <textarea class="form-control form-control-sm" rows="2" maxlength="250" wire:model.defer="rejectReason"></textarea>
+                                <div id="count" class="d-flex justify-content-end">
+                                    <span id="current_count">0</span>
+                                    <span id="maximum_count">/ 250</span>
+                                </div>
                             </div>
                         </div>
                         @endif
@@ -1083,5 +1089,19 @@
         $(event.detail.selectName).append(event.detail.newOption);
     });
 
+    // Set default requester for & buyer
+    document.addEventListener("livewire:load", function() { 
+        @this.setDefaultSelect2()
+    });
+</script>
+
+<script type="text/javascript">
+    $('textarea').keyup(function() {    
+        var characterCount = $(this).val().length,
+            current_count = $('#current_count'),
+            maximum_count = $('#maximum_count'),
+            count = $('#count');    
+            current_count.text(characterCount);        
+    });
 </script>
 @endpush

@@ -13,6 +13,11 @@ class Test2 extends Component
     public $testSelect2, $choice_dd;
     public $attachment_file, $maxSize;
 
+    public function linkURL()
+    {
+        dd(url('/test2'));
+    }
+
     public function updatedAttachmentFile()
     {
         // $this->validate([

@@ -71,6 +71,11 @@
                 </form>
             </div>
         </div>
+        <div class="row">
+            <div class="col">
+                <button class="btn btn-primary" wire:click.prevent="linkURL">URL</button>
+            </div>
+        </div>
    </div>
 </div>
 

@@ -189,15 +189,15 @@
     <script src="{{ asset('backend/dist/js/adminlte.min.js') }}"></script>
 
     <!-- toastr alert -->
-    <script type="text/javascript" src=" {{ asset('backend/plugins/toastr/toastr.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('backend/plugins/toastr/toastr.min.js') }}"></script>
 
     <!-- Pickup Date-Time -->
-    <script type="text/javascript" src=" {{ asset('backend/plugins/tempusdominus-bootstrap-4/js/moment.js') }}"></script>
-    <script type="text/javascript" src=" {{ asset('backend/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('backend/plugins/tempusdominus-bootstrap-4/js/moment.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('backend/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js') }}"></script>
 
     <!-- sweetalert2 -->
     {{-- <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script> --}}
-    <script type="text/javascript" src=" {{ asset('backend/plugins/sweetalert2/sweetalert2@11.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('backend/plugins/sweetalert2/sweetalert2@11.js') }}"></script>
     <x-popup-alert></x-popup-alert>
     <x-popup-success></x-popup-success>
     <x-delete-confirmation></x-delete-confirmation>

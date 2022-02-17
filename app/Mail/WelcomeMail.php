@@ -31,15 +31,15 @@ class WelcomeMail extends Mailable
     public function build()
     {
         $template = "";
-        
-        if ($this->detailMail['template'] == "MAIL_PR02") {
+        if ($this->detailMail['template'] == "MAIL_PR01") {
+            $template = "emails.MAIL_PR01";
+        } else if ($this->detailMail['template'] == "MAIL_PR02") {
             $template = "emails.MAIL_PR02";
         } else if ($this->detailMail['template'] == "MAIL_PR03") {
             $template = "emails.MAIL_PR03";
         }
 
-        return $this->markdown($template,[
-            'detailMail' => $this->detailMail,
-        ]);
+        return $this->markdown($template,['detailMail' => $this->detailMail,])
+            ->subject($this->detailMail['subject']);
     }
 }

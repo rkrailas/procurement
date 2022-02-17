@@ -3,6 +3,8 @@
 
 Please be informed that your Purchase Requisition No: {{ $detailMail['docno'] }} has been approved by {{ $detailMail['actionby'] }}.
 
+Link : <a href="{{ $detailMail["link_url"] }}">{{ $detailMail['docno'] }}</a>
+
 <br>
 Regards,
 <br>{{ $detailMail['actionby'] }} 
