@@ -4,9 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\PurchaseRequisition\PurchaseRequisitionList;
 use App\Http\Livewire\PurchaseRequisition\PurchaseRequisitionDetails;
 use App\Http\Livewire\PurchaseRequisition\RequisitionInbox;
+use App\Http\Livewire\PurchaseRequisition\RfqList;
+use App\Http\Livewire\PurchaseRequisition\RfqDetail;
 use App\Http\Livewire\admin\ChangePassword;
 use App\Http\Controllers\ClientController;
-use App\Http\Controllers\DropzoneController;
 use App\Http\Controllers\Form\PRForm;
 
 //for Test
@@ -16,6 +17,7 @@ use App\Http\Livewire\Test1;
 use App\Http\Livewire\Test2;
 use App\Http\Controllers\PHPJasperController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\DropzoneController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,11 +40,15 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('purchase-requisition/purchaserequisitionlist', PurchaseRequisitionList::class)->name('purchase-requisition.purchaserequisitionlist');
     Route::get('purchase-requisition/purchaserequisitiondetails', PurchaseRequisitionDetails::class)->name('purchase-requisition.purchaserequisitiondetails');
     Route::get('purchase-requisition/requisitioninbox', RequisitionInbox::class)->name('purchase-requisition.requisitioninbox');
+    Route::get('purchase-requisition/rfqlist', RfqList::class)->name('purchase-requisition.rfqlist');
+    Route::get('purchase-requisition/rfqdetail', RfqDetail::class)->name('purchase-requisition.rfqdetail');
     Route::get('purchase-requisition/PRForm/{prno}', [PRForm::class,'genForm']);
 });
 
 Route::get('admin/changepassword', ChangePassword::class)->name('admin.changepassword');
 Route::post('logout', [ClientController::class, 'logout'])->name('logout');
+
+
 
 
 //for Test

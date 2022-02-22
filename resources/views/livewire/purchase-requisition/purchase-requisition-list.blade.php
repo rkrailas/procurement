@@ -97,7 +97,7 @@
                         <label>Buyer</label>
                         <x-select2-multiple id="buyer-select2" wire:model.defer="buyer">
                             @foreach($buyer_dd as $row)
-                            <option value='{{ $row->id }}'>
+                            <option value='{{ $row->buyer }}'>
                                 {{ $row->fullname }}
                             </option>
                             @endforeach

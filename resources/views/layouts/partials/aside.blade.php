@@ -48,6 +48,13 @@
                 <p>Requisition Inbox</p>
               </a>
             </li>
+            <li class="nav-item">
+              <a href="{{ route('purchase-requisition.rfqlist') }}" 
+                class="nav-link {{ request()->is('purchase-requisition/rfqlist') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon-submenu"></i>
+                <p>RFQ List</p>
+              </a>
+            </li>
           </ul>
         </li>
 

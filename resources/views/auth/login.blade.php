@@ -7,7 +7,7 @@
   <title>P2P System (NISSAN) </title>
 
   <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="{{ asset('backend/plugins/google/google-font.css') }}">
   <!-- Font Awesome -->
   <link rel="stylesheet" href="{{ asset('backend/plugins/fontawesome-free/css/all.min.css') }}" >
   <!-- icheck bootstrap -->
@@ -20,7 +20,7 @@
   <!-- /.login-logo -->
   <div class="card card-outline card-danger">
     <div class="card-header text-center">
-      <a href="../../index2.html" class="h1"><b>Sign In</b></a>
+      <div class="h1"><b>Sign In</b></div>
     </div>
     <div class="card-body">
       <p class="login-box-msg">Sign in to Nissan Procurement System</p>

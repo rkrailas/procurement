@@ -8,8 +8,10 @@
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
-
-                <div class="col-sm-12">
+                <div class="col-md-6" style="font-size: 20px; color: #C3002F">
+                    Purchase Requsition No : <span>{{ $prHeader['prno'] }}</span>
+                </div>
+                <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item">Purchase Requisition</li>
                         <li class="breadcrumb-item active" style="color: #C3002F;">Purchase Requisition Details</li>
@@ -21,11 +23,6 @@
 
     <div class="container" id="PR_Detail">
         {{-- Header --}}
-        <div class="row">
-            <div class="col-md-12" style="font-size: 20px; color: #C3002F">
-                Purchase Requsition No : <span>{{ $prHeader['prno'] }}</span>
-            </div>
-        </div>
         <div class="card shadow-none border rounded">
             <div class="card-header my-card-header">
                 <div class="row py-0 my-0">
@@ -135,7 +132,7 @@
                     </div>
                     <div class="col-md-3">
                         <label>Cost Center Description</label>
-                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.costcenter_desc">
+                        <input class="form-control form-control-sm" type="text" readonly wire:model="prHeader.costcenter_desc">
                     </div>
                 </div>
 
@@ -145,7 +142,7 @@
                         <x-select2 id="buyer-select2" wire:model.defer="prHeader.buyer">
                             <option value=" ">--- Please Select ---</option>
                             @foreach($buyer_dd as $row)
-                            <option value="{{ $row->id }}">
+                            <option value="{{ $row->buyer }}">
                                 {{ $row->fullname }}
                             </option>
                             @endforeach
@@ -939,35 +936,36 @@
             <div class="col-md-12">
                 <div class="d-flex justify-content-between">
                     <div>
-                        @if ( $prHeader['status'] < '20' )
-                        <button wire:click.prevent="releaseForSourcing" class="btn btn-sm btn-danger">
-                            <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
-                        @else
-                        <button wire:click.prevent="releaseForSourcing" class="btn btn-sm btn-danger" disabled>
-                            <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
+                        @if ( $prHeader['prno'] <> '' )
+                            @if ( $prHeader['status'] < '20' )
+                            <button wire:click.prevent="releaseForSourcing" class="btn btn-sm btn-danger">
+                                <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
+                            @else
+                            <button wire:click.prevent="releaseForSourcing" class="btn btn-sm btn-danger" disabled>
+                                <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
+                            @endif
+
+                            <button wire:click.prevent="releaseForPO" class="btn btn-sm btn-danger">
+                                <i class="fas fa-check mr-2"></i>Release for PO</button>
+
+                            <a href="PRForm/{{ $prHeader['prno'] }}" target="_blank">
+                                <button class="btn btn-sm btn-danger" {{ $prHeader['prno'] ? '' : 'disabled' }}>
+                                    <i class="fas fa-print mr-2"></i>Print</button>
+                            </a>
+
+                            <button wire:click.prevent="cancelPR" class="btn btn-sm btn-light">
+                                <i class="fas fa-times mr-2"></i>Cancel</button>
+
+                            <button wire:click.prevent="confirmDeletePrHeader_Detail" 
+                                class="btn btn-sm btn-light" {{ $prHeader['prno'] ? '' : 'disabled' }}>
+                                <i class="fas fa-trash-alt mr-2"></i>Delete</button>
+
+                            <button wire:click.prevent="reopen" class="btn btn-sm btn-danger">
+                                <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
+
+                            <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
+                                <i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
                         @endif
-
-                        <button wire:click.prevent="releaseForPO" class="btn btn-sm btn-danger">
-                            <i class="fas fa-check mr-2"></i>Release for PO</button>
-
-                        <a href="PRForm/{{ $prHeader['prno'] }}" target="_blank">
-                            <button class="btn btn-sm btn-danger" {{ $prHeader['prno'] ? '' : 'disabled' }}>
-                                <i class="fas fa-print mr-2"></i>Print</button>
-                        </a>
-
-                        <button wire:click.prevent="cancelPR" class="btn btn-sm btn-light">
-                            <i class="fas fa-times mr-2"></i>Cancel</button>
-
-                        <button wire:click.prevent="confirmDeletePrHeader_Detail" 
-                            class="btn btn-sm btn-light" {{ $prHeader['prno'] ? '' : 'disabled' }}>
-                            <i class="fas fa-trash-alt mr-2"></i>Delete</button>
-
-                        <button wire:click.prevent="reopen" class="btn btn-sm btn-danger">
-                            <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
-
-                        <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
-                            <i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
-
                     </div>
                     <div>
                         <button wire:click.prevent="backToPRList" class="btn btn-sm btn-light">

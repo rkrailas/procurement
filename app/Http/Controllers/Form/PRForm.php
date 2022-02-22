@@ -9,7 +9,8 @@ class PRForm extends Controller
 {
     public function genForm($prno)
     {
-        $input = storage_path("app/public/myforms/pr_form1.jasper");
+        //.jrxml extension source code / .jasper extension compiled
+        $input = storage_path("app/public/myforms/pr_form1.jasper"); 
         $name = "pr_form";
         $filename = $name . time();
         $output = base_path("public/reports/" . $filename);

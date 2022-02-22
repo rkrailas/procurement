@@ -111,6 +111,10 @@ class PurchaseRequisitionList extends Component
                     . "' ORDER BY users.name";
         $this->requestor_dd = DB::select($strsql);
         $this->requestedfor_dd = DB::select($strsql);
+
+        $strsql = "SELECT a.buyer, b.name + ' ' + b.lastname AS fullname
+                FROM buyer a 
+                left join users b ON a.username=b.username";
         $this->buyer_dd = DB::select($strsql);
 
         $strsql = "SELECT status, description FROM pr_status 
