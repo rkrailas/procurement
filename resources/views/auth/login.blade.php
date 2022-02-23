@@ -25,7 +25,7 @@
     <div class="card-body">
       <p class="login-box-msg">Sign in to Nissan Procurement System</p>
 
-      <form action="{{ route('login') }}" method="POST">
+      <form action="{{ route('login') }}" method="POST" autocomplete="off">
         @csrf
         <div class="input-group mb-3">
           <input type="text" name="username" class="form-control" placeholder="Username">

@@ -565,14 +565,17 @@ class PurchaseRequisitionDetails extends Component
                         DB::statement(
                             "INSERT INTO pr_header(prno, ordertype, status, requestor, requested_for, buyer
                             , delivery_address, delivery_location, delivery_site
+                            , requestor_phone, requestor_ext, requested_for_phone, requested_for_ext, requested_for_email
                             , request_date, company, site, functions, department, division, section, cost_center, valid_until
                             , days_to_notify, notify_below_10, notify_below_25, notify_below_35, budget_year, purpose_pr, create_by, create_on)
                             
-                            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                                 [
                                     $this->prHeader['prno'], $this->prHeader['ordertype'], $this->prHeader['status'], $this->prHeader['requestor']
                                     , $this->prHeader['requested_for'], $this->prHeader['buyer'], $this->prHeader['delivery_address']
-                                    , $this->prHeader['delivery_location'], $this->prHeader['delivery_site'], $this->prHeader['request_date']
+                                    , $this->prHeader['delivery_location'], $this->prHeader['delivery_site']
+                                    , $this->prHeader['phone'], $this->prHeader['extention'], $this->prHeader['phone_reqf'], $this->prHeader['extention_reqf']
+                                    , $this->prHeader['email_reqf'], $this->prHeader['request_date']
                                     , $this->prHeader['company'], $this->prHeader['site'], $this->prHeader['functions'], $this->prHeader['department']
                                     , $this->prHeader['division'], $this->prHeader['section'], $this->prHeader['cost_center']
                                     , $this->prHeader['valid_until'], $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10']
@@ -580,34 +583,6 @@ class PurchaseRequisitionDetails extends Component
                                     , $this->prHeader['purpose_pr'], auth()->user()->id, Carbon::now()
                                 ]
                         );
-    
-                        //30-01-2022 Hold
-                        //History Log
-                            // $xRandom = Str::random(20);
-                            // DB::statement(
-                            //     "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
-                            //     , changed_by, changed_on)
-                                
-                            //     VALUES(?,?,?,?,?,?,?,?,?,?)",
-                            //     [
-                            //         'PR', $this->prHeader['prno'], 'Insert', 'Header', 0, 'history_prheader', $xRandom, auth()->user()->company
-                            //         , auth()->user()->id, Carbon::now()
-                            //     ]
-                            // );
-    
-                            // DB::statement(
-                            //     "INSERT INTO history_prheader(history_ref, prno, ordertype, status, requestor, requested_for, buyer, delivery_address
-                            //     , request_date, company, site, functions, department, division, section, cost_center, edecision, valid_until
-                            //     , days_to_notify, notify_below_10, notify_below_25, notify_below_35, create_by, create_on)
-                                
-                            //     SELECT '" . $xRandom . "', prno, ordertype, status, requestor, requested_for, buyer, delivery_address
-                            //     , request_date, company, site, functions, department, division, section, cost_center, edecision, valid_until
-                            //     , days_to_notify, notify_below_10, notify_below_25, notify_below_35, create_by, create_on
-                            //     FROM pr_header
-                            //     WHERE prno='" . $this->prHeader['prno'] . "' AND company='" . auth()->user()->company . "'"
-                            // );
-                        //History Log End
-    
                     });
     
                     $strsql = "SELECT msg_text FROM message_list WHERE msg_no='100' AND class='PURCHASE REQUISITION'";
@@ -625,12 +600,14 @@ class PurchaseRequisitionDetails extends Component
                     DB::transaction(function () {
                         DB::statement("UPDATE pr_header SET requested_for=?, delivery_address=?, delivery_location=?, delivery_site=?
                         , request_date=?, site=?, functions=?, department=?
+                        , requestor_phone=?, requestor_ext=?, requested_for_phone=?, requested_for_ext=?, requested_for_email=?
                         , division=?, section=?, buyer=?, cost_center=?, valid_until=?, days_to_notify=?, notify_below_10=?, notify_below_25=?
                         , notify_below_35=?,budget_year=?, purpose_pr=?, status=?, changed_by=?, changed_on=?
                         where prno=?" 
                         , [$this->prHeader['requested_for'], $this->prHeader['delivery_address'], $this->prHeader['delivery_location'], $this->prHeader['delivery_site']
-                        , $this->prHeader['request_date']
-                        , $this->prHeader['site'], $this->prHeader['functions'], $this->prHeader['department'], $this->prHeader['division'], $this->prHeader['section']
+                        , $this->prHeader['request_date'], $this->prHeader['site'], $this->prHeader['functions'], $this->prHeader['department']
+                        , $this->prHeader['phone'], $this->prHeader['extention'], $this->prHeader['phone_reqf'], $this->prHeader['extention_reqf']
+                        , $this->prHeader['email_reqf'], $this->prHeader['division'], $this->prHeader['section']
                         , $this->prHeader['buyer'], $this->prHeader['cost_center'], $this->prHeader['valid_until']
                         , $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10'], $this->prHeader['notify_below_25'], $this->prHeader['notify_below_35']
                         , $this->prHeader['budget_year'], $this->prHeader['purpose_pr'], $this->prHeader['status'], auth()->user()->id, Carbon::now(), $this->prHeader['prno']]);
