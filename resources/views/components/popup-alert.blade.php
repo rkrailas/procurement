@@ -3,6 +3,7 @@
   window.addEventListener('popup-alert',function(e) {
         Swal.fire({
             title:  e.detail.title,
+            text: e.detail.text,
             icon: 'warning',
         });
     });

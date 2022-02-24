@@ -1135,7 +1135,7 @@ class PurchaseRequisitionDetails extends Component
                         SELECT '" . $xNewRFQNo . "', a.nominated_supplier, b.po_currency, " 
                         . auth()->user()->id . ",'" . Carbon::now() . "' 
                         FROM pr_item a
-                        LEFT JOIN supplier b ON a.nominated_supplier=vendor_code
+                        LEFT JOIN supplier b ON a.nominated_supplier=supplier
                         WHERE a.prno='" . $this->prHeader['prno'] . "'
                         GROUP BY a.nominated_supplier, b.po_currency";
                     DB::statement($strsql);
@@ -1725,7 +1725,7 @@ class PurchaseRequisitionDetails extends Component
                 , FORMAT(a.quotation_expiry_date,'yyyy-MM-dd') AS quotation_expiry_date, a.reference_pr, c.min_order_qty, c.supplier_lead_time
                 , d.status + ':' + d.description AS status_des, d.status
                 FROM pr_item a
-                LEFT JOIN supplier b ON b.vendor_code = a.nominated_supplier
+                LEFT JOIN supplier b ON b.supplier = a.nominated_supplier
                 LEFT JOIN part_master c ON c.partno = a.partno
                 LEFT JOIN pr_status d ON d.status = a.status
                 WHERE a.id ='" . $lineItemId . "'";

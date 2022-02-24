@@ -148,7 +148,7 @@
         </ul>
         <!-- Tab Header End -->
 
-        {{-- Tab Content --}}        
+        {{-- Tab Content --}}
         <div class="tab-content m-0 pb-0" id="pills-tabContent">
             <div class="tab-pane fade {{ $currentTab == 'item' ? 'show active' : '' }}" id="pills-lineitem" role="tabpanel" aria-labelledby="pills-lineitem-tab" wire:ignore.self>
                 <div class="row">
@@ -185,7 +185,7 @@
                             <tr>
                                 {{-- $bankDetails[$index]['taxref'] --}}
                                 <td>
-                                    <div d-inline ml-2>
+                                    <div d-inline ml-2 mt-auto>
                                         <input wire:model="selectedRows" type="checkbox" value="{{ $itemList[$index]['id'] }}"
                                             id="{{ $itemList[$index]['line_no'] }}">
                                         <span>{{ $itemList[$index]['line_no'] }}</span>
@@ -211,7 +211,63 @@
                         </table>
                     </div>
                 </div>
-            </div>  
+            </div>
+
+            <div class="tab-pane fade {{ $currentTab == 'Suppliers' ? 'show active' : '' }}" id="pills-Suppliers" role="tabpanel" aria-labelledby="pills-Suppliers-tab" wire:ignore.self>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>Supplier</label>
+                        <select class="form-control form-control-sm" wire:model="tabSupplier.selectsupplier">
+                            <option value="">--- Please Select ---</option>
+                            @foreach($supplier_dd as $row)
+                            <option value="{{ $row->supplier }}">
+                                {{ $row->supplier }} : {{ $row->supplier_name }}
+                            </option> 
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6 mt-auto">
+                        <button wire:click.prevent="addSupplier" class="btn btn-sm btn-danger"><i class="fas fa-plus-square mr-1"></i>ADD</button>
+                    </div>
+                </div>
+                <div class="row m-0 p-0">
+                    <div class="col-md-12">
+                        <table class="table table-sm nissanTB">
+                            <thead>
+                            <tr class="text-center">
+                                <th scope="col">Supplier</th>
+                                <th scope="col">Supplier Name</th>
+                                <th scope="col">Address</th>
+                                <th scope="col">PO Currency</th>
+                                <th scope="col">Contact Person</th>
+                                <th scope="col">Phone</th>
+                                <th scope="col">Email</th>
+                                <th scope="col"></th>
+
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach ($supplierList as $index => $row)
+                            <tr>
+                                <td scope="col">{{ $supplierList[$index]['supplier'] }}</td>
+                                <td scope="col">{{ $supplierList[$index]['supplier_name'] }}</td>
+                                <td scope="col">{{ $supplierList[$index]['location'] }}</td>
+                                <td scope="col">{{ $supplierList[$index]['po_currency'] }}</td>
+                                <td scope="col">{{ $supplierList[$index]['contact_person'] }}</td>
+                                <td scope="col">{{ $supplierList[$index]['telphone_number'] }}</td>
+                                <td scope="col">{{ $supplierList[$index]['email'] }}</td>
+                                <td scope="col">
+                                    <a href="" wire:click.prevent="deleteRFQSupplier('{{ $supplierList[$index]['supplier'] }}')">
+                                        <i class="fas fa-times text-center mr-1" style="color: red"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
         {{-- Tab Content End--}} 
 

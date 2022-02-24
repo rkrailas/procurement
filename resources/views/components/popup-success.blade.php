@@ -3,6 +3,7 @@
   window.addEventListener('popup-success',function(e) {
         Swal.fire({
             title:  e.detail.title,
+            text: e.detail.text,
             icon: 'success',
         });
     });

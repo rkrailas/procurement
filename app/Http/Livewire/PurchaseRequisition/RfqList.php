@@ -81,8 +81,8 @@ class RfqList extends Component
     public function resetSearch()
     {
         $this->reset(['prno', 'buyer', 'buyer_group', 'createon_from', 'createon_to', 'rfqno', 'requested_for', 'requester', 'site', 'status']);
-        $this->createon_from = date_format(Carbon::now(),'Y-m-d');
-        $this->createon_to = date_format(Carbon::now()->addMonth(+3),'Y-m-d');
+        $this->createon_from = date_format(Carbon::now()->addMonth(-1),'Y-m-d');
+        $this->createon_to = date_format(Carbon::now()->addMonth(+2),'Y-m-d');
         $this->dispatchBrowserEvent('clear-select2');
     }
 
