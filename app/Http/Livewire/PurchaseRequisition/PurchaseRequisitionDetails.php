@@ -30,11 +30,11 @@ class PurchaseRequisitionDetails extends Component
     public $selectedRows = [];
 
     //Header
-    public $prHeader, $requested_for_dd, $delivery_address_dd, $buyer_dd, $cost_center_dd, $budget_year; 
+    public $prHeader, $requested_for_dd, $delivery_address_dd, $buyer_dd, $cost_center_dd, $budget_year, $isBuyer; 
 
     //Line Items > $itemList=in table, $prItem=ใน Modal, 
     public $prItem = [], $itemList = [], $partno_dd, $currency_dd, $internal_order_dd, $budget_code, $purchaseunit_dd, $purchasegroup_dd
-        , $budgetcode_dd, $prLineNo_dd, $isCreateLineItem; 
+        , $budgetcode_dd, $prLineNo_dd, $isCreateLineItem, $showMore1Year; 
 
     //DeliveryPlan
     public $prDeliveryPlan, $prListDeliveryPlan = [];  //$prDeliveryPlan=ใน Tab, $prListDeliveryPlan=ใน Grid
@@ -1155,6 +1155,13 @@ class PurchaseRequisitionDetails extends Component
                     //Update status pr_header & pr_item to RFQ Created (31)
                     DB::statement("UPDATE pr_header SET status='31' WHERE id=" . $this->prHeader['id']);
                     DB::statement("UPDATE pr_item SET status='31' WHERE prno='" . $this->prHeader['prno'] ."' AND status='30'");
+
+                    //Update Pr Header Status Name
+                    $strsql = "SELECT description FROM pr_status WHERE status='31'";
+                    $data = DB::select($strsql);
+                    if ($data) {
+                        $this->prHeader['statusname'] = $data[0]->description;
+                    }
                 });
                 //Create RFQ & update status pr_header and pr_item End
 
@@ -1478,14 +1485,6 @@ class PurchaseRequisitionDetails extends Component
                 VALUES(?,?,?,?,?,?,?,?)"
                 ,['DECIDER', $this->decider['username'], '10', '10', $this->prHeader['prno'], $this->prHeader['id'], auth()->user()->id, Carbon::now()]);
 
-                //Approval History
-                    DB::statement("INSERT INTO dec_val_workflow_log (approval_type, approver, status, refdoc_type, refdoc_no, refdoc_id
-                    , submitted_date, submitted_by, create_by, create_on)
-                    VALUES(?,?,?,?,?,?,?,?,?,?)"
-                    ,['DECIDER', $this->decider['username'], '10', '10', $this->prHeader['prno'], $this->prHeader['id']
-                    , Carbon::now(), auth()->user()->id, auth()->user()->id, Carbon::now()]);
-                //Approval History End
-
                 $this->reset(['decider']);
                 $this->dispatchBrowserEvent('clear-select2');
             }
@@ -1507,8 +1506,7 @@ class PurchaseRequisitionDetails extends Component
                     ]);                
                 }
             });
-
-            $this->reset(['deleteID', 'deleteType']);
+            $this->reset(['deleteID', 'deleteType','prDeliveryPlan']);
         }
 
         public function addDeliveryPlan()
@@ -1721,7 +1719,8 @@ class PurchaseRequisitionDetails extends Component
 
             $strsql = "SELECT a.id, a.[lineno], a.partno, a.description, a.purchase_unit, a.unit_price, a.currency, a.exchange_rate
                 , a.purchase_group, a.account_group, a.qty, a.internal_order, FORMAT(a.req_date,'yyyy-MM-dd') AS req_date, a.budget_code, a.over_1_year_life
-                , a.snn_service, a.snn_production, b.name1 AS nominated_supplier, a.remarks, a.skip_rfq, a.skip_doa, a.final_price
+                , a.snn_service, a.snn_production, b.supplier AS nominated_supplier, b.name1 + ' ' + b.name2 AS nominated_supplier_name, a.remarks
+                , a.skip_rfq, a.skip_doa, a.final_price
                 , FORMAT(a.quotation_expiry_date,'yyyy-MM-dd') AS quotation_expiry_date, a.reference_pr, c.min_order_qty, c.supplier_lead_time
                 , d.status + ':' + d.description AS status_des, d.status
                 FROM pr_item a
@@ -1737,6 +1736,11 @@ class PurchaseRequisitionDetails extends Component
                 } else if ($this->orderType == "11" or $this->orderType == "21") {
                     $this->dispatchBrowserEvent('show-modelExpenseLineItem');
                 }
+
+                $this->prItem['skip_rfq'] = tinyToBoolean($this->prItem['skip_rfq']);
+                $this->prItem['skip_doa'] = tinyToBoolean($this->prItem['skip_doa']);
+                $this->prItem['over_1_year_life'] = tinyToBoolean($this->prItem['over_1_year_life']);
+
                 //ต้องเป็น Array เพราะต้องใช้ FUnction Validation
                 $this->prItem = json_decode(json_encode($this->prItem), true);
             }
@@ -1807,7 +1811,7 @@ class PurchaseRequisitionDetails extends Component
                     'partno' => 'required',
                     'description' => 'required',
                     'qty' => 'required|numeric|min:1|max:99999999.99', 
-                    'req_date' => 'required',
+                    'req_date' => 'required|date|date_format:Y-m-d|after:yesterday',
                     'budget_code' => 'required',
                 ])->validate();
             } else if ($this->prHeader['ordertype'] == '11' OR $this->prHeader['ordertype'] == '21') {
@@ -1827,7 +1831,7 @@ class PurchaseRequisitionDetails extends Component
 
             //2022-01-30 > Add Validate
                 $xValidate = true;
-                //IF PR ORDER TYPE = STANDARD PARTS or BLANKET PARTS AND PR ITEM.Req Date - Current Date < PART.Lead Time
+                //IF PR ORDER TYPE = STANDARD PARTS or BLANKET PARTS AND (PR ITEM.Req Date - Current Date) < PART.Lead Time
                 //(Ref. P2P-PUR-001-FS-Purchase Requisition_(2022-01-28))
 
                 $interval = Carbon::now()->diff($this->prItem['req_date']);
@@ -1892,30 +1896,6 @@ class PurchaseRequisitionDetails extends Component
                         , $this->prItem['snn_service'], $this->prItem['snn_production'] ,$this->prItem['nominated_supplier'], $this->prItem['remarks']
                         , $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr'], "10" ,auth()->user()->id, Carbon::now()
                         ]);
-        
-                        //30-01-2022 Hold
-                            //History Log
-                            // $xRandom = Str::random(20);
-                            // DB::statement(
-                            //     "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
-                            //     , changed_by, changed_on)
-                            // VALUES(?,?,?,?,?,?,?,?,?,?)",
-                            //     [
-                            //         'PR', $this->prHeader['prno'], 'Insert', 'Line Item', $lineno, 'history_pritem', $xRandom, auth()->user()->company
-                            //         , auth()->user()->id, Carbon::now()
-                            //     ]
-                            // );
-            
-                            // DB::statement("INSERT INTO history_pritem(history_ref, prno, prno_id, [lineno], partno, description, purchase_unit, unit_price
-                            // , currency, exchange_rate,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
-                            // ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on, changed_by, changed_on)
-                            // SELECT '" . $xRandom . "', prno, prno_id, [lineno], partno, description, purchase_unit, unit_price
-                            // , currency, exchange_rate,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
-                            // ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on, changed_by, changed_on
-                            // FROM pr_item
-                            // WHERE prno='" . $this->prHeader['prno'] . "' AND [lineno]=" .  $lineno
-                            // );
-                        //History Log End
         
                         $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
                         $data = DB::select($strsql);
@@ -2179,6 +2159,15 @@ class PurchaseRequisitionDetails extends Component
             }
         //PR Header End ***ที่เป็น Tab ย้ายไปอยู่ที่ Render
 
+        //ตรวจสอบว่าเป็น Buyer หรือไม่
+        $strsql = "SELECT username FROM buyer WHERE username='" . auth()->user()->username . "'";
+        $data = DB::select($strsql);
+        if (count($data) > 0) {
+            $this->isBuyer = true;
+        } else {
+            $this->isBuyer = false;
+        }
+
         //Authorization
             //ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่
             $strsql = "SELECT approver FROM dec_val_workflow WHERE ref_doc_type='10' AND ref_doc_id=" . $this->prHeader['id'] . " 
@@ -2395,7 +2384,6 @@ class PurchaseRequisitionDetails extends Component
         //division
         $this->prHeader['division'] =  auth()->user()->division;
         $this->prHeader['section'] =  auth()->user()->section;
-        //???กำลังทำตรงนี้
         $this->prHeader['cost_center'] = auth()->user()->cost_center;
         $strsql = "SELECT cost_center, description FROM cost_center WHERE cost_center='" . auth()->user()->cost_center . "'";
         $data = DB::select($strsql);
@@ -2450,7 +2438,8 @@ class PurchaseRequisitionDetails extends Component
 
             //Delivery Address
             $this->cost_center_dd = [];
-            $strsql = "SELECT address_id, SUBSTRING(address,1,30) as address FROM site WHERE company = '" . auth()->user()->company . "' ORDER BY address_id";
+            $strsql = "SELECT address_id, delivery_location FROM site 
+                    WHERE company = '" . auth()->user()->company . "' ORDER BY address_id";
             $this->delivery_address_dd = DB::select($strsql);
 
             //Cost_Center
@@ -2541,7 +2530,6 @@ class PurchaseRequisitionDetails extends Component
             $this->editPR();
             //$this->isBlanket, $this->orderType Assign ค่าใน Function editPR
         }
-
         $this->maxSize = config('constants.maxAttachmentSize');
     }
 
@@ -2565,9 +2553,10 @@ class PurchaseRequisitionDetails extends Component
             //prListDeliveryPlan
             if ($this->prHeader['ordertype'] == "20" or $this->prHeader['ordertype'] == "21"){
                 $strsql = "SELECT del.id, pri.[lineno], pri.description, pri.partno, del.qty, pri.purchase_unit, del.delivery_date
-                        FROM delivery_plan del
+                        FROM delivery_plan del                        
                         JOIN pr_item pri ON pri.id = del.ref_prline_id
-                        WHERE del.ref_pr_id=" . $this->prHeader['id'];
+                        WHERE del.ref_pr_id=" . $this->prHeader['id']
+                        . " ORDER BY del.id";
                 $this->prListDeliveryPlan = json_decode(json_encode(DB::select($strsql)), true);
             }
 
@@ -2593,7 +2582,8 @@ class PurchaseRequisitionDetails extends Component
             $this->validatorList = json_decode(json_encode(DB::select($strsql)), true);
 
             //attachmentFileList
-            $strsql = "SELECT a.id, a.file_name, a.file_path, a.file_type, a.edecision_no, a.ref_docno, a.ref_lineno, a.create_on
+            $strsql = "SELECT a.id, a.file_name, a.file_path, a.file_type, a.edecision_no, a.ref_docno, a.ref_lineno
+            , FORMAT(a.create_on, 'dd-MMM-yy, hh:mm') AS create_on
             , b.description AS ref_doctype, c.name + ' ' + c.lastname AS create_by
                 FROM attactments a
                 LEFT JOIN document_file_type b ON a.ref_doctype = b.doc_type_no
@@ -2604,8 +2594,8 @@ class PurchaseRequisitionDetails extends Component
 
             //approval_history ที่อยู่ตรงนี้เพราะ pagination ไม่สามารถส่งค่าผ่ายตัวแปร $this->historylog ได้
             $strsql = "SELECT a.approver, b.name + ' ' + b.lastname as fullname, a.approval_type, b.company, b.department, b.position
-                , c.description as status, a.reject_reason, FORMAT(a.submitted_date, 'dd-MMMM-yy') as submitted_date
-                , FORMAT(a.completed_date, 'dd-MMMM-yy') as completed_date
+                , c.description as status, a.reject_reason, FORMAT(a.submitted_date, 'dd-MMM-yy, hh:mm') as submitted_date
+                , FORMAT(a.completed_date, 'dd-MMM-yy, hh:mm') as completed_date
                 FROM dec_val_workflow_log a
                 LEFT JOIN users b ON a.approver = b.username
                 LEFT JOIN dec_val_status c ON a.status = c.status_no

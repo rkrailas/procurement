@@ -62,7 +62,7 @@
                     <div class="col-md-4">
                         {{-- Change to Not required & Readonly Ref. 18-Jan-2022: update editable and non-editable fields --}}
                         <label>Budget Price Per Unit</label>
-                        <input class="form-control form-control-sm" type="number" readonly step="0.01" wire:model.defer="prItem.unit_price">
+                        <input class="form-control form-control-sm" type="number" readonly step="0.01" wire:model.lazy="prItem.unit_price">
                     </div>
                     <div class="col-md-4">
                         {{-- Change to Not required & Readonly & input=text Ref. 18-Jan-2022: update editable and non-editable fields --}}
@@ -111,7 +111,7 @@
                             </div>
                             <x-datepicker autocomplete="off" wire:model.defer="prItem.req_date" id="request_date1" :error="'date'"/>
                         </div>
-                        @error('req_date') <span class="text-red">This field is required.</span> @enderror
+                        @error('req_date') <span class="text-red">Something wrong</span> @enderror
                     </div>
                     <div class="col-md-4">
                         <label>Internal Order</label>
@@ -159,18 +159,21 @@
                             </div>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="checkbox" disabled wire:model.defer="prItem.skip_doa">
-                                <label class="form-check-label">Skip RFQ</label>
+                                <label class="form-check-label">Skip DOA</label>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <label>Useful life more than 1 year</label>
-                        <div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" wire:model.defer="prItem.over_1_year_life">
-                                <label class="form-check-label">Yes</label>
+                        <div id="more1year">
+                            <label>Useful life more than 1 year</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" 
+                                        wire:model="prItem.over_1_year_life">
+                                    <label class="form-check-label">Yes</label>
+                                </div>
                             </div>
-                        </div>                            
+                        </div>                        
                     </div>
                     <div class="col-md-4">
                         @if ($prHeader['company'] == "2641")
@@ -210,7 +213,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label>Nominated Supplier</label>
-                                <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.nominated_supplier">
+                                <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.nominated_supplier_name">
                             </div>
                         </div>
                     </div>
@@ -279,10 +282,6 @@
         clearSelect2('budgetcode-select2');
     })
 
-    // window.addEventListener('bindToSelect', event => {
-    //     $(event.detail.selectName).html(" ");
-    //     $(event.detail.selectName).append(event.detail.newOption);
-    // })
 
     // การ Disable aelect2 ยังไม่ได้ใช้ตอนนี้
     // window.addEventListener('disable-partno-select2', event => {

@@ -66,3 +66,11 @@
         return($xWhere);
     }
 
+    function tinyToBoolean($xTiny)
+    {
+        if ($xTiny == 1){
+            return true;
+        } else {
+            return false;
+        }
+    }

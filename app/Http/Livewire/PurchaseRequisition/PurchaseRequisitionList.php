@@ -86,13 +86,6 @@ class PurchaseRequisitionList extends Component
     public function mount()
     {
         $this->resetSearch();
-        //หา Company 
-        // $strsql = "SELECT usr.company FROM users usr WHERE id=" . config('constants.USER_LOGIN');
-        // $data = DB::select($strsql);
-        // if (count($data)) {
-        //     $this->workAtCompany = $data[0]->company;
-        // }
-        $this->workAtCompany = auth()->user()->company;
     }
 
     public function loadDropdownList()
@@ -101,9 +94,9 @@ class PurchaseRequisitionList extends Component
                     WHERE pr = 1 ORDER BY ordertype";
         $this->ordertype_dd = DB::select($strsql);
 
-        $strsql = "SELECT site FROM site 
+        $strsql = "SELECT site, name FROM site 
                     WHERE company='" . config("constants.USER_COMPANY") 
-                . "' GROUP BY site ORDER BY site";
+                . "' GROUP BY site, name ORDER BY site";
         $this->site_dd = DB::select($strsql);
 
         $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users 
@@ -148,7 +141,7 @@ class PurchaseRequisitionList extends Component
             $this->skipRender();
         }
 
-        $xWhere = " WHERE prh.company='" . $this->workAtCompany . "' AND ISNULL(prh.deletion_flag, 0) <> 1";
+        $xWhere = " WHERE prh.company='" . auth()->user()->company . "' AND ISNULL(prh.deletion_flag, 0) <> 1";
 
         //ตรวจสอบว่าเป็น Buyer หรือไม่
         $strsql = "SELECT username FROM buyer WHERE username='" . auth()->user()->username . "'";
@@ -187,7 +180,7 @@ class PurchaseRequisitionList extends Component
         }
 
         $strsql = "SELECT prh.prno, ort.description AS order_type, ISNULL(req_f.name,'') + ' ' + ISNULL(req_f.lastname,'') AS requested_for
-                , pr_status.description AS status, prh.request_date, ISNULL(buyer.name,'') + ' ' + ISNULL(buyer.lastname,'') AS buyer
+                , pr_status.description AS status, prh.request_date, ISNULL(buyername.name,'') + ' ' + ISNULL(buyername.lastname,'') AS buyer
                 , pri.total_budget, pri.total_final_price, site.name as site
                 , ISNULL(req.name,'') + ' ' + ISNULL(req.lastname,'') AS requestor
                 FROM pr_header prh
@@ -198,12 +191,13 @@ class PurchaseRequisitionList extends Component
                 LEFT JOIN users req_f ON req_f.id=prh.requested_for
                 LEFT JOIN users req ON req.id=prh.requestor
                 LEFT JOIN pr_status ON pr_status.status=prh.status
-                LEFT JOIN users buyer ON buyer.id=prh.buyer
+                LEFT JOIN buyer ON buyer.buyer=prh.buyer
+                LEFT JOIN users buyername ON buyername.username=buyer.username
                 LEFT JOIN site ON site.site=prh.site";
 
         $strsql = $strsql . $xWhere;
         $strsql = $strsql . " GROUP BY prh.prno, ort.description, req_f.name, req_f.lastname, pr_status.description, prh.request_date
-                        , buyer.name, buyer.lastname, pri.total_budget, pri.total_final_price, site.name, prh.site, prh.status
+                        , buyername.name, buyername.lastname, pri.total_budget, pri.total_final_price, site.name, prh.site, prh.status
                         , req.name, req.lastname";
         $strsql = $strsql . " ORDER BY " . $this->sortBy . " " . $this->sortDirection;
 

@@ -58,7 +58,7 @@
                                     <i class="fas fa-calendar"></i>
                                 </span>
                             </div>
-                            <x-datepicker wire:model.defer="prHeader.request_date" id="request_date"
+                            <x-datepicker wire:model.defer="prHeader.request_date" id="request_date" readonly="true"
                                 :error="'date'"/>
                         </div>
                     </div>
@@ -155,7 +155,7 @@
                             <option value="">--- Please Select ---</option>
                             @foreach($delivery_address_dd as $row)
                             <option value="{{ $row->address_id }}">
-                                {{ $row->address_id }} : {{ $row->address }}
+                                {{ $row->address_id }} : {{ $row->delivery_location }}
                             </option>
                             @endforeach
                         </select>
@@ -243,7 +243,7 @@
                 @if ($isBlanket)
                 <li class="nav-item" wire:ignore>
                     <a class="nav-link {{ $currentTab == 'delivery' ? 'active' : '' }}" id="pills-delivery-tab" data-toggle="pill" href="#pills-delivery" role="tab" 
-                        aria-controls="pills-delivery" aria-selected="false">Delivery Plan</a>
+                        aria-controls="pills-delivery" aria-selected="false">Estimate Delivery Plan</a>
                 </li>
                 @endif            
                 <li class="nav-item" wire:ignore>
@@ -390,7 +390,7 @@
                                         <th scope="col">Ref Line No.</th>
                                         <th scope="col">Description</th>
                                         <th scope="col">Part No.</th>
-                                        <th scope="col">Qty</th>
+                                        <th scope="col">Max Qty</th>
                                         <th scope="col">UoM</th>
                                         <th scope="col">Planned Delivery Date</th>
                                         <th scope="col"></th>
@@ -405,7 +405,7 @@
                                         <td scope="col">{{ $prListDeliveryPlan[$index]['partno'] }}</td>
                                         <td scope="col" class="text-right pr-2">{{ number_format($prListDeliveryPlan[$index]['qty'], 2) }}</td>
                                         <td scope="col">{{ $prListDeliveryPlan[$index]['purchase_unit'] }}</td>
-                                        <td scope="col" class="text-center">{{ \Carbon\Carbon::parse( $prListDeliveryPlan[$index]['delivery_date'])->format('d-M-Y') }} </td>
+                                        <td scope="col">{{ \Carbon\Carbon::parse( $prListDeliveryPlan[$index]['delivery_date'])->format('d-M-Y') }} </td>
                                         <td scope="col">
                                             <center>
                                                 <a href="" wire:click.prevent="confirmDelete('{{ $prListDeliveryPlan[$index]['id'] }}', 'deliveryPlan')">
@@ -424,209 +424,86 @@
                 
                 {{-- Tab Authorization --}}         
                     <div class="tab-pane fade {{ $currentTab == 'auth' ? 'show active' : '' }}" id="pills-auth" role="tabpanel" aria-labelledby="pills-auth-tab" wire:ignore.self>
-                        {{-- Decider --}}
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="card shadow-none border rounded">
-                                        <div class="card-header my-card-header">
-                                            Decider
-                                        </div>
-                                        <div class="card-body my-card-body">
-                                            {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
-                                            @if ($isValidator_Decider <> true)
-                                            <div class="row">
-                                                <div class="col-md-3">
-                                                    <label>Select Decider</label>
-                                                    <x-select2 id="decider-select2" wire:model.defer="decider.username">
-                                                        <option value="">--- Please Select ---</option>
-                                                        @foreach($decider_dd as $row)
-                                                        <option value="{{ $row->username }}">
-                                                            {{ $row->fullname }}
-                                                        </option>
-                                                        @endforeach
-                                                    </x-select2>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label>Company</label>
-                                                    <input class="form-control form-control-sm" type="text" readonly wire:model.defer="decider.company">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label>Department</label>
-                                                    <input class="form-control form-control-sm" type="text" readonly wire:model.defer="decider.department">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label>Position</label>
-                                                    <input class="form-control form-control-sm" type="text" readonly wire:model.defer="decider.position">
-                                                </div>
+                        {{-- แสดงเฉพาะ Status < RFQ Created --}}
+                        @if ( $prHeader['status'] < '31' )
+
+                            {{-- Decider --}}
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card shadow-none border rounded">
+                                            <div class="card-header my-card-header">
+                                                Decider
                                             </div>
-                                            <div class="row">
-                                                <div class="col-md-9">
-                                                    <b>Note:</b> <br/>
-                                                    <div class="ml-3">
-                                                        <small style="color: blue">Request amount > 20,000 THB approved by GM or GM up</small> <br/>
-                                                        <small style="color: blue">Request amount <= 20,000 THB approved by AGM/DGM</small> <br/>
+                                            <div class="card-body my-card-body">
+                                                {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
+                                                @if ($isValidator_Decider <> true)
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <label>Select Decider</label>
+                                                        <x-select2 id="decider-select2" wire:model.defer="decider.username">
+                                                            <option value="">--- Please Select ---</option>
+                                                            @foreach($decider_dd as $row)
+                                                            <option value="{{ $row->username }}">
+                                                                {{ $row->fullname }}
+                                                            </option>
+                                                            @endforeach
+                                                        </x-select2>
                                                     </div>
-                                                    
+                                                    <div class="col-md-3">
+                                                        <label>Company</label>
+                                                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="decider.company">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>Department</label>
+                                                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="decider.department">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>Position</label>
+                                                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="decider.position">
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-3 text-right">
-                                                    <button class="btn btn-sm btn-danger" {{ $deciderList ? 'disabled' : ''}} 
-                                                        wire:click.prevent="addDecider"><i class="fas fa-plus-square mr-1"></i>Confirm</button>
+                                                <div class="row">
+                                                    <div class="col-md-9">
+                                                        <b>Note:</b> <br/>
+                                                        <div class="ml-3">
+                                                            <small style="color: blue">Request amount > 20,000 THB approved by GM or GM up</small> <br/>
+                                                            <small style="color: blue">Request amount <= 20,000 THB approved by AGM/DGM</small> <br/>
+                                                        </div>
+                                                        
+                                                    </div>
+                                                    <div class="col-md-3 text-right">
+                                                        <button class="btn btn-sm btn-danger" {{ $deciderList ? 'disabled' : ''}} 
+                                                            wire:click.prevent="addDecider"><i class="fas fa-plus-square mr-1"></i>Confirm</button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            @endif
-
-                                            {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
-                                            @if ($isValidator_Decider)
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <table class="table table-sm">
-                                                        <thead>
-                                                        <tr>
-                                                            <th scope="col">User ID</th>
-                                                            <th scope="col">Name</th>
-                                                            <th scope="col">Company</th>
-                                                            <th scope="col">Position</th>
-                                                            <th scope="col">Status</th>
-                                                            <th scope="col" style="width: 20%">Action</th>
-                                                        </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                        @foreach ($deciderList as $index => $row)
-                                                        <tr>
-                                                            <td scope="col">{{ $deciderList[$index]['approver'] }}</td>
-                                                            <td scope="col">{{ $deciderList[$index]['fullname'] }}</td>
-                                                            <td scope="col">{{ $deciderList[$index]['company'] }}</td>
-                                                            <td scope="col">{{ $deciderList[$index]['position'] }}</td>
-                                                            <td scope="col">{{ $deciderList[$index]['statusname'] }}</td>
-                                                            <td scope="col">
-                                                                @if (auth()->user()->username == $deciderList[$index]['approver'] 
-                                                                    AND $deciderList[$index]['status'] == '20')
-                                                                <button class="btn btn-sm btn-danger" wire:click.prevent="validatorDeciderApprove" >Approve</button>
-                                                                <button class="btn btn-sm btn-light" wire:click.prevent="validatorDeciderReject" >Reject</button>
-                                                                @else
-                                                                <button class="btn btn-sm btn-danger" disabled wire:click.prevent="" >Approve</button>
-                                                                <button class="btn btn-sm btn-light" disabled wire:click.prevent="" >Reject</button>
-                                                                @endif
-                                                            </td>
-                                                        </tr>
-                                                        @endforeach
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                            @else
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <table class="table table-sm">
-                                                        <thead>
-                                                        <tr>
-                                                            <th scope="col">User ID</th>
-                                                            <th scope="col">Name</th>
-                                                            <th scope="col">Company</th>
-                                                            <th scope="col">Position</th>
-                                                            <th scope="col">Status</th>
-                                                            <th scope="col"></th>
-                                                        </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                        @foreach ($deciderList as $index => $row)
-                                                        <tr>
-                                                            <td scope="col">{{ $deciderList[$index]['approver'] }}</td>
-                                                            <td scope="col">{{ $deciderList[$index]['fullname'] }}</td>
-                                                            <td scope="col">{{ $deciderList[$index]['company'] }}</td>
-                                                            <td scope="col">{{ $deciderList[$index]['position'] }}</td>
-                                                            <td scope="col">{{ $deciderList[$index]['statusname'] }}</td>
-                                                            <td scope="col">
-                                                                <center>
-                                                                    <a href="" wire:click.prevent="confirmDelete('{{ $deciderList[$index]['approver'] }}', 'decider')">
-                                                                        <i class="fas fa-times text-center" style="color: red"></i>
-                                                                    </a>
-                                                                </center>
-                                                            </td>
-                                                        </tr>
-                                                        @endforeach
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                            @endif
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        {{-- Decider End--}}
-
-                        {{-- Validator --}}
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="card shadow-none border rounded">
-                                        <div class="card-header my-card-header">
-                                            Validator
-                                        </div>
-                                        <div class="card-body my-card-body">
-
-                                            {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
-                                            @if ($isValidator_Decider <> true)
-                                            <div class="row">
-                                                <div class="col-md-3">
-                                                    <label>Select Validator</label>
-                                                    <x-select2 id="validator-select2" wire:model.defer="validator.username">
-                                                        <option value="">--- Please Select ---</option>
-                                                        @foreach($validator_dd as $row)
-                                                        <option value="{{ $row->username }}">
-                                                            {{ $row->fullname }}
-                                                        </option>
-                                                        @endforeach
-                                                    </x-select2>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label>Company</label>
-                                                    <input class="form-control form-control-sm" type="text" readonly wire:model.defer="validator.company">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label>Department</label>
-                                                    <input class="form-control form-control-sm" type="text" readonly wire:model.defer="validator.department">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label>Position</label>
-                                                    <input class="form-control form-control-sm" type="text" readonly wire:model.defer="validator.position">
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-12 text-right">
-                                                    <button class="btn btn-sm btn-danger"
-                                                        wire:click.prevent="addValidator"><i class="fas fa-plus-square mr-1"></i>Add</button>
-                                                </div>
-                                            </div>
-                                            @endif
-
-                                            {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
-                                            @if ($isValidator_Decider)
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <table class="table table-sm">
-                                                        <thead>
+                                                @endif
+    
+                                                {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
+                                                @if ($isValidator_Decider)
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <table class="table table-sm">
+                                                            <thead>
                                                             <tr>
-                                                            <th scope="col">User ID</th>
-                                                            <th scope="col">Name</th>
-                                                            <th scope="col">Company</th>
-                                                            <th scope="col">Position</th>
-                                                            <th scope="col">Status</th>
-                                                            <th scope="col" style="width: 20%">Action</th>
+                                                                <th scope="col">User ID</th>
+                                                                <th scope="col">Name</th>
+                                                                <th scope="col">Company</th>
+                                                                <th scope="col">Position</th>
+                                                                <th scope="col">Status</th>
+                                                                <th scope="col" style="width: 20%">Action</th>
                                                             </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @foreach ($validatorList as $index => $row)
+                                                            </thead>
+                                                            <tbody>
+                                                            @foreach ($deciderList as $index => $row)
                                                             <tr>
-                                                                <td scope="col">{{ $validatorList[$index]['approver'] }}</td>
-                                                                <td scope="col">{{ $validatorList[$index]['fullname'] }}</td>
-                                                                <td scope="col">{{ $validatorList[$index]['company'] }}</td>
-                                                                <td scope="col">{{ $validatorList[$index]['position'] }}</td>
-                                                                <td scope="col">{{ $validatorList[$index]['statusname'] }}</td>
+                                                                <td scope="col">{{ $deciderList[$index]['approver'] }}</td>
+                                                                <td scope="col">{{ $deciderList[$index]['fullname'] }}</td>
+                                                                <td scope="col">{{ $deciderList[$index]['company'] }}</td>
+                                                                <td scope="col">{{ $deciderList[$index]['position'] }}</td>
+                                                                <td scope="col">{{ $deciderList[$index]['statusname'] }}</td>
                                                                 <td scope="col">
-                                                                    @if (auth()->user()->username == $validatorList[$index]['approver'] 
-                                                                        AND $validatorList[$index]['status'] == '20')
+                                                                    @if (auth()->user()->username == $deciderList[$index]['approver'] 
+                                                                        AND $deciderList[$index]['status'] == '20')
                                                                     <button class="btn btn-sm btn-danger" wire:click.prevent="validatorDeciderApprove" >Approve</button>
                                                                     <button class="btn btn-sm btn-light" wire:click.prevent="validatorDeciderReject" >Reject</button>
                                                                     @else
@@ -636,68 +513,196 @@
                                                                 </td>
                                                             </tr>
                                                             @endforeach
-                                                        </tbody>
-                                                    </table>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            @else
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <table class="table table-sm">
-                                                        <thead>
+                                                @else
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <table class="table table-sm">
+                                                            <thead>
                                                             <tr>
-                                                            <th scope="col">Seq</th>
-                                                            <th scope="col">User ID</th>
-                                                            <th scope="col">Name</th>
-                                                            <th scope="col">Company</th>
-                                                            <th scope="col">Position</th>
-                                                            <th scope="col">Status</th>
-                                                            <th scope="col"></th>
+                                                                <th scope="col">User ID</th>
+                                                                <th scope="col">Name</th>
+                                                                <th scope="col">Company</th>
+                                                                <th scope="col">Position</th>
+                                                                <th scope="col">Status</th>
+                                                                <th scope="col"></th>
                                                             </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @foreach ($validatorList as $index => $row)
+                                                            </thead>
+                                                            <tbody>
+                                                            @foreach ($deciderList as $index => $row)
                                                             <tr>
-                                                                <td scope="col">{{ $validatorList[$index]['seqno'] }}</td>
-                                                                <td scope="col">{{ $validatorList[$index]['approver'] }}</td>
-                                                                <td scope="col">{{ $validatorList[$index]['fullname'] }}</td>
-                                                                <td scope="col">{{ $validatorList[$index]['company'] }}</td>
-                                                                <td scope="col">{{ $validatorList[$index]['position'] }}</td>
-                                                                <td scope="col">{{ $validatorList[$index]['statusname'] }}</td>
+                                                                <td scope="col">{{ $deciderList[$index]['approver'] }}</td>
+                                                                <td scope="col">{{ $deciderList[$index]['fullname'] }}</td>
+                                                                <td scope="col">{{ $deciderList[$index]['company'] }}</td>
+                                                                <td scope="col">{{ $deciderList[$index]['position'] }}</td>
+                                                                <td scope="col">{{ $deciderList[$index]['statusname'] }}</td>
                                                                 <td scope="col">
                                                                     <center>
-                                                                        <a href="" wire:click.prevent="confirmDelete('{{ $validatorList[$index]['approver'] }}', 'validator')">
+                                                                        <a href="" wire:click.prevent="confirmDelete('{{ $deciderList[$index]['approver'] }}', 'decider')">
                                                                             <i class="fas fa-times text-center" style="color: red"></i>
                                                                         </a>
                                                                     </center>
                                                                 </td>
                                                             </tr>
                                                             @endforeach
-                                                        </tbody>
-                                                    </table>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
+                                                @endif
+    
                                             </div>
-                                            @endif
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        {{-- Validator End--}}
+                            {{-- Decider End--}}
 
-                        {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
-                        @if ($isValidator_Decider)
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label>Rejection Reason</label>
-                                <textarea class="form-control form-control-sm" rows="2" maxlength="250" wire:model.defer="rejectReason"></textarea>
-                                <div id="count" class="d-flex justify-content-end">
-                                    <span id="current_count">0</span>
-                                    <span id="maximum_count">/ 250</span>
+                            {{-- Validator --}}
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card shadow-none border rounded">
+                                            <div class="card-header my-card-header">
+                                                Validator
+                                            </div>
+                                            <div class="card-body my-card-body">
+
+                                                {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
+                                                @if ($isValidator_Decider <> true)
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <label>Select Validator</label>
+                                                        <x-select2 id="validator-select2" wire:model.defer="validator.username">
+                                                            <option value="">--- Please Select ---</option>
+                                                            @foreach($validator_dd as $row)
+                                                            <option value="{{ $row->username }}">
+                                                                {{ $row->fullname }}
+                                                            </option>
+                                                            @endforeach
+                                                        </x-select2>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>Company</label>
+                                                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="validator.company">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>Department</label>
+                                                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="validator.department">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>Position</label>
+                                                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="validator.position">
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-12 text-right">
+                                                        <button class="btn btn-sm btn-danger"
+                                                            wire:click.prevent="addValidator"><i class="fas fa-plus-square mr-1"></i>Add</button>
+                                                    </div>
+                                                </div>
+                                                @endif
+
+                                                {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
+                                                @if ($isValidator_Decider)
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <table class="table table-sm">
+                                                            <thead>
+                                                                <tr>
+                                                                <th scope="col">User ID</th>
+                                                                <th scope="col">Name</th>
+                                                                <th scope="col">Company</th>
+                                                                <th scope="col">Position</th>
+                                                                <th scope="col">Status</th>
+                                                                <th scope="col" style="width: 20%">Action</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach ($validatorList as $index => $row)
+                                                                <tr>
+                                                                    <td scope="col">{{ $validatorList[$index]['approver'] }}</td>
+                                                                    <td scope="col">{{ $validatorList[$index]['fullname'] }}</td>
+                                                                    <td scope="col">{{ $validatorList[$index]['company'] }}</td>
+                                                                    <td scope="col">{{ $validatorList[$index]['position'] }}</td>
+                                                                    <td scope="col">{{ $validatorList[$index]['statusname'] }}</td>
+                                                                    <td scope="col">
+                                                                        @if (auth()->user()->username == $validatorList[$index]['approver'] 
+                                                                            AND $validatorList[$index]['status'] == '20')
+                                                                        <button class="btn btn-sm btn-danger" wire:click.prevent="validatorDeciderApprove" >Approve</button>
+                                                                        <button class="btn btn-sm btn-light" wire:click.prevent="validatorDeciderReject" >Reject</button>
+                                                                        @else
+                                                                        <button class="btn btn-sm btn-danger" disabled wire:click.prevent="" >Approve</button>
+                                                                        <button class="btn btn-sm btn-light" disabled wire:click.prevent="" >Reject</button>
+                                                                        @endif
+                                                                    </td>
+                                                                </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                @else
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <table class="table table-sm">
+                                                            <thead>
+                                                                <tr>
+                                                                <th scope="col">Seq</th>
+                                                                <th scope="col">User ID</th>
+                                                                <th scope="col">Name</th>
+                                                                <th scope="col">Company</th>
+                                                                <th scope="col">Position</th>
+                                                                <th scope="col">Status</th>
+                                                                <th scope="col"></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach ($validatorList as $index => $row)
+                                                                <tr>
+                                                                    <td scope="col">{{ $validatorList[$index]['seqno'] }}</td>
+                                                                    <td scope="col">{{ $validatorList[$index]['approver'] }}</td>
+                                                                    <td scope="col">{{ $validatorList[$index]['fullname'] }}</td>
+                                                                    <td scope="col">{{ $validatorList[$index]['company'] }}</td>
+                                                                    <td scope="col">{{ $validatorList[$index]['position'] }}</td>
+                                                                    <td scope="col">{{ $validatorList[$index]['statusname'] }}</td>
+                                                                    <td scope="col">
+                                                                        <center>
+                                                                            <a href="" wire:click.prevent="confirmDelete('{{ $validatorList[$index]['approver'] }}', 'validator')">
+                                                                                <i class="fas fa-times text-center" style="color: red"></i>
+                                                                            </a>
+                                                                        </center>
+                                                                    </td>
+                                                                </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {{-- Validator End--}}
+
+                            {{-- ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่ --}}
+                            @if ($isValidator_Decider)
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label>Rejection Reason</label>
+                                    <textarea class="form-control form-control-sm" rows="2" maxlength="250" wire:model.defer="rejectReason"></textarea>
+                                    <div id="count" class="d-flex justify-content-end">
+                                        <span id="current_count">0</span>
+                                        <span id="maximum_count">/ 250</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        @endif
+                            @endif
 
+                        @endif
+                        
                         {{-- Approval History --}}
                             <div class="card shadow-none border rounded">
                                 <div class="card-header my-card-header">
@@ -937,7 +942,9 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         @if ( $prHeader['prno'] <> '' )
-                            @if ( $prHeader['status'] < '20' )
+
+                            {{-- 10-Planned --}}
+                            @if ( $prHeader['status'] == '10' ) 
                             <button wire:click.prevent="releaseForSourcing" class="btn btn-sm btn-danger">
                                 <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
                             @else
@@ -945,35 +952,77 @@
                                 <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
                             @endif
 
+                            {{-- 40-ConfirmedFinalPrice, 50-ReleasedForPO --}}
+                            @if ( $prHeader['status'] == '40' OR  $prHeader['status'] == '50') 
                             <button wire:click.prevent="releaseForPO" class="btn btn-sm btn-danger">
                                 <i class="fas fa-check mr-2"></i>Release for PO</button>
+                            @else
+                            <button wire:click.prevent="releaseForPO" class="btn btn-sm btn-danger" disabled>
+                                <i class="fas fa-check mr-2"></i>Release for PO</button>
+                            @endif
 
+                            {{-- Between 30-PRAuthorized and 60-Closed --}}
+                            @if ( $prHeader['status'] >= '30' AND  $prHeader['status'] <= '60') 
                             <a href="PRForm/{{ $prHeader['prno'] }}" target="_blank">
-                                <button class="btn btn-sm btn-danger" {{ $prHeader['prno'] ? '' : 'disabled' }}>
+                                <button class="btn btn-sm btn-danger">
                                     <i class="fas fa-print mr-2"></i>Print</button>
                             </a>
+                            @else
+                            <a href="PRForm/{{ $prHeader['prno'] }}" target="_blank">
+                                <button class="btn btn-sm btn-danger" disabled>
+                                    <i class="fas fa-print mr-2"></i>Print</button>
+                            </a>
+                            @endif
 
+                            {{-- Between 10=Planned and 40-Confirmed Final Price --}}
+                            @if ($prHeader['status'] >= '10' AND $prHeader['status'] >= '40')
                             <button wire:click.prevent="cancelPR" class="btn btn-sm btn-light">
                                 <i class="fas fa-times mr-2"></i>Cancel</button>
+                            @else
+                            <button wire:click.prevent="cancelPR" class="btn btn-sm btn-light" disabled>
+                                <i class="fas fa-times mr-2"></i>Cancel</button>
+                            @endif
 
-                            <button wire:click.prevent="confirmDeletePrHeader_Detail" 
-                                class="btn btn-sm btn-light" {{ $prHeader['prno'] ? '' : 'disabled' }}>
+                            {{-- 10=Planned --}}
+                            @if ($prHeader['status'] == '10')
+                            <button wire:click.prevent="confirmDeletePrHeader_Detail" class="btn btn-sm btn-light">
                                 <i class="fas fa-trash-alt mr-2"></i>Delete</button>
+                            @else
+                            <button wire:click.prevent="confirmDeletePrHeader_Detail" class="btn btn-sm btn-light" disabled>
+                                <i class="fas fa-trash-alt mr-2"></i>Delete</button>
+                            @endif
 
+                            {{--70-Cancelled --}}
+                            @if ($prHeader['status'] == '70')
                             <button wire:click.prevent="reopen" class="btn btn-sm btn-danger">
                                 <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
+                            @else
+                            <button wire:click.prevent="reopen" class="btn btn-sm btn-danger" disabled>
+                                <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
+                            @endif
 
+                            {{-- 50-ReleasedForPO --}}
+                            @if ($prHeader['status'] == '50' AND $isBuyer == true)
+                            <button wire:click.prevent="" class="btn btn-sm btn-danger">
+                                <i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
+                            @else
                             <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
                                 <i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
+                            @endif
                         @endif
                     </div>
                     <div>
                         <button wire:click.prevent="backToPRList" class="btn btn-sm btn-light">
                             <i class="fas fa-arrow-alt-circle-left mr-1"></i></i>Back</button>
-                        <button wire:click.prevent="savePR" class="btn btn-sm btn-danger" class="btn btn-sm btn-light" 
-                            {{-- {{ $prHeader['status'] > '10' ? 'disabled' : '' }} --}}
-                            >
+
+                        {{-- 01-Draft, 10-Planned --}}
+                        @if ($prHeader['status'] == '01' OR $prHeader['status'] == '10')
+                        <button wire:click.prevent="savePR" class="btn btn-sm btn-danger" class="btn btn-sm btn-light">
                             <i class="fas fa-save mr-1"></i>Save</button>
+                        @else
+                        <button wire:click.prevent="savePR" class="btn btn-sm btn-danger" class="btn btn-sm btn-light" disabled>
+                            <i class="fas fa-save mr-1"></i>Save</button>
+                        @endif
                     </div>
                     
                 </div>
@@ -1080,6 +1129,8 @@
 
     window.addEventListener('clear-select2', event => {
         clearSelect2('attachment_lineno-select2');
+        clearSelect2('decider-select2');
+        clearSelect2('validator-select2'); 
     })
 
     window.addEventListener('bindToSelect2', event => {

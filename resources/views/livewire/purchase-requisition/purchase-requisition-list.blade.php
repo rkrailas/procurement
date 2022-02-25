@@ -41,7 +41,7 @@
                         <x-select2-multiple id="site-select2" wire:model.defer="site">
                             @foreach($site_dd as $row)
                             <option value="{{ $row->site }}">
-                                {{ $row->site }}
+                                {{ $row->site }} : {{ $row->name }}
                             </option>
                             @endforeach
                         </x-select2-multiple>
