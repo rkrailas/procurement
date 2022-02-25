@@ -1135,7 +1135,7 @@ class PurchaseRequisitionDetails extends Component
                         SELECT '" . $xNewRFQNo . "', a.nominated_supplier, b.po_currency, " 
                         . auth()->user()->id . ",'" . Carbon::now() . "' 
                         FROM pr_item a
-                        LEFT JOIN supplier b ON a.nominated_supplier=supplier
+                        LEFT JOIN supplier b ON a.nominated_supplier=b.supplier
                         WHERE a.prno='" . $this->prHeader['prno'] . "'
                         GROUP BY a.nominated_supplier, b.po_currency";
                     DB::statement($strsql);
@@ -1478,7 +1478,7 @@ class PurchaseRequisitionDetails extends Component
         {
             if ($this->decider == ""){
                 $this->dispatchBrowserEvent('popup-alert', [
-                    'title' => 'Please Select Deceder',
+                    'title' => 'Please Select Decider',
                 ]);
             } else {
                 DB::statement("INSERT INTO dec_val_workflow (approval_type, approver, status, ref_doc_type, ref_doc_no, ref_doc_id, create_by, create_on)
