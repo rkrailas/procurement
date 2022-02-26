@@ -28,23 +28,23 @@ class PurchaseRequisitionDetails extends Component
     public $currentTab = "";
     public $enableAddPlan = false;
     public $selectedRows = [];
+    public $numberOfPage = 10;
 
     //Header
     public $prHeader, $requested_for_dd, $delivery_address_dd, $buyer_dd, $cost_center_dd, $budget_year, $isBuyer; 
 
     //Line Items > $itemList=in table, $prItem=ใน Modal, 
-    public $prItem = [], $itemList = [], $partno_dd, $currency_dd, $internal_order_dd, $budget_code, $purchaseunit_dd, $purchasegroup_dd
+    public $prItem = [], $partno_dd, $currency_dd, $internal_order_dd, $budget_code, $purchaseunit_dd, $purchasegroup_dd
         , $budgetcode_dd, $prLineNo_dd, $isCreateLineItem, $showMore1Year; 
 
     //DeliveryPlan
-    public $prDeliveryPlan, $prListDeliveryPlan = [];  //$prDeliveryPlan=ใน Tab, $prListDeliveryPlan=ใน Grid
+    public $prDeliveryPlan = [];  //$prDeliveryPlan=ใน Tab, $prListDeliveryPlan=ใน Grid
 
     //Authorization > deciderList=in table, $decider=Dropdown, validatorList=in table, $validator=Dropdown
     public $decider_dd, $deciderList = [], $decider = [], $validator_dd, $validatorList = [], $validator = [], $rejectReason
         , $isValidator_Decider =false;
 
     //Attachment Dropdown ใช้ตัวแปรร่วมกับ prLineNo_dd
-    public $attachmentFileList;
     public $editAttachment, $attachmentDocType_dd, $maxSize;
     public $prLineNoAtt_dd, $attachment_lineno, $attachment_filetype, $attachment_edecisionno, $attachment_file; //Header
 
@@ -113,7 +113,7 @@ class PurchaseRequisitionDetails extends Component
 
         public function clearVariablePR()
         {
-            $this->reset(['prHeader', 'prItem', 'itemList', 'prListDeliveryPlan', 'deciderList', 'validatorList', 'attachmentFileList', 'historyLog'
+            $this->reset(['prHeader', 'prItem', 'deciderList', 'validatorList', 'historyLog'
                     , 'isCreateMode', 'editPRNo', 'isBlanket', 'orderType', 'deleteID', 'deleteType', 'currentTab', 'prDeliveryPlan'
                     , 'decider', 'isValidator_Decider', 'validator', 'rejectReason', 'attachment_lineno', 'attachment_file']);
         }
@@ -192,7 +192,7 @@ class PurchaseRequisitionDetails extends Component
                         $xPrID = $data[0]->id;
                     }
 
-                    //Copy pr_item
+                    //Copy pr_item ที่เลือก และ Status=Cancel
                     $strsql = "insert into pr_item(prno, prno_id, [lineno], partno, description, purchase_unit, unit_price, unit_price_local, currency
                         , exchange_rate, purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life
                         , snn_service, snn_production, final_price, final_price_local, quotation_expiry_date, quotation_date, nominated_supplier
@@ -204,12 +204,12 @@ class PurchaseRequisitionDetails extends Component
                         , remarks, skip_rfq, skip_doa, '" . $this->prHeader['prno'] . "', reference_po, reference_po_item, status, close_reason
                         , '" . auth()->user()->id . "', '" . Carbon::now() . "'
                         from pr_item
-                        where id in (" . myWhereInID($this->selectedRows) . ")";
+                        where id in (" . myWhereInID($this->selectedRows) . ") AND status='70'";
                     DB::statement($strsql);
 
-                    //Set PR Item Status = Cancelled
-                    $strsql = "UPDATE pr_item SET status='70' WHERE prno='" . $this->prHeader['prno'] . "'";
-                    DB::statement($strsql);
+                    //26-2-22 ไม่ใช้งาน Set PR Item Status = Cancelled
+                    // $strsql = "UPDATE pr_item SET status='70' WHERE prno='" . $this->prHeader['prno'] . "'";
+                    // DB::statement($strsql);
 
                     //Popup Message
                     $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='100' AND class='PURCHASE REQUISITION'";
@@ -746,15 +746,6 @@ class PurchaseRequisitionDetails extends Component
 
             $this->dispatchBrowserEvent('show-modelEditAttachment');
         }
-
-        // Not use ไปใช้เป็น Modal แทน
-        // public function updatedAttachmentFileList($value, $key) //No Refresh
-        // {
-        //     $data = explode("." , $key);
-        //     DB::statement("UPDATE attactments SET file_type=?, changed_by=?, changed_on=?
-        //         WHERE id=?" 
-        //         , [$value, auth()->user()->id, Carbon::now(), $this->attachmentFileList[$data[0]]['id']]);
-        // }
 
         public function deleteAttachment()
         {
@@ -1496,7 +1487,7 @@ class PurchaseRequisitionDetails extends Component
         {
             DB::transaction(function() 
             {
-                DB::statement("DELETE FROM delivery_plan where id=? " , [$this->deleteID]);
+                DB::statement("DELETE FROM pr_delivery_plan where id=? " , [$this->deleteID]);
                 
                 $strsql = "SELECT msg_text FROM message_list WHERE msg_no='104' AND class='PURCHASE REQUISITION'";
                 $data = DB::select($strsql);
@@ -1511,12 +1502,19 @@ class PurchaseRequisitionDetails extends Component
 
         public function addDeliveryPlan()
         {
+            //Validate
+            Validator::make($this->prDeliveryPlan, [
+                'ref_prline_id' => 'required',
+                'qty' => 'required|numeric|min:1|max:99999999.99', 
+                'delivery_date' => 'required|date|date_format:Y-m-d|after:yesterday',
+            ])->validate();
+
             //ตรวจสอบว่า QTY ที่จะ Add เกินกว่าที่เหลือหรือไม่
             if ($this->prDeliveryPlan['totalQtyPlanned'] + $this->prDeliveryPlan['qty'] <= $this->prDeliveryPlan['totalQty']) {
-                DB::statement("INSERT INTO delivery_plan (qty, delivery_date, ref_pr_id, ref_prline_id, create_by, create_on)
-                VALUES(?,?,?,?,?,?)"
-                ,[$this->prDeliveryPlan['qty'], $this->prDeliveryPlan['delivery_date'], $this->prHeader['id'], $this->prDeliveryPlan['ref_prline_id']
-                , auth()->user()->id, Carbon::now()
+                DB::statement("INSERT INTO pr_delivery_plan (qty, delivery_date, ref_prno, ref_pr_id, ref_prline_id, create_by, create_on)
+                VALUES(?,?,?,?,?,?,?)"
+                ,[$this->prDeliveryPlan['qty'], $this->prDeliveryPlan['delivery_date'], $this->prHeader['prno'], $this->prHeader['id']
+                , $this->prDeliveryPlan['ref_prline_id'], auth()->user()->id, Carbon::now()
                 ]);
         
                 $this->reset(['prDeliveryPlan']);
@@ -1538,7 +1536,7 @@ class PurchaseRequisitionDetails extends Component
                 }
         
                 //Sum QTY ของ PrLine นั้น ๆ
-                $strsql = "SELECT SUM(qty) as sumqty FROM delivery_plan WHERE ref_prline_id = " . $this->prDeliveryPlan['ref_prline_id'];
+                $strsql = "SELECT SUM(qty) as sumqty FROM pr_delivery_plan WHERE ref_prline_id = " . $this->prDeliveryPlan['ref_prline_id'];
                 $data = DB::select($strsql);
                 $this->prDeliveryPlan['totalQtyPlanned'] = 0;
                 if ($data) {
@@ -1562,40 +1560,6 @@ class PurchaseRequisitionDetails extends Component
     //Delivery Plan End
 
     //Line Item
-        public function revokeLineItem()
-        {
-            //8-2-2022 Change for CR No. 6
-            if (($this->prItem['status'] == "20" OR $this->prItem['status'] == "21" OR $this->prItem['status'] == "30")
-                AND $this->prHeader['requestor'] == auth()->user()->id){
-
-                DB::transaction(function() 
-                {
-                    DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=? where id=?"
-                    , ['10',auth()->user()->id, Carbon::now(), $this->prItem['id']]);
-
-                    DB::statement("UPDATE pr_header SET status=?, changed_by=?, changed_on=? where id=?"
-                    , ['10',auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
-
-                    $this->prHeader['statusname'] = 'Planned'; //ใช้วิธีนี้เพราะไม่ต้องการ Redirect
-                });
-                
-
-                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
-                $data = DB::select($strsql);
-                if (count($data) > 0) {
-                    $this->dispatchBrowserEvent('popup-success', [
-                        'title' => str_replace("<PR Line No.>", $this->prItem['lineno'], $data[0]->msg_text),
-                    ]);
-                }
-
-                $this->reset(['prItem']);
-                $this->dispatchBrowserEvent('hide-modelPartLineItem');
-            }else{
-                $this->dispatchBrowserEvent('popup-alert', [
-                    'title' => 'Cannot Revoke',]);
-            }
-        }
-
         public function closedModal()
         {
             $this->reset(['prItem']);
@@ -1755,38 +1719,6 @@ class PurchaseRequisitionDetails extends Component
 
             DB::transaction(function() 
             {
-                //30-01-2022 Hold
-                //History Log
-                    //หา Line no
-                    // $strsql = "SELECT [lineno] FROM pr_item WHERE id=". $this->deleteID;
-                    // $data = DB::select($strsql);
-                    // $lineno = 0;
-                    // if ($data) {
-                    //     $lineno = $data[0]->lineno;
-                    // } 
-
-                    // $xRandom = Str::random(20);
-                    // DB::statement(
-                    //     "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
-                    //     , changed_by, changed_on)
-                    // VALUES(?,?,?,?,?,?,?,?,?,?)",
-                    //     [
-                    //         'PR', $this->prHeader['prno'], 'Delete', 'Line Item', $lineno, 'history_pritem', $xRandom, auth()->user()->company
-                    //         , auth()->user()->id, Carbon::now()
-                    //     ]
-                    // );
-
-                    // DB::statement("INSERT INTO history_pritem(history_ref, prno, prno_id, [lineno], partno, description, purchase_unit, unit_price
-                    // , currency, exchange_rate,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
-                    // ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on, changed_by, changed_on)
-                    // SELECT '" . $xRandom . "', prno, prno_id, [lineno], partno, description, purchase_unit, unit_price
-                    // , currency, exchange_rate,purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
-                    // ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on, changed_by, changed_on
-                    // FROM pr_item
-                    // WHERE id=" . $this->deleteID
-                    // );
-                //History Log End
-
                 DB::statement("DELETE FROM pr_item where id=? " , [$this->prItem['id']]);
                 
                 $strsql = "SELECT msg_text FROM message_list WHERE msg_no='104' AND class='PURCHASE REQUISITION'";
@@ -1801,6 +1733,7 @@ class PurchaseRequisitionDetails extends Component
 
             $this->reset(['prItem']);
             $this->dispatchBrowserEvent('hide-modelPartLineItem');
+            $this->dispatchBrowserEvent('hide-modelExpenseLineItem');
         }
 
         public function saveLineItem()
@@ -2111,6 +2044,29 @@ class PurchaseRequisitionDetails extends Component
     //     }
     // }
 
+    public function revokePrHeader()
+    {
+        //26-2-22 Change for 'P2P-PR Process for UAT 20220224.pptx'
+        DB::transaction(function() 
+        {
+            DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=? where prno_id=?"
+            , ['10',auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+
+            DB::statement("UPDATE pr_header SET status=?, changed_by=?, changed_on=? where id=?"
+            , ['10',auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+
+            $this->prHeader['statusname'] = 'Planned'; //ใช้วิธีนี้เพราะไม่ต้องการ Redirect
+        });
+
+        $strsql = "SELECT msg_text FROM message_list WHERE msg_no='110' AND class='PURCHASE REQUISITION'";
+        $data = DB::select($strsql);
+        if (count($data) > 0) {
+            $this->dispatchBrowserEvent('popup-success', [
+                'title' => str_replace("<PR No.>", $this->prHeader['prno'], $data[0]->msg_text),
+            ]);
+        }
+    }
+
     public function editPR()
     {
         //PR Header
@@ -2243,42 +2199,6 @@ class PurchaseRequisitionDetails extends Component
             $this->prHeader['costcenter_desc'] = "";
         }
     }
-
-    // public function getNewPrNo()
-        // {
-        //     $newPRNo = "";
-
-        //     if ($this->orderType == '10' OR $this->orderType == '11'){
-        //         $strsql = "SELECT lastnumber FROM tran_type_number WHERE tran_type='PR' 
-        //                 AND calendar_year='" . $this->prHeader['budget_year'] . "' AND last_calendar_year='". $this->prHeader['budget_year'] . "'";
-        //         $data = DB::select($strsql);
-
-        //         if ($data){
-        //             DB::statement("UPDATE tran_type_number SET lastnumber=?, changed_by=?, changed_on=? 
-        //                         WHERE tran_type=? AND calendar_year=? AND last_calendar_year=?"
-        //              , [$data[0]->lastnumber + 1, auth()->user()->id, Carbon::now()
-        //              , 'PR', $this->prHeader['budget_year'], $this->prHeader['budget_year']]);
-
-        //              $newPRNo = 'PR' . substr($this->prHeader['budget_year'], 2, 2) . sprintf("%05d", $data[0]->lastnumber + 1);
-        //         }
-
-        //     }else if ($this->orderType == '20' OR $this->orderType == '21'){
-        //         $strsql = "SELECT lastnumber FROM tran_type_number WHERE tran_type='BPR' 
-        //                 AND calendar_year='" . $this->prHeader['budget_year'] . "' AND last_calendar_year='". $this->prHeader['budget_year'] . "'";
-        //         $data = DB::select($strsql);
-
-        //         if ($data){
-        //             DB::statement("UPDATE tran_type_number SET lastnumber=?, changed_by=?, changed_on=? 
-        //                         WHERE tran_type=? AND calendar_year=? AND last_calendar_year=?"
-        //              , [$data[0]->lastnumber + 1, auth()->user()->id, Carbon::now()
-        //              , 'BPR', $this->prHeader['budget_year'], $this->prHeader['budget_year']]);
-
-        //              $newPRNo = 'BPR' . substr($this->prHeader['budget_year'], 2, 2) . sprintf("%05d", $data[0]->lastnumber + 1);
-        //         }
-        //     }
-
-        //     return $newPRNo;
-    // }
 
     public function getNewPrNo()
     {
@@ -2544,20 +2464,23 @@ class PurchaseRequisitionDetails extends Component
             //itemList
             $strsql = "SELECT pri.id, pri.[lineno], pri.description, pri.partno, pri.[status] + ' : ' + sts.[description] AS [status]
                 , pri.qty, pri.purchase_unit, pri.unit_price, pri.qty * pri.unit_price AS budgettotal, pri.req_date, pri.final_price, pri.currency
+                , pri.reference_po
                 FROM pr_item pri
                 LEFT JOIN pr_status sts ON sts.status=pri.[status]
                 WHERE pri.prno='" . $this->prHeader['prno'] . "'
                 ORDER BY pri.[lineno]";
-            $this->itemList = json_decode(json_encode(DB::select($strsql)), true);
+            $itemList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
             //prListDeliveryPlan
             if ($this->prHeader['ordertype'] == "20" or $this->prHeader['ordertype'] == "21"){
                 $strsql = "SELECT del.id, pri.[lineno], pri.description, pri.partno, del.qty, pri.purchase_unit, del.delivery_date
-                        FROM delivery_plan del                        
+                        FROM pr_delivery_plan del
                         JOIN pr_item pri ON pri.id = del.ref_prline_id
                         WHERE del.ref_pr_id=" . $this->prHeader['id']
                         . " ORDER BY del.id";
-                $this->prListDeliveryPlan = json_decode(json_encode(DB::select($strsql)), true);
+                $prListDeliveryPlan = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
+            } else {
+                $prListDeliveryPlan = (new Collection([]))->paginate($this->numberOfPage);
             }
 
             //deciderList
@@ -2590,7 +2513,7 @@ class PurchaseRequisitionDetails extends Component
                 LEFT JOIN users c ON a.create_by = c.id
                 
                 WHERE ref_docid =" . $this->prHeader['id'] . " ORDER BY ref_lineno";
-            $this->attachmentFileList = json_decode(json_encode(DB::select($strsql)), true);
+            $attachmentFileList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
             //approval_history ที่อยู่ตรงนี้เพราะ pagination ไม่สามารถส่งค่าผ่ายตัวแปร $this->historylog ได้
             $strsql = "SELECT a.approver, b.name + ' ' + b.lastname as fullname, a.approval_type, b.company, b.department, b.position
@@ -2600,14 +2523,17 @@ class PurchaseRequisitionDetails extends Component
                 LEFT JOIN users b ON a.approver = b.username
                 LEFT JOIN dec_val_status c ON a.status = c.status_no
                 WHERE a.refdoc_type='10' AND a.refdoc_id=" . $this->prHeader['id'];
-            $approval_history = (new Collection(DB::select($strsql)))->paginate(10);
+            $approval_history = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
+
+            //Reset Pagination
+            $this->resetPage();
 
             return view('livewire.purchase-requisition.purchase-requisition-details',[
-                'itemList' => $this->itemList,
-                'prListDeliveryPlan' => $this->prListDeliveryPlan,
+                'itemList' => $itemList,
+                'prListDeliveryPlan' => $prListDeliveryPlan,
                 'deciderList' => $this->deciderList,
                 'validatorList' => $this->validatorList,
-                'attachmentFileList' => $this->attachmentFileList,
+                'attachmentFileList' => $attachmentFileList,
                 'approval_history' => $approval_history,
             ]);
         }

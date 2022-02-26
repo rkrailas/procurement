@@ -27,7 +27,7 @@
                         <label>Description <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="250"
                             wire:model.defer="prItem.description">
-                        @error('description') <span class="text-red">This field is required.</span> @enderror
+                        @error('description') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                 </div>
 
@@ -43,13 +43,13 @@
                             </option>
                             @endforeach
                         </x-select2>
-                        @error('purchase_unit') <span class="text-red">This field is required.</span> @enderror
+                        @error('purchase_unit') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                     <div class="col-md-4">
                         <label>Budget Price Per Unit <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="number" step="0.01"
                             wire:model.defer="prItem.unit_price">
-                        @error('unit_price') <span class="text-red">This field is required.</span> @enderror
+                        @error('unit_price') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                     <div class="col-md-4">
                         <label>Currency <span style="color: red">*</span></label>
@@ -60,7 +60,7 @@
                             </option>
                             @endforeach
                         </x-select2>
-                        @error('currency') <span class="text-red">This field is required.</span> @enderror
+                        @error('currency') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                 </div>
 
@@ -70,7 +70,7 @@
                         <label>Exchange Rate <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" readonly
                             wire:model.defer="prItem.exchange_rate">
-                        @error('exchange_rate') <span class="text-red">This field is required.</span> @enderror
+                        @error('exchange_rate') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                     <div class="col-md-4">
                         <label>Purchase Group</label>
@@ -92,7 +92,7 @@
                         <label>QTY <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="number" step="0.01"
                             wire:model.defer="prItem.qty">
-                        @error('qty') <span class="text-red">This field is required or Exceed Length.</span> @enderror
+                        @error('qty') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-4">
                         <label>Requested Delivery Date <span style="color: red">*</span></label>
@@ -104,7 +104,7 @@
                             </div>
                             <x-datepicker autocomplete="off" wire:model.defer="prItem.req_date" id="request_date2" :error="'date'"/>
                         </div>
-                        @error('req_date') <span class="text-red">This field is required.</span> @enderror
+                        @error('req_date') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                     <div class="col-md-4">
                         <label>Internal Order</label>
@@ -129,7 +129,7 @@
                             </option>
                             @endforeach
                         </x-select2>
-                        @error('budget_code') <span class="text-red">This field is required.</span> @enderror
+                        @error('budget_code') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                     <div class="col-md-4">
                         <label>Useful life more than 1 year</label>
@@ -219,8 +219,6 @@
                         <div>
                             <button type="button" class="btn btn-sm btn-light" wire:click.prevent="deleteLineItem">
                                 <i class="fas fa-trash-alt mr-1"></i>Delete</button>
-                            <button type="button" class="btn btn-sm btn-danger" wire:click.prevent="revokeLineItem">
-                                <i class="fas fa-undo mr-1"></i>Revoke</button>
                         </div>
                         <div>
                             <button type="button" class="btn btn-sm btn-light" data-dismiss="modal" wire:click.prevent="closedModal">

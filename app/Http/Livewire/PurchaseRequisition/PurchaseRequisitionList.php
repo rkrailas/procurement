@@ -182,7 +182,7 @@ class PurchaseRequisitionList extends Component
         $strsql = "SELECT prh.prno, ort.description AS order_type, ISNULL(req_f.name,'') + ' ' + ISNULL(req_f.lastname,'') AS requested_for
                 , pr_status.description AS status, prh.request_date, ISNULL(buyername.name,'') + ' ' + ISNULL(buyername.lastname,'') AS buyer
                 , pri.total_budget, pri.total_final_price, site.name as site
-                , ISNULL(req.name,'') + ' ' + ISNULL(req.lastname,'') AS requestor
+                , ISNULL(req.name,'') + ' ' + ISNULL(req.lastname,'') AS requestor, c.description as item_desc
                 FROM pr_header prh
                 LEFT JOIN (SELECT prno, SUM(qty * unit_price_local) as total_budget
                             , SUM(final_price_local) as total_final_price 
@@ -193,12 +193,16 @@ class PurchaseRequisitionList extends Component
                 LEFT JOIN pr_status ON pr_status.status=prh.status
                 LEFT JOIN buyer ON buyer.buyer=prh.buyer
                 LEFT JOIN users buyername ON buyername.username=buyer.username
-                LEFT JOIN site ON site.site=prh.site";
+                LEFT JOIN site ON site.site=prh.site
+                LEFT JOIN (SELECT prno, MIN(id) AS id
+                            FROM pr_item 
+                            GROUP BY prno) b ON b.prno=prh.prno
+                LEFT JOIN pr_item c ON c.id=b.id";
 
         $strsql = $strsql . $xWhere;
         $strsql = $strsql . " GROUP BY prh.prno, ort.description, req_f.name, req_f.lastname, pr_status.description, prh.request_date
                         , buyername.name, buyername.lastname, pri.total_budget, pri.total_final_price, site.name, prh.site, prh.status
-                        , req.name, req.lastname";
+                        , req.name, req.lastname, c.description";
         $strsql = $strsql . " ORDER BY " . $this->sortBy . " " . $this->sortDirection;
 
         $pr_list = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);

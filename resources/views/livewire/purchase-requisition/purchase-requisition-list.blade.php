@@ -195,6 +195,15 @@
                                         class="fa fa-arrow-down {{ $sortBy === 'prh.status' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
+                            <th scope="col">First Line Item Description
+                                <span wire:click="sortBy('c.description')" class="float-right text-sm"
+                                    style="cursor: pointer;">
+                                    <i
+                                        class="fa fa-arrow-up {{ $sortBy === 'c.description' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
+                                    <i
+                                        class="fa fa-arrow-down {{ $sortBy === 'c.description' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
+                                </span>
+                            </th>
                             <th scope="col">Total Base Price
                                 <span wire:click="sortBy('pri.total_budget')" class="float-right text-sm"
                                     style="cursor: pointer;">
@@ -243,6 +252,7 @@
                                 <td scope="col">{{ $row->requested_for }} </td>
                                 <td scope="col">{{ $row->site }} </td>
                                 <td scope="col">{{ $row->status }} </td>
+                                <td scope="col">{{ $row->item_desc }} </td>
                                 <td scope="col" class="text-right">{{ number_format($row->total_budget, 2) }} </td>
                                 <td scope="col" class="text-right">{{ number_format($row->total_final_price, 2) }} </td>
                                 <td scope="col" class="text-center">{{ \Carbon\Carbon::parse($row->request_date)->format('d-M-Y') }} </td>
@@ -282,7 +292,6 @@
             </div> --}}
             <div class="row">
                 <div class="col-md-12 mb-1">
-                    {{-- {{ $pr_list->links('pagination-links') }} --}}
                     {{ $pr_list->links() }}
                 </div>
             </div>

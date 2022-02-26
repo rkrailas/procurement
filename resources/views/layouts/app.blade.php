@@ -36,9 +36,6 @@
     <!-- for pagination -->
     <link rel="stylesheet" href="{{ asset('backend/plugins/tailwindcss1_9_2/tailwind.min.css') }}" />
 
-    <!-- Dropzone -->
-    <link rel="stylesheet" href="{{ asset('backend/plugins/dropzone/dropzone.min.css') }}" type="text/css" />
-    
 <style>
         /* เปลี่ยนสี background ตรง Logo */
         .brand-link{

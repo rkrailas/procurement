@@ -74,7 +74,7 @@
                             </option>
                             @endforeach
                         </x-select2>
-                        @error('requested_for') <span class="text-red">This field is required.</span> @enderror
+                        @error('requested_for') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
                         <label>Phone (Requestor For)</label>
@@ -128,7 +128,7 @@
                             </option>
                             @endforeach
                         </select>
-                        @error('cost_center') <span class="text-red">This field is required.</span> @enderror
+                        @error('cost_center') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
                         <label>Cost Center Description</label>
@@ -147,7 +147,7 @@
                             </option>
                             @endforeach
                         </x-select2>
-                        @error('buyer') <span class="text-red">This field is required.</span> @enderror
+                        @error('buyer') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
                         <label>Delivery Address <span style="color: red">*</span></label>
@@ -159,7 +159,7 @@
                             </option>
                             @endforeach
                         </select>
-                        @error('delivery_address') <span class="text-red">This field is required.</span> @enderror
+                        @error('delivery_address') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
                         <label>Budget Year <span style="color: red">*</span></label>
@@ -171,12 +171,12 @@
                             </option>
                             @endforeach
                         </select>
-                        @error('budget_year') <span class="text-red">This field is required.</span> @enderror
+                        @error('budget_year') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-3">
                         <label for="prno">Purpose of PR <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.purpose_pr">
-                        @error('purpose_pr') <span class="text-red">This field is required.</span> @enderror
+                        @error('purpose_pr') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>
@@ -202,7 +202,7 @@
                             <x-datepicker wire:model.defer="prHeader.valid_until" id="valid_until"
                                 :error="'date'"/>
                         </div>
-                        @error('valid_until') <span class="text-red">This field is required.</span> @enderror
+                        @error('valid_until') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
                         {{-- Remove Ref. 18-Jan-2022: fix notification at D-30, D-15, D-7 before expiry. --}}
@@ -282,50 +282,53 @@
                                         <th scope="col">Description</th>
                                         <th scope="col">Status</th>
                                         <th scope="col">Qty</th>
-                                        <th scope="col">Purchasing Unit</th>
-                                        <th scope="col">Budget Unit Price</th>
-                                        <th scope="col">Budget Total Price</th>
+                                        <th scope="col">UOM</th>
+                                        <th scope="col">Unit Price</th>
+                                        <th scope="col">Total Price</th>
+                                        <th scope="col">Currency</th>
                                         <th scope="col">Requested Delivery Date</th>
                                         <th scope="col">Final Price</th>
-                                        <th scope="col">Currency</th>
+                                        <th scope="col">PO No.</th>
                                         <th scope="col"></th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    @foreach ($itemList as $index => $row)
+                                    @foreach ($itemList as $row)
                                     <tr>
-                                        {{-- $bankDetails[$index]['taxref'] --}}
                                         <td>
                                             <div d-inline ml-2>
-                                                <input wire:model="selectedRows" type="checkbox" value="{{ $itemList[$index]['id'] }}"
-                                                    id="{{ $itemList[$index]['lineno'] }}">
-                                                <span>{{ $itemList[$index]['lineno'] }}</span>
+                                                <input wire:model="selectedRows" type="checkbox" value="{{ $row->id }}"
+                                                    id="{{ $row->lineno }}">
+                                                <span>{{ $row->lineno }}</span>
                                             </div>
                                         </td>
-                                        <td scope="col">{{ $itemList[$index]['partno'] }}</td>
-                                        <td scope="col">{{ $itemList[$index]['description'] }}</td>                                
-                                        <td scope="col">{{ $itemList[$index]['status'] }}</td>
-                                        <td scope="col" class="text-right pr-2">{{ number_format($itemList[$index]['qty'], 0) }}</td>
-                                        <td scope="col" class="text-center">{{ $itemList[$index]['purchase_unit'] }}</td>
-                                        <td scope="col" class="text-right pr-2">{{ number_format($itemList[$index]['unit_price'], 2) }}</td>
-                                        <td scope="col" class="text-right pr-2">{{ number_format( $itemList[$index]['budgettotal'], 2) }}</td>
-                                        <td scope="col" class="text-center">{{ \Carbon\Carbon::parse( $itemList[$index]['req_date'])->format('d-M-Y') }} </td>
-                                        <td scope="col" class="text-right pr-2">{{ number_format($itemList[$index]['final_price'], 2) }} </td>
-                                        <td scope="col" class="text-center">{{ $itemList[$index]['currency'] }}</td>
+                                        <td scope="col">{{ $row->partno }}</td>
+                                        <td scope="col">{{ $row->description }}</td>                                
+                                        <td scope="col">{{ $row->status }}</td>
+                                        <td scope="col" class="text-right pr-2">{{ number_format($row->qty, 0) }}</td>
+                                        <td scope="col" class="text-center">{{ $row->purchase_unit }}</td>
+                                        <td scope="col" class="text-right pr-2">{{ number_format($row->unit_price, 2) }}</td>
+                                        <td scope="col" class="text-right pr-2">{{ number_format( $row->budgettotal, 2) }}</td>
+                                        <td scope="col" class="text-center">{{ $row->currency }}</td>
+                                        <td scope="col" class="text-center">{{ \Carbon\Carbon::parse( $row->req_date)->format('d-M-Y') }} </td>
+                                        <td scope="col" class="text-right pr-2">{{ number_format($row->final_price, 2) }} </td>
+                                        <td scope="col">{{ $row->reference_po }}</td>
                                         <td scope="col">
                                             <center>
-                                                <a href="" wire:click.prevent="editLineItem('{{ $itemList[$index]['id'] }}')">
+                                                <a href="" wire:click.prevent="editLineItem('{{ $row->id }}')">
                                                     <i class="fa fa-edit mr-2"></i>
                                                 </a>
-                                                {{-- <button class="btn btn-sm m-0 p-0" wire:click.prevent="editLineItem('{{ $itemList[$index]['id'] }}')">
-                                                    <i class="fa fa-edit mr-2"></i>
-                                                </button> --}}
                                             </center>
                                         </td>
                                     </tr>
                                     @endforeach
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-1">
+                                {{ $itemList->links() }}
                             </div>
                         </div>
                     </div>                  
@@ -344,10 +347,12 @@
                                     </option>
                                     @endforeach
                                 </select>
+                                @error('ref_prline_id') <span class="text-red">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-3">
                                 <label>Quantity</label>
                                 <input class="form-control form-control-sm" type="number" step="1" wire:model.defer="prDeliveryPlan.qty">
+                                @error('qty') <span class="text-red">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-3">
                                 <label>UoM</label>
@@ -364,6 +369,7 @@
                                     <x-datepicker wire:model.defer="prDeliveryPlan.delivery_date" id="plan_delivery_date_1"
                                         :error="'date'"/>
                                 </div>
+                                @error('delivery_date') <span class="text-red">{{ $message }}</span> @enderror
                             </div>
                         </div>
                         <div class="row">
@@ -390,25 +396,25 @@
                                         <th scope="col">Ref Line No.</th>
                                         <th scope="col">Description</th>
                                         <th scope="col">Part No.</th>
-                                        <th scope="col">Max Qty</th>
+                                        <th scope="col">Qty</th>
                                         <th scope="col">UoM</th>
                                         <th scope="col">Planned Delivery Date</th>
                                         <th scope="col"></th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    @foreach ($prListDeliveryPlan as $index => $row)
+                                    @foreach ($prListDeliveryPlan as $row)
                                     <tr>
-                                        <td scope="col">{{ $index + 1 }}</td>
-                                        <td scope="col">{{ $prListDeliveryPlan[$index]['lineno'] }}</td>
-                                        <td scope="col">{{ $prListDeliveryPlan[$index]['description'] }}</td>
-                                        <td scope="col">{{ $prListDeliveryPlan[$index]['partno'] }}</td>
-                                        <td scope="col" class="text-right pr-2">{{ number_format($prListDeliveryPlan[$index]['qty'], 2) }}</td>
-                                        <td scope="col">{{ $prListDeliveryPlan[$index]['purchase_unit'] }}</td>
-                                        <td scope="col">{{ \Carbon\Carbon::parse( $prListDeliveryPlan[$index]['delivery_date'])->format('d-M-Y') }} </td>
+                                        <td scope="col">{{ $loop->iteration + $prListDeliveryPlan->firstitem()-1 }}</td>
+                                        <td scope="col">{{ $row->lineno }}</td>
+                                        <td scope="col">{{ $row->description }}</td>
+                                        <td scope="col">{{ $row->partno }}</td>
+                                        <td scope="col" class="text-right pr-2">{{ number_format($row->qty, 2) }}</td>
+                                        <td scope="col">{{ $row->purchase_unit }}</td>
+                                        <td scope="col">{{ \Carbon\Carbon::parse( $row->delivery_date)->format('d-M-Y') }} </td>
                                         <td scope="col">
                                             <center>
-                                                <a href="" wire:click.prevent="confirmDelete('{{ $prListDeliveryPlan[$index]['id'] }}', 'deliveryPlan')">
+                                                <a href="" wire:click.prevent="confirmDelete('{{ $row->id }}', 'deliveryPlan')">
                                                     <i class="fas fa-times text-center" style="color: red"></i>
                                                 </a>
                                             </center>
@@ -419,10 +425,15 @@
                                 </table>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-1">
+                                {{ $prListDeliveryPlan->links() }}
+                            </div>
+                        </div>
                     </div>
-                {{-- Tab Delivery End --}}  
+                {{-- Tab Delivery End --}}
                 
-                {{-- Tab Authorization --}}         
+                {{-- Tab Authorization --}}
                     <div class="tab-pane fade {{ $currentTab == 'auth' ? 'show active' : '' }}" id="pills-auth" role="tabpanel" aria-labelledby="pills-auth-tab" wire:ignore.self>
                         {{-- แสดงเฉพาะ Status < RFQ Created --}}
                         @if ( $prHeader['status'] < '31' )
@@ -850,29 +861,29 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    @foreach ($attachmentFileList as $index => $row)
+                                    @foreach ($attachmentFileList as $row)
                                     <tr>
-                                        <td scope="col">{{ $attachmentFileList[$index]['file_name'] }}</td>
-                                        <td scope="col">{{ $attachmentFileList[$index]['file_type'] }}</td>
-                                        <td scope="col">{{ $attachmentFileList[$index]['edecision_no'] }}</td>
-                                        <td scope="col">{{ $attachmentFileList[$index]['ref_doctype'] }}</td>
-                                        <td scope="col">{{ $attachmentFileList[$index]['ref_docno'] }}</td>
-                                        <td scope="col">{{ str_replace('[', '', (str_replace(']', '', (str_replace('"', '', $attachmentFileList[$index]['ref_lineno']))))) }}</td>
-                                        <td scope="col">{{ $attachmentFileList[$index]['create_by'] }}</td>
-                                        <td scope="col">{{ $attachmentFileList[$index]['create_on'] }}</td>
+                                        <td scope="col">{{ $row->file_name }}</td>
+                                        <td scope="col">{{ $row->file_type }}</td>
+                                        <td scope="col">{{ $row->edecision_no }}</td>
+                                        <td scope="col">{{ $row->ref_doctype }}</td>
+                                        <td scope="col">{{ $row->ref_docno }}</td>
+                                        <td scope="col">{{ str_replace('[', '', (str_replace(']', '', (str_replace('"', '', $row->ref_lineno))))) }}</td>
+                                        <td scope="col">{{ $row->create_by }}</td>
+                                        <td scope="col">{{ $row->create_on }}</td>
                                         <td scope="col" class="d-flex justify-content-between">
                                             <div>
-                                                <a href="" wire:click.prevent="editAttachment('{{ $attachmentFileList[$index]['id'] }}')">
+                                                <a href="" wire:click.prevent="editAttachment('{{ $row->id }}')">
                                                     <i class="fa fa-edit mr-2"></i>
                                                 </a>
                                             </div>
                                             <div>
-                                                <a href="{{url('storage/attachments/' . $attachmentFileList[$index]['file_path'] )}}">
+                                                <a href="{{url('storage/attachments/' . $row->file_path )}}">
                                                     <i class="fas fa-download mr-1"></i>
                                                 </a>
                                             </div>
                                             <div>
-                                                <a href="" wire:click.prevent="confirmDelete('{{ $attachmentFileList[$index]['id'] }}', 'attachment')">
+                                                <a href="" wire:click.prevent="confirmDelete('{{ $row->id }}', 'attachment')">
                                                     <i class="fas fa-times text-center mr-1" style="color: red"></i>
                                                 </a>
                                             </div>
@@ -881,6 +892,11 @@
                                     @endforeach
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-1">
+                                {{ $attachmentFileList->links() }}
                             </div>
                         </div>
                     </div>
@@ -893,11 +909,9 @@
                                 <table class="table table-sm nissanTB">
                                     <thead>
                                     <tr>
-                                        <th scope="col">Action</th>
-                                        <th scope="col">Where</th>
                                         <th scope="col">Line No.</th>
-                                        <th scope="col">History Table</th>
-                                        <th scope="col">History Ref</th>
+                                        <th scope="col">Field</th>
+                                        <th scope="col">Value</th>
                                         <th scope="col">Changed By</th>
                                         <th scope="col">Changed On</th>
                                     </tr>
@@ -975,7 +989,7 @@
                             @endif
 
                             {{-- Between 10=Planned and 40-Confirmed Final Price --}}
-                            @if ($prHeader['status'] >= '10' AND $prHeader['status'] >= '40')
+                            @if ($prHeader['status'] >= '10' AND $prHeader['status'] <= '40')
                             <button wire:click.prevent="cancelPR" class="btn btn-sm btn-light">
                                 <i class="fas fa-times mr-2"></i>Cancel</button>
                             @else
@@ -1008,6 +1022,15 @@
                             @else
                             <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
                                 <i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
+                            @endif
+
+                            {{-- 20-ReleasedforSourcing, 21-PartiallyAuthorized --}}
+                            @if ($prHeader['status'] == '20' OR $prHeader['status'] == '21')
+                            <button wire:click.prevent="revokePrHeader" class="btn btn-sm btn-danger">
+                                <i class="fas fa-undo mr-1"></i>Revoke</button>
+                            @else
+                            <button wire:click.prevent="revokePrHeader" class="btn btn-sm btn-danger" disabled>
+                                <i class="fas fa-undo mr-1"></i>Revoke</button>
                             @endif
                         @endif
                     </div>

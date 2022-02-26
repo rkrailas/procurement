@@ -32,7 +32,7 @@
                             </option>
                             @endforeach
                         </x-select2>
-                        @error('partno') <span class="text-red">This field is required.</span> @enderror
+                        @error('partno') <span class="text-red">{{ $message }}.</span> @enderror
                        
                         {{-- @if ($isCreateLineItem)
 
@@ -49,7 +49,7 @@
                         <label>Description <span style="color: red">*</span></label>
                         {{-- Change to readonly Ref. 18-Jan-2022: update editable and non-editable fields --}}
                         <input class="form-control form-control-sm" type="text" readonly maxlength="250" wire:model.defer="prItem.description">
-                        @error('description') <span class="text-red">This field is required.</span> @enderror
+                        @error('description') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                 </div>
 
@@ -99,7 +99,7 @@
                     <div class="col-md-4">
                         <label>QTY <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="number" step="0.01" wire:model.lazy="prItem.qty">
-                        @error('qty') <span class="text-red">This field is required or Exceed Length.</span> @enderror
+                        @error('qty') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-4">
                         <label>Requested Delivery Date <span style="color: red">*</span></label>
@@ -111,7 +111,7 @@
                             </div>
                             <x-datepicker autocomplete="off" wire:model.defer="prItem.req_date" id="request_date1" :error="'date'"/>
                         </div>
-                        @error('req_date') <span class="text-red">Something wrong</span> @enderror
+                        @error('req_date') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-4">
                         <label>Internal Order</label>
@@ -136,7 +136,7 @@
                             </option>
                             @endforeach
                         </x-select2>
-                        @error('budget_code') <span class="text-red">This field is required.</span> @enderror
+                        @error('budget_code') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                     <div class="col-md-4">
                         <label>Brand</label>
@@ -248,8 +248,6 @@
                         <div>
                             <button type="button" class="btn btn-sm btn-light" wire:click.prevent="deleteLineItem">
                                 <i class="fas fa-trash-alt mr-1"></i>Delete</button>
-                            <button type="button" class="btn btn-sm btn-danger" wire:click.prevent="revokeLineItem">
-                                <i class="fas fa-undo mr-1"></i>Revoke</button>
                         </div>
                         <div>
                             <button type="button" class="btn btn-sm btn-light" data-dismiss="modal" wire:click.prevent="closedModal">
