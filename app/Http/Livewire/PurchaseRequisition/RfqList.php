@@ -55,7 +55,7 @@ class RfqList extends Component
     {
         $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username 
             FROM users 
-            WHERE company='" . config("constants.USER_COMPANY") 
+            WHERE company='" . auth()->user()->company
             . "' ORDER BY users.name";
         $this->requestor_dd = DB::select($strsql);
         $this->requestedfor_dd = DB::select($strsql);
@@ -69,7 +69,7 @@ class RfqList extends Component
         $this->buyergroup_dd = DB::select($strsql);
 
         $strsql = "SELECT site FROM site 
-                    WHERE company='" . config("constants.USER_COMPANY") 
+                    WHERE company='" . auth()->user()->company
                 . "' GROUP BY site ORDER BY site";
         $this->site_dd = DB::select($strsql);
 

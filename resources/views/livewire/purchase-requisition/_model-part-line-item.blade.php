@@ -23,7 +23,7 @@
 
                 {{-- Part --}}
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-md-9">
                         <label>Part <span style="color: red">*</span></label>
                         <x-select2 id="partno-select2" wire:model.defer="prItem.partno">
                             @foreach($partno_dd as $row)
@@ -40,6 +40,14 @@
                         <label>Part <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.partno">
                         @endif --}}
+                    </div>
+                    <div class="col-md-3">
+                        <label>Non Stock Control</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" wire:model.defer="" disabled>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

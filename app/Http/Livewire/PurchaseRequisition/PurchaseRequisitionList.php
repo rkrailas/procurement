@@ -94,13 +94,12 @@ class PurchaseRequisitionList extends Component
                     WHERE pr = 1 ORDER BY ordertype";
         $this->ordertype_dd = DB::select($strsql);
 
-        $strsql = "SELECT site, name FROM site 
-                    WHERE company='" . config("constants.USER_COMPANY") 
-                . "' GROUP BY site, name ORDER BY site";
+        $strsql = "SELECT site, delivery_location FROM site 
+                    WHERE company='" . auth()->user()->company . "' AND SUBSTRING(address_id, 7, 2)='EN'";
         $this->site_dd = DB::select($strsql);
 
         $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users 
-                    WHERE company='" . config("constants.USER_COMPANY") 
+                    WHERE company='" . auth()->user()->company 
                     . "' ORDER BY users.name";
         $this->requestor_dd = DB::select($strsql);
         $this->requestedfor_dd = DB::select($strsql);
@@ -181,7 +180,7 @@ class PurchaseRequisitionList extends Component
 
         $strsql = "SELECT prh.prno, ort.description AS order_type, ISNULL(req_f.name,'') + ' ' + ISNULL(req_f.lastname,'') AS requested_for
                 , pr_status.description AS status, prh.request_date, ISNULL(buyername.name,'') + ' ' + ISNULL(buyername.lastname,'') AS buyer
-                , pri.total_budget, pri.total_final_price, site.name as site
+                , pri.total_budget, pri.total_final_price, site.delivery_location as site
                 , ISNULL(req.name,'') + ' ' + ISNULL(req.lastname,'') AS requestor, c.description as item_desc
                 FROM pr_header prh
                 LEFT JOIN (SELECT prno, SUM(qty * unit_price_local) as total_budget
@@ -201,7 +200,7 @@ class PurchaseRequisitionList extends Component
 
         $strsql = $strsql . $xWhere;
         $strsql = $strsql . " GROUP BY prh.prno, ort.description, req_f.name, req_f.lastname, pr_status.description, prh.request_date
-                        , buyername.name, buyername.lastname, pri.total_budget, pri.total_final_price, site.name, prh.site, prh.status
+                        , buyername.name, buyername.lastname, pri.total_budget, pri.total_final_price, site.delivery_location, prh.site, prh.status
                         , req.name, req.lastname, c.description";
         $strsql = $strsql . " ORDER BY " . $this->sortBy . " " . $this->sortDirection;
 

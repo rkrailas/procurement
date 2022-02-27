@@ -989,13 +989,13 @@
                             @endif
 
                             {{-- Between 10=Planned and 40-Confirmed Final Price --}}
-                            @if ($prHeader['status'] >= '10' AND $prHeader['status'] <= '40')
+                            {{-- @if ($prHeader['status'] >= '10' AND $prHeader['status'] <= '40')
                             <button wire:click.prevent="cancelPR" class="btn btn-sm btn-light">
                                 <i class="fas fa-times mr-2"></i>Cancel</button>
                             @else
                             <button wire:click.prevent="cancelPR" class="btn btn-sm btn-light" disabled>
                                 <i class="fas fa-times mr-2"></i>Cancel</button>
-                            @endif
+                            @endif --}}
 
                             {{-- 10=Planned --}}
                             @if ($prHeader['status'] == '10')
@@ -1007,13 +1007,13 @@
                             @endif
 
                             {{--70-Cancelled --}}
-                            @if ($prHeader['status'] == '70')
+                            {{-- @if ($prHeader['status'] == '70')
                             <button wire:click.prevent="reopen" class="btn btn-sm btn-danger">
                                 <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
                             @else
                             <button wire:click.prevent="reopen" class="btn btn-sm btn-danger" disabled>
                                 <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
-                            @endif
+                            @endif --}}
 
                             {{-- 50-ReleasedForPO --}}
                             @if ($prHeader['status'] == '50' AND $isBuyer == true)

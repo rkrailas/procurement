@@ -681,7 +681,8 @@ class PurchaseRequisitionDetails extends Component
         public function editAttachment_Save()
         {
             //ตรวจสอบว่าเป็น Header หรือไม่
-            if (in_array("0", $this->editAttachment['ref_lineno'])) {
+            //??? กำลังแก้
+            if (in_array("0", array($this->editAttachment['ref_lineno']))) {
                 $isHeader = true;
             }else{
                 $isHeader = false;
@@ -702,6 +703,8 @@ class PurchaseRequisitionDetails extends Component
 
             $this->reset(['editAttachment']);
             $this->dispatchBrowserEvent('hide-modelEditAttachment');
+
+            
         }
 
         public function editAttachment($rowID)
@@ -2357,9 +2360,9 @@ class PurchaseRequisitionDetails extends Component
             $this->buyer_dd = DB::select($strsql);
 
             //Delivery Address
-            $this->cost_center_dd = [];
             $strsql = "SELECT address_id, delivery_location FROM site 
-                    WHERE company = '" . auth()->user()->company . "' ORDER BY address_id";
+                    WHERE company = '" . auth()->user()->company . "' AND SUBSTRING(address_id, 7, 2)='EN'
+                    ORDER BY address_id";
             $this->delivery_address_dd = DB::select($strsql);
 
             //Cost_Center
