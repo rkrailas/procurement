@@ -93,12 +93,12 @@
                         <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.exchange_rate">
                     </div>
                     <div class="col-md-4">
-                        <label>Purchase Group</label>
-                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.purchase_group">
+                        {{-- <label>Purchase Group</label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.purchase_group"> --}}
                     </div>
                     <div class="col-md-4">
-                        <label>Accounting Group</label>
-                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.account_group">
+                        {{-- <label>Accounting Group</label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.account_group"> --}}
                     </div>
                 </div>
 
@@ -258,6 +258,11 @@
                                 <i class="fas fa-trash-alt mr-1"></i>Delete</button>
                         </div>
                         <div>
+                            @if ($isCreateLineItem == true)
+                            <button type="button" class="btn btn-sm btn-light" wire:click.prevent="clearAll">
+                                <i class="fa fa-times mr-1"></i>Clear All</button>
+                            @endif
+
                             <button type="button" class="btn btn-sm btn-light" data-dismiss="modal" wire:click.prevent="closedModal">
                                 <i class="fa fa-times mr-1"></i>Close</button>
                             <button type="button" class="btn btn-sm btn-danger" wire:click.prevent="saveLineItem">

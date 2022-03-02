@@ -703,7 +703,18 @@
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <label>Rejection Reason</label>
+                                    @if (auth()->user()->username == $validatorList[$index]['approver'] 
+                                        AND $validatorList[$index]['status'] == '20')                                        
                                     <textarea class="form-control form-control-sm" rows="2" maxlength="250" wire:model.defer="rejectReason"></textarea>
+                                    
+                                    @elseif (auth()->user()->username == $deciderList[$index]['approver'] 
+                                        AND $deciderList[$index]['status'] == '20')
+                                    <textarea class="form-control form-control-sm" rows="2" maxlength="250" wire:model.defer="rejectReason"></textarea>
+
+                                    @else
+                                    <textarea class="form-control form-control-sm" rows="2" maxlength="250" disabled wire:model.defer="rejectReason"></textarea>
+
+                                    @endif
                                     <div id="count" class="d-flex justify-content-end">
                                         <span id="current_count">0</span>
                                         <span id="maximum_count">/ 250</span>
@@ -772,18 +783,10 @@
                 
                 {{-- Tab Attachments --}}
                     <div class="tab-pane fade {{ $currentTab == 'attachments' ? 'show active' : '' }}" id="pills-attachments" role="tabpanel" aria-labelledby="pills-attachments-tab" wire:ignore.self>
+                        @if ($isRequester_RequestedFor == true)
                             <div class="row">
                                 <div class="col-md-4">
                                     <label>Attachment Level <span style="color: blue; font-weight: normal">(Please select before add new files.)</span></label>
-                                    {{-- <select class="form-control form-control-sm" wire:model="attachment_lineno">
-                                        <option value="">--- Please Select ---</option>
-                                        <option value="0">0 : Level PR Header</option>
-                                        @foreach($prLineNoAtt_dd as $row)
-                                        <option value="{{ $row->lineno }}">
-                                            {{ $row->lineno }} : {{ $row->description }}
-                                        </option>
-                                        @endforeach
-                                    </select> --}}
                                     <x-select2-multiple id="attachment_lineno-select2" wire:model.defer="attachment_lineno">
                                         <option value="0">0 : Level PR Header</option>
                                         @foreach($prLineNoAtt_dd as $row)
@@ -843,7 +846,8 @@
                                     </div>
                                 </div>
                             </form>
-
+                        @endif
+                        
                         <div class="row">
                             <div class="col-md-12">
                                 <table class="table table-sm nissanTB">
@@ -872,19 +876,21 @@
                                         <td scope="col">{{ $row->create_by }}</td>
                                         <td scope="col">{{ $row->create_on }}</td>
                                         <td scope="col" class="d-flex justify-content-between">
+                                            @if ($isRequester_RequestedFor == true)
+                                            <div>
+                                                <a href="" wire:click.prevent="confirmDelete('{{ $row->id }}', 'attachment')">
+                                                    <i class="fas fa-times text-center mr-2" style="color: red"></i>
+                                                </a>
+                                            </div>
                                             <div>
                                                 <a href="" wire:click.prevent="editAttachment('{{ $row->id }}')">
                                                     <i class="fa fa-edit mr-2"></i>
                                                 </a>
                                             </div>
+                                            @endif
                                             <div>
                                                 <a href="{{url('storage/attachments/' . $row->file_path )}}">
-                                                    <i class="fas fa-download mr-1"></i>
-                                                </a>
-                                            </div>
-                                            <div>
-                                                <a href="" wire:click.prevent="confirmDelete('{{ $row->id }}', 'attachment')">
-                                                    <i class="fas fa-times text-center mr-1" style="color: red"></i>
+                                                    <i class="fas fa-download mr-2"></i>
                                                 </a>
                                             </div>
                                         </td>
@@ -961,17 +967,11 @@
                             @if ( $prHeader['status'] == '10' ) 
                             <button wire:click.prevent="releaseForSourcing" class="btn btn-sm btn-danger">
                                 <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
-                            @else
-                            <button wire:click.prevent="releaseForSourcing" class="btn btn-sm btn-danger" disabled>
-                                <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
                             @endif
 
                             {{-- 40-ConfirmedFinalPrice, 50-ReleasedForPO --}}
                             @if ( $prHeader['status'] == '40' OR  $prHeader['status'] == '50') 
                             <button wire:click.prevent="releaseForPO" class="btn btn-sm btn-danger">
-                                <i class="fas fa-check mr-2"></i>Release for PO</button>
-                            @else
-                            <button wire:click.prevent="releaseForPO" class="btn btn-sm btn-danger" disabled>
                                 <i class="fas fa-check mr-2"></i>Release for PO</button>
                             @endif
 
@@ -981,55 +981,35 @@
                                 <button class="btn btn-sm btn-danger">
                                     <i class="fas fa-print mr-2"></i>Print</button>
                             </a>
-                            @else
-                            <a href="PRForm/{{ $prHeader['prno'] }}" target="_blank">
-                                <button class="btn btn-sm btn-danger" disabled>
-                                    <i class="fas fa-print mr-2"></i>Print</button>
-                            </a>
                             @endif
 
                             {{-- Between 10=Planned and 40-Confirmed Final Price --}}
-                            {{-- @if ($prHeader['status'] >= '10' AND $prHeader['status'] <= '40')
-                            <button wire:click.prevent="cancelPR" class="btn btn-sm btn-light">
+                            @if ($prHeader['status'] >= '10' AND $prHeader['status'] <= '40')
+                            <button wire:click.prevent="confirmCancelPrHeader" class="btn btn-sm btn-light">
                                 <i class="fas fa-times mr-2"></i>Cancel</button>
-                            @else
-                            <button wire:click.prevent="cancelPR" class="btn btn-sm btn-light" disabled>
-                                <i class="fas fa-times mr-2"></i>Cancel</button>
-                            @endif --}}
+                            @endif
 
                             {{-- 10=Planned --}}
                             @if ($prHeader['status'] == '10')
                             <button wire:click.prevent="confirmDeletePrHeader_Detail" class="btn btn-sm btn-light">
                                 <i class="fas fa-trash-alt mr-2"></i>Delete</button>
-                            @else
-                            <button wire:click.prevent="confirmDeletePrHeader_Detail" class="btn btn-sm btn-light" disabled>
-                                <i class="fas fa-trash-alt mr-2"></i>Delete</button>
                             @endif
 
                             {{--70-Cancelled --}}
-                            {{-- @if ($prHeader['status'] == '70')
+                            @if ($prHeader['status'] == '70')
                             <button wire:click.prevent="reopen" class="btn btn-sm btn-danger">
                                 <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
-                            @else
-                            <button wire:click.prevent="reopen" class="btn btn-sm btn-danger" disabled>
-                                <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
-                            @endif --}}
+                            @endif
 
                             {{-- 50-ReleasedForPO --}}
                             @if ($prHeader['status'] == '50' AND $isBuyer == true)
                             <button wire:click.prevent="" class="btn btn-sm btn-danger">
-                                <i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
-                            @else
-                            <button wire:click.prevent="" class="btn btn-sm btn-danger" disabled>
                                 <i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
                             @endif
 
                             {{-- 20-ReleasedforSourcing, 21-PartiallyAuthorized --}}
                             @if ($prHeader['status'] == '20' OR $prHeader['status'] == '21')
                             <button wire:click.prevent="revokePrHeader" class="btn btn-sm btn-danger">
-                                <i class="fas fa-undo mr-1"></i>Revoke</button>
-                            @else
-                            <button wire:click.prevent="revokePrHeader" class="btn btn-sm btn-danger" disabled>
                                 <i class="fas fa-undo mr-1"></i>Revoke</button>
                             @endif
                         @endif
@@ -1041,9 +1021,6 @@
                         {{-- 01-Draft, 10-Planned --}}
                         @if ($prHeader['status'] == '01' OR $prHeader['status'] == '10')
                         <button wire:click.prevent="savePR" class="btn btn-sm btn-danger" class="btn btn-sm btn-light">
-                            <i class="fas fa-save mr-1"></i>Save</button>
-                        @else
-                        <button wire:click.prevent="savePR" class="btn btn-sm btn-danger" class="btn btn-sm btn-light" disabled>
                             <i class="fas fa-save mr-1"></i>Save</button>
                         @endif
                     </div>
@@ -1059,6 +1036,30 @@
     @endif
     @if ($orderType == "11" or $orderType == "21" )
         @include('livewire.purchase-requisition._model-expense-line-item')
+    @endif
+
+    {{-- @error('emailAddress.*')
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-danger" role="alert">
+                    {{ $message }}
+                </div>
+            </div>
+        </div>
+    </div>
+    @enderror --}}
+
+    @if ($errors->any())
+    <div class="container">
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
     @endif
 
     {{-- Modal Edit Attachment --}}

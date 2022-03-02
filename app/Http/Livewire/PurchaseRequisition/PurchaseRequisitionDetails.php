@@ -29,9 +29,10 @@ class PurchaseRequisitionDetails extends Component
     public $enableAddPlan = false;
     public $selectedRows = [];
     public $numberOfPage = 10;
+    public $emailAddress;
 
     //Header
-    public $prHeader, $requested_for_dd, $delivery_address_dd, $buyer_dd, $cost_center_dd, $budget_year, $isBuyer; 
+    public $prHeader, $requested_for_dd, $delivery_address_dd, $buyer_dd, $cost_center_dd, $budget_year, $isBuyer, $isRequester_RequestedFor; 
 
     //Line Items > $itemList=in table, $prItem=ใน Modal, 
     public $prItem = [], $partno_dd, $currency_dd, $internal_order_dd, $budget_code, $purchaseunit_dd, $purchasegroup_dd
@@ -42,7 +43,7 @@ class PurchaseRequisitionDetails extends Component
 
     //Authorization > deciderList=in table, $decider=Dropdown, validatorList=in table, $validator=Dropdown
     public $decider_dd, $deciderList = [], $decider = [], $validator_dd, $validatorList = [], $validator = [], $rejectReason
-        , $isValidator_Decider =false;
+        , $isValidator_Decider;
 
     //Attachment Dropdown ใช้ตัวแปรร่วมกับ prLineNo_dd
     public $editAttachment, $attachmentDocType_dd, $maxSize;
@@ -115,7 +116,8 @@ class PurchaseRequisitionDetails extends Component
         {
             $this->reset(['prHeader', 'prItem', 'deciderList', 'validatorList', 'historyLog'
                     , 'isCreateMode', 'editPRNo', 'isBlanket', 'orderType', 'deleteID', 'deleteType', 'currentTab', 'prDeliveryPlan'
-                    , 'decider', 'isValidator_Decider', 'validator', 'rejectReason', 'attachment_lineno', 'attachment_file']);
+                    , 'decider', 'isValidator_Decider', 'validator', 'rejectReason', 'attachment_lineno', 'attachment_file'
+                    , 'isRequester_RequestedFor']);
         }
     //Share Function End
 
@@ -175,7 +177,7 @@ class PurchaseRequisitionDetails extends Component
                         , site, functions, department, division, section, cost_center, valid_until, days_to_notify, notify_below_10
                         , notify_below_25, notify_below_35, rejection_reason, budget_year, purpose_pr, deletion_flag
                         , create_by, create_on)
-                        SELECT '" . $newPrNo . "', ordertype, '01', requestor, requested_for, buyer, delivery_address, '" 
+                        SELECT '" . $newPrNo . "', ordertype, '10', requestor, requested_for, buyer, delivery_address, '" 
                         . date_format(Carbon::now(), 'Y-m-d') . "', company
                         , site, functions, department, division, section, cost_center, valid_until, days_to_notify, notify_below_10
                         , notify_below_25, notify_below_35, rejection_reason, budget_year, purpose_pr, deletion_flag
@@ -201,7 +203,7 @@ class PurchaseRequisitionDetails extends Component
                         select '" . $newPrNo . "', " . $xPrID . ", [lineno], partno, description, purchase_unit, unit_price, unit_price_local, currency
                         , exchange_rate, purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life
                         , snn_service, snn_production, final_price, final_price_local, quotation_expiry_date, quotation_date, nominated_supplier
-                        , remarks, skip_rfq, skip_doa, '" . $this->prHeader['prno'] . "', reference_po, reference_po_item, status, close_reason
+                        , remarks, skip_rfq, skip_doa, '" . $this->prHeader['prno'] . "', reference_po, reference_po_item, '10', close_reason
                         , '" . auth()->user()->id . "', '" . Carbon::now() . "'
                         from pr_item
                         where id in (" . myWhereInID($this->selectedRows) . ") AND status='70'";
@@ -236,35 +238,70 @@ class PurchaseRequisitionDetails extends Component
             }
         }
 
-        public function cancelPR()
-        {
-            if ($this->selectedRows) {
-                $xID = myWhereInID($this->selectedRows);
-                DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=? 
-                    WHERE id IN (" . $xID . ")"
-                    , ['70', auth()->user()->id, Carbon::now()]);
+        //2-3-2022 Change from UAT1 > confirmCancelPrHeader
+        // public function cancelPR()
+        // {
+            // if ($this->selectedRows) {
+            //     $xID = myWhereInID($this->selectedRows);
+            //     DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=? 
+            //         WHERE id IN (" . $xID . ")"
+            //         , ['70', auth()->user()->id, Carbon::now()]);
 
-                $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='103' AND class='PURCHASE REQUISITION'";
-                $data = DB::select($strsql);
-                if (count($data) > 0) {
-                    $this->dispatchBrowserEvent('popup-success', [
-                        'title' => $data[0]->msg_text,
-                    ]);
-                }
+            //     $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='103' AND class='PURCHASE REQUISITION'";
+            //     $data = DB::select($strsql);
+            //     if (count($data) > 0) {
+            //         $this->dispatchBrowserEvent('popup-success', [
+            //             'title' => $data[0]->msg_text,
+            //         ]);
+            //     }
                 
-                $this->reset(['selectedRows']);
+            //     $this->reset(['selectedRows']);
 
-                return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+            //     return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
 
-            }else{
-                $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='105' AND class='PURCHASE REQUISITION'";
-                $data = DB::select($strsql);
-                if (count($data) > 0) {
-                    $this->dispatchBrowserEvent('popup-alert', [
-                        'title' => $data[0]->msg_text,
-                    ]);
-                }
+            // }else{
+            //     $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='105' AND class='PURCHASE REQUISITION'";
+            //     $data = DB::select($strsql);
+            //     if (count($data) > 0) {
+            //         $this->dispatchBrowserEvent('popup-alert', [
+            //             'title' => $data[0]->msg_text,
+            //         ]);
+            //     }
+            // }
+        // }
+
+        public function confirmCancelPrHeader()
+        {
+            $this->listeners = ['deleteConfirmed' => 'cancelPrHeader'];
+
+            $this->dispatchBrowserEvent('delete-confirmation',[
+                'title' => 'Do you want to cancel Purchase Requisition No. ' . $this->prHeader['prno'] . '?',
+            ]);
+        }
+
+        public function cancelPrHeader()
+        {
+            DB::transaction(function () {
+                DB::statement("UPDATE pr_header SET status=?, changed_by=?, changed_on=?
+                WHERE id=?" 
+                , ['70', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+
+                DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=?
+                WHERE prno_id=?" 
+                , ['70', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+            });
+
+            $strsql = "SELECT msg_text FROM message_list WHERE msg_no='103' AND class='PURCHASE REQUISITION'";
+            $data = DB::select($strsql);
+            if (count($data) > 0) {
+                $this->dispatchBrowserEvent('popup-success', [
+                    'title' => $data[0]->msg_text,
+                ]);
             }
+
+            $this->clearVariablePR();
+
+            return redirect("purchase-requisition/purchaserequisitionlist");
         }
 
         public function releaseForSourcing()
@@ -300,10 +337,12 @@ class PurchaseRequisitionDetails extends Component
                     $this->prHeader['statusname'] = 'Released for Sourcing'; //ใช้วิธีนี้เพราะไม่ต้องการ Redirect
 
                     //Update Status=Open
-                    //Check have vlidator or not?
+                    //Check have vlidator?
                     $strsql = "SELECT count(*) as count_val FROM dec_val_workflow WHERE approval_type='VALIDATOR' 
                         AND ref_doc_type='10' AND ref_doc_id=" . $this->prHeader['id'];
                     $data = DB::select($strsql);
+
+                    $this->emailAddress = []; //Clear ค่าก่อนเพื่อนำไปตรวจสอบว่าต้องส่ง Mail หรือไม่
 
                     if ($data[0]->count_val > 0){
 
@@ -316,64 +355,9 @@ class PurchaseRequisitionDetails extends Component
                         //ถ้ามีข้อมูล Validator
                         if ($xApprover){
                             DB::statement("UPDATE dec_val_workflow SET status='20' WHERE id=" . $xApprover[0]->id);
-
-                            //Send Mail (.env "APP_SENDMAIL=Yes")
-                            if (config('app.sendmail') == "Yes") {
-
-                                $requester_fullname = '';
-                                $requester_email = '';
-                                $requested_for_fullname = '';
-                                $requested_for_email = '';
-                                $approver_fullname = '';
-                                $approver_email = '';
-
-                                //requester
-                                $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                                    WHERE company = '" . auth()->user()->company . "' 
-                                    AND id=" . $this->prHeader['requestor'];
-                                $data = DB::select($strsql);
-                                if ($data) {
-                                    $requester_fullname = $data[0]->fullname;
-                                    $requester_email = $data[0]->email;
-                                }
-
-                                //requested_for
-                                $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                                    WHERE company = '" . auth()->user()->company . "' 
-                                    AND id=" . $this->prHeader['requested_for'];
-                                $data = DB::select($strsql);
-                                if ($data) {
-                                    $requested_for_fullname = $data[0]->fullname;
-                                    $requested_for_email = $data[0]->email;
-                                }
-
-                                //approver
-                                $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                                WHERE company = '" . auth()->user()->company . "' 
-                                AND username='" . $xApprover[0]->approver . "'";
-                                $data = DB::select($strsql);
-                                if ($data) {
-                                    $approver_fullname = $data[0]->fullname;
-                                    $approver_email = $data[0]->email;
-                                }
-
-                                //เนื้อหาใน Mail
-                                $detailMail = [
-                                    'template' => 'MAIL_PR01',
-                                    'subject' => 'Request to approve Purchase Requisition No: ' . $this->prHeader['prno'],
-                                    'dear' => $approver_fullname,
-                                    'docno' => $this->prHeader['prno'],
-                                    'releasedby' => $requester_fullname,
-                                    'link_url' => url('/purchase-requisition/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
-                                ];
-
-                                Mail::to($approver_email)->cc([$requester_email, $requested_for_email])
-                                    ->send(New WelcomeMail($detailMail));
-                            }
-                            //Send Mail End
                         }
 
-                    }else{
+                    } else {
                         //DECIDER Status=Open
                         $strsql = "SELECT * FROM dec_val_workflow WHERE approval_type='DECIDER' 
                             AND ref_doc_type='10' AND ref_doc_id=" . $this->prHeader['id'];
@@ -382,63 +366,75 @@ class PurchaseRequisitionDetails extends Component
                         //ถ้ามีข้อมมูล Decider
                         if ($xApprover) {
                             DB::statement("UPDATE dec_val_workflow SET status='20' WHERE id=" . $xApprover[0]->id);
-
-                            //Send Mail (.env "APP_SENDMAIL=Yes")
-                                if (config('app.sendmail') == "Yes") {
-
-                                    $requester_fullname = '';
-                                    $requester_email = '';
-                                    $requested_for_fullname = '';
-                                    $requested_for_email = '';
-                                    $approver_fullname = '';
-                                    $approver_email = '';
-
-                                    //requester
-                                    $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                                        WHERE company = '" . auth()->user()->company . "' 
-                                        AND id=" . $this->prHeader['requestor'];
-                                    $data = DB::select($strsql);
-                                    if ($data) {
-                                        $requester_fullname = $data[0]->fullname;
-                                        $requester_email = $data[0]->email;
-                                    }
-
-                                    //requested_for
-                                    $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                                        WHERE company = '" . auth()->user()->company . "' 
-                                        AND id=" . $this->prHeader['requested_for'];
-                                    $data = DB::select($strsql);
-                                    if ($data) {
-                                        $requested_for_fullname = $data[0]->fullname;
-                                        $requested_for_email = $data[0]->email;
-                                    }
-
-                                    //approver
-                                    $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                                    WHERE company = '" . auth()->user()->company . "' 
-                                    AND username='" . $xApprover[0]->approver . "'";
-                                    $data = DB::select($strsql);
-                                    if ($data) {
-                                        $approver_fullname = $data[0]->fullname;
-                                        $approver_email = $data[0]->email;
-                                    }
-
-                                    //เนื้อหาใน Mail
-                                    $detailMail = [
-                                        'template' => 'MAIL_PR01',
-                                        'subject' => 'Request to approve Purchase Requisition No: ' . $this->prHeader['prno'],
-                                        'dear' => $approver_fullname,
-                                        'docno' => $this->prHeader['prno'],
-                                        'releasedby' => $requester_fullname,
-                                        'link_url' => url('/purchase-requisition/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
-                                    ];
-
-                                    Mail::to($approver_email)->cc([$requester_email, $requested_for_email])
-                                        ->send(New WelcomeMail($detailMail));
-                                }
-                            //Send Mail End
                         }
                     }
+
+                    //Send Mail (.env "APP_SENDMAIL=Yes")
+                        if (config('app.sendmail') == "Yes") {
+
+                            $requester_fullname = '';
+                            $requester_email = '';
+                            $requested_for_fullname = '';
+                            $requested_for_email = '';
+                            $approver_fullname = '';
+                            $approver_email = '';
+
+                            //requester
+                            $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                                WHERE company = '" . auth()->user()->company . "' 
+                                AND id=" . $this->prHeader['requestor'];
+                            $data = DB::select($strsql);
+                            if ($data) {
+                                $requester_fullname = $data[0]->fullname;
+                                $requester_email = $data[0]->email;
+                            }
+
+                            //requested_for
+                            $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                                WHERE company = '" . auth()->user()->company . "' 
+                                AND id=" . $this->prHeader['requested_for'];
+                            $data = DB::select($strsql);
+                            if ($data) {
+                                $requested_for_fullname = $data[0]->fullname;
+                                $requested_for_email = $data[0]->email;
+                            }
+
+                            //approver
+                            $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                            WHERE company = '" . auth()->user()->company . "' 
+                            AND username='" . $xApprover[0]->approver . "'";
+                            $data = DB::select($strsql);
+                            if ($data) {
+                                $approver_fullname = $data[0]->fullname;
+                                $approver_email = $data[0]->email;
+                            }
+
+                            //เนื้อหาใน Mail
+                            $detailMail = [
+                                'template' => 'MAIL_PR01',
+                                'subject' => 'Request to approve Purchase Requisition No: ' . $this->prHeader['prno'],
+                                'dear' => $approver_fullname,
+                                'docno' => $this->prHeader['prno'],
+                                'releasedby' => $requester_fullname,
+                                'link_url' => url('/purchase-requisition/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
+                            ];
+
+                            //Validate Email
+                            $this->emailAddress['approver_email'] = $approver_email;
+                            $this->emailAddress['requester_email'] = $requester_email;
+                            $this->emailAddress['requested_for_email'] = $requested_for_email;
+                    
+                            $this->validate([
+                                'emailAddress.*' => 'required|email',
+                            ]);
+
+                            Mail::to($approver_email)->cc([$requester_email, $requested_for_email])
+                                ->send(New WelcomeMail($detailMail));
+
+                            $this->reset(['emailAddress']);
+                        }
+                    //Send Mail End
+
                 });
 
                 $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='101' AND class='PURCHASE REQUISITION'";
@@ -681,7 +677,6 @@ class PurchaseRequisitionDetails extends Component
         public function editAttachment_Save()
         {
             //ตรวจสอบว่าเป็น Header หรือไม่
-            //??? กำลังแก้
             if (in_array("0", array($this->editAttachment['ref_lineno']))) {
                 $isHeader = true;
             }else{
@@ -703,8 +698,6 @@ class PurchaseRequisitionDetails extends Component
 
             $this->reset(['editAttachment']);
             $this->dispatchBrowserEvent('hide-modelEditAttachment');
-
-            
         }
 
         public function editAttachment($rowID)
@@ -906,7 +899,20 @@ class PurchaseRequisitionDetails extends Component
                     //Set status=open to next validator
                     DB::statement("UPDATE dec_val_workflow SET status='20' WHERE id=" . $xApprover[0]->id);
 
-                    //Send Mail
+                }else{
+                    //หาคนที่เป็น Decider
+                    $strsql = "SELECT * FROM dec_val_workflow WHERE approval_type='DECIDER'
+                        AND ref_doc_id=" . $this->prHeader['id'] . " AND ref_doc_type='10'";
+                    $xApprover = DB::select($strsql);
+
+                    if ($xApprover) {
+                        //Set status=Open decider
+                        DB::statement("UPDATE dec_val_workflow SET status='20' WHERE approval_type='DECIDER' 
+                            AND ref_doc_id=" . $this->prHeader['id'] . " AND ref_doc_type='10'");
+                    }
+                }
+
+                //Send Mail
                     if (config('app.sendmail') == "Yes") {
 
                         $requester_fullname = '';
@@ -956,78 +962,19 @@ class PurchaseRequisitionDetails extends Component
                             'link_url' => url('/purchase-requisition/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
                         ];
 
+                        //Validate Email
+                        $this->emailAddress['approver_email'] = $approver_email;
+                        $this->emailAddress['requester_email'] = $requester_email;
+                        $this->emailAddress['requested_for_email'] = $requested_for_email;
+                
+                        $this->validate([
+                            'emailAddress.*' => 'required|email',
+                        ]);
+
                         Mail::to($approver_email)->cc([$requester_email, $requested_for_email])
                             ->send(New WelcomeMail($detailMail));
                     }
-                    //Send Mail End
-
-                }else{
-                    //หาคนที่เป็น Decider
-                    $strsql = "SELECT * FROM dec_val_workflow WHERE approval_type='DECIDER'
-                        AND ref_doc_id=" . $this->prHeader['id'] . " AND ref_doc_type='10'";
-                    $xApprover = DB::select($strsql);
-
-                    if ($xApprover) {
-                        //Set status=Open decider
-                        DB::statement("UPDATE dec_val_workflow SET status='20' WHERE approval_type='DECIDER' 
-                            AND ref_doc_id=" . $this->prHeader['id'] . " AND ref_doc_type='10'");
-
-                        //Send Mail
-                        if (config('app.sendmail') == "Yes") {
-
-                            $requester_fullname = '';
-                            $requester_email = '';
-                            $requested_for_fullname = '';
-                            $requested_for_email = '';
-                            $approver_fullname = '';
-                            $approver_email = '';
-
-                            //requester
-                            $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                                WHERE company = '" . auth()->user()->company . "' 
-                                AND id=" . $this->prHeader['requestor'];
-                            $data = DB::select($strsql);
-                            if ($data) {
-                                $requester_fullname = $data[0]->fullname;
-                                $requester_email = $data[0]->email;
-                            }
-
-                            //requested_for
-                            $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                                WHERE company = '" . auth()->user()->company . "' 
-                                AND id=" . $this->prHeader['requested_for'];
-                            $data = DB::select($strsql);
-                            if ($data) {
-                                $requested_for_fullname = $data[0]->fullname;
-                                $requested_for_email = $data[0]->email;
-                            }
-
-                            //approver
-                            $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                            WHERE company = '" . auth()->user()->company . "' 
-                            AND username='" . $xApprover[0]->approver . "'";
-                            $data = DB::select($strsql);
-                            if ($data) {
-                                $approver_fullname = $data[0]->fullname;
-                                $approver_email = $data[0]->email;
-                            }
-
-                            //เนื้อหาใน Mail
-                            $detailMail = [
-                                'template' => 'MAIL_PR01',
-                                'subject' => 'Request to approve Purchase Requisition No: ' . $this->prHeader['prno'],
-                                'dear' => $approver_fullname,
-                                'docno' => $this->prHeader['prno'],
-                                'releasedby' => $requester_fullname,
-                                'link_url' => url('/purchase-requisition/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
-                            ];
-
-                            Mail::to($approver_email)->cc([$requester_email, $requested_for_email])
-                                ->send(New WelcomeMail($detailMail));
-                        }
-                        //Send Mail End
-                    }                        
-                }
+                //Send Mail End
 
             } else if ($xApproval_type == 'DECIDER'){
                 //Update status > pr_header & pr_item
@@ -1203,6 +1150,15 @@ class PurchaseRequisitionDetails extends Component
                         'link_url' => url('/purchase-requisition/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
                     ];
 
+                    //Validate Email
+                    $this->emailAddress['approver_email'] = $approver_email;
+                    $this->emailAddress['requester_email'] = $requester_email;
+                    $this->emailAddress['requested_for_email'] = $requested_for_email;
+            
+                    $this->validate([
+                        'emailAddress.*' => 'required|email',
+                    ]);
+
                     Mail::to($requester_email)->cc([$approver_email, $requested_for_email])->send(New WelcomeMail($detailMail));
                 }
                 //Send Mail End
@@ -1304,6 +1260,15 @@ class PurchaseRequisitionDetails extends Component
                                 'link_url' => url('/purchase-requisition/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
                             ];
 
+                            //Validate Email
+                            $this->emailAddress['approver_email'] = $approver_email;
+                            $this->emailAddress['requester_email'] = $requester_email;
+                            $this->emailAddress['requested_for_email'] = $requested_for_email;
+                    
+                            $this->validate([
+                                'emailAddress.*' => 'required|email',
+                            ]);
+                            
                             Mail::to($requester_email)->cc([$approver_email, $requested_for_email])->send(New WelcomeMail($detailMail));
                         }
                     }
@@ -1563,6 +1528,26 @@ class PurchaseRequisitionDetails extends Component
     //Delivery Plan End
 
     //Line Item
+        public function clearAll()
+        {
+            $this->reset(['prItem']);
+
+            //สร้างฟิลด์ใน Array 
+            $this->prItem['budget_code'] = "";
+            $this->prItem['snn_service'] = false; 
+            $this->prItem['snn_production'] = false; 
+            $this->prItem['reference_pr'] = ""; 
+            $this->prItem['over_1_year_life'] = false;
+            $this->prItem['remarks'] = "";
+            $this->prItem['nominated_supplier'] = "";
+            $this->prItem['brand'] = "";
+            $this->prItem['model'] = "";
+            $this->prItem['skip_rfq'] = false;
+            $this->prItem['skip_doa'] = false;
+    
+            $this->dispatchBrowserEvent('clear-select2-modal');
+        }
+
         public function closedModal()
         {
             $this->reset(['prItem']);
@@ -1952,7 +1937,7 @@ class PurchaseRequisitionDetails extends Component
                             $this->budgetcode_dd = [];
                             $strsql = "select c.account, c.description
                                 FROM pr_header a
-                                LEFT JOIN cost_center b ON b.cost_center = b.cost_center
+                                LEFT JOIN cost_center b ON a.cost_center = b.cost_center
                                 LEFT JOIN gl_master c ON c.category = b.gl_category
                                 WHERE a.cost_center='" . $this->prHeader['cost_center'] . "' AND (GETDATE() between c.valid_from AND c.valid_to) 
                                 GROUP BY c.account, c.description
@@ -2068,6 +2053,8 @@ class PurchaseRequisitionDetails extends Component
                 'title' => str_replace("<PR No.>", $this->prHeader['prno'], $data[0]->msg_text),
             ]);
         }
+
+        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
     }
 
     public function editPR()
@@ -2125,6 +2112,16 @@ class PurchaseRequisitionDetails extends Component
             $this->isBuyer = true;
         } else {
             $this->isBuyer = false;
+        }
+
+        //ตรวจสอบว่าเป็น Requester หรือ RequestedFor หรือไม่
+        $strsql = "SELECT requested_for, requestor FROM pr_header WHERE id=" . $this->prHeader['id'] . " 
+                AND (requested_for=" . auth()->user()->id . " OR requestor=" . auth()->user()->id . ")";
+        $data = DB::select($strsql);
+        if ($data) {
+            $this->isRequester_RequestedFor = true;
+        } else {
+            $this->isRequester_RequestedFor = false;
         }
 
         //Authorization

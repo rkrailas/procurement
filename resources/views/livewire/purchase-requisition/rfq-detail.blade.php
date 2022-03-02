@@ -81,7 +81,7 @@
                             </option>
                             @endforeach
                         </x-select2>
-                        @error('currency') <span class="text-red">This field is required.</span> @enderror
+                        @error('currency') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -152,10 +152,20 @@
         <div class="tab-content m-0 pb-0" id="pills-tabContent">
             <div class="tab-pane fade {{ $currentTab == 'item' ? 'show active' : '' }}" id="pills-lineitem" role="tabpanel" aria-labelledby="pills-lineitem-tab" wire:ignore.self>
                 <div class="row">
-                    <div class="col-md-12">
-                        <div class="d-flex justify-content-end mb-2">
-                            <button wire:click.prevent="assignSupplier" class="btn btn-sm btn-danger">APPLY</button>
-                        </div>
+                    <div class="col-md-6">
+                        <label>Supplier</label>
+                        <select class="form-control form-control-sm" wire:model="tabLineItem.selectSupplierItem">
+                            <option value="">--- Please Select ---</option>
+                            @foreach($supplierForAssign_dd as $row)
+                            <option value="{{ $row->supplier }}">
+                                {{ $row->supplier }} : {{ $row->supplier_name }}
+                            </option> 
+                            @endforeach
+                        </select>
+                        @error('selectSupplierItem') <span class="text-red">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-6 mt-auto">
+                        <button wire:click.prevent="assignSupplier" class="btn btn-sm btn-danger"><i class="fas fa-plus-square mr-1"></i>APPLY</button>
                     </div>
                 </div>                
                 <div class="row m-0 p-0">
@@ -181,34 +191,38 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @foreach ($itemList as $index => $row)
+                            @foreach ($itemList as $row)
                             <tr>
-                                {{-- $bankDetails[$index]['taxref'] --}}
                                 <td>
                                     <div d-inline ml-2 mt-auto>
-                                        <input wire:model="selectedRows" type="checkbox" value="{{ $itemList[$index]['id'] }}"
-                                            id="{{ $itemList[$index]['line_no'] }}">
-                                        <span>{{ $itemList[$index]['line_no'] }}</span>
+                                        <input wire:model="selectedRows" type="checkbox" value="{{ $row->id }}"
+                                            id="{{ $row->line_no }}">
+                                        <span>{{ $row->line_no }}</span>
                                     </div>
                                 </td>
-                                <td scope="col">{{ $itemList[$index]['partno'] }}</td>
-                                <td scope="col">{{ $itemList[$index]['description'] }}</td>                                
-                                <td scope="col">{{ $itemList[$index]['status'] }}</td>
-                                <td scope="col" class="text-right pr-2">{{ number_format($itemList[$index]['qty'], 0) }}</td>
-                                <td scope="col" class="text-center">{{ $itemList[$index]['uom'] }}</td>
-                                <td scope="col" class="text-center">{{ \Carbon\Carbon::parse( $itemList[$index]['delivery_date'])->format('d-M-Y') }} </td>
-                                <td scope="col" class="text-right pr-2">{{ number_format($itemList[$index]['total_price_lc'], 2) }}</td>
-                                <td scope="col" class="text-right pr-2">{{ number_format( $itemList[$index]['final_price_lc'], 2) }}</td>
-                                <td scope="col" class="text-center">{{ $itemList[$index]['currency'] }}</td>
-                                <td scope="col" class="text-right pr-2">{{ number_format($itemList[$index]['cr'], 2) }}</td>
-                                <td scope="col" class="text-right pr-2">{{ number_format($itemList[$index]['cramt'], 2) }}</td>
-                                <td scope="col">{{ $itemList[$index]['supplier'] }}</td>
-                                <td scope="col">{{ $itemList[$index]['edecision'] }}</td>
-                                <td scope="col">{{ $itemList[$index]['pono'] }}</td>
+                                <td scope="col">{{ $row->partno }}</td>
+                                <td scope="col">{{ $row->description }}</td>                                
+                                <td scope="col">{{ $row->status }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row->qty, 0) }}</td>
+                                <td scope="col" class="text-center">{{ $row->uom }}</td>
+                                <td scope="col" class="text-center">{{ \Carbon\Carbon::parse( $row->delivery_date)->format('d-M-Y') }} </td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row->total_price_lc, 2) }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format( $row->final_price_lc, 2) }}</td>
+                                <td scope="col" class="text-center">{{ $row->currency }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row->cr, 2) }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row->cramt, 2) }}</td>
+                                <td scope="col">{{ $row->supplier }}</td>
+                                <td scope="col">{{ $row->edecision }}</td>
+                                <td scope="col">{{ $row->pono }}</td>
                             </tr>
                             @endforeach
                             </tbody>
                         </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-1">
+                        {{ $itemList->links() }}
                     </div>
                 </div>
             </div>
@@ -217,7 +231,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <label>Supplier</label>
-                        <select class="form-control form-control-sm" wire:model="tabSupplier.selectsupplier">
+                        <select class="form-control form-control-sm" wire:model="tabSupplier.selectSupplier">
                             <option value="">--- Please Select ---</option>
                             @foreach($supplier_dd as $row)
                             <option value="{{ $row->supplier }}">
@@ -225,6 +239,7 @@
                             </option> 
                             @endforeach
                         </select>
+                        @error('selectSupplier') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-6 mt-auto">
                         <button wire:click.prevent="addSupplier" class="btn btn-sm btn-danger"><i class="fas fa-plus-square mr-1"></i>ADD</button>
@@ -247,17 +262,17 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @foreach ($supplierList as $index => $row)
+                            @foreach ($supplierList as $row)
                             <tr>
-                                <td scope="col">{{ $supplierList[$index]['supplier'] }}</td>
-                                <td scope="col">{{ $supplierList[$index]['supplier_name'] }}</td>
-                                <td scope="col">{{ $supplierList[$index]['location'] }}</td>
-                                <td scope="col">{{ $supplierList[$index]['po_currency'] }}</td>
-                                <td scope="col">{{ $supplierList[$index]['contact_person'] }}</td>
-                                <td scope="col">{{ $supplierList[$index]['telphone_number'] }}</td>
-                                <td scope="col">{{ $supplierList[$index]['email'] }}</td>
+                                <td scope="col">{{ $row->supplier }}</td>
+                                <td scope="col">{{ $row->supplier_name }}</td>
+                                <td scope="col">{{ $row->location }}</td>
+                                <td scope="col">{{ $row->po_currency }}</td>
+                                <td scope="col">{{ $row->contact_person }}</td>
+                                <td scope="col">{{ $row->telphone_number }}</td>
+                                <td scope="col">{{ $row->email }}</td>
                                 <td scope="col">
-                                    <a href="" wire:click.prevent="deleteRFQSupplier('{{ $supplierList[$index]['supplier'] }}')">
+                                    <a href="" wire:click.prevent="deleteRFQSupplier('{{ $row->supplier }}')">
                                         <i class="fas fa-times text-center mr-1" style="color: red"></i>
                                     </a>
                                 </td>
@@ -265,6 +280,11 @@
                             @endforeach
                             </tbody>
                         </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-1">
+                        {{ $supplierList->links() }}
                     </div>
                 </div>
             </div>

@@ -67,7 +67,7 @@ class RequisitionInbox extends Component
     {
         $this->loadDropdownList();
 
-        $xWhere = " WHERE a.status='20' AND a.approver='" . auth()->user()->username . "'";
+        $xWhere = " WHERE d.status IN ('20', '21') AND a.status='20' AND a.approver='" . auth()->user()->username . "'";
 
         if ($this->doctype) {
             $xWhere = $xWhere . " AND a.ref_doc_type = '" . $this->doctype . "'";

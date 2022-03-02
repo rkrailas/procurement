@@ -78,8 +78,10 @@ class PurchaseRequisitionList extends Component
     public function resetSearch()
     {
         $this->reset(['prno', 'ordertype', 'site', 'requestor', 'requested_for', 'buyer', 'status']);
-        $this->requestdate_from = date_format(Carbon::now(),'Y-m-d');
-        $this->requestdate_to = date_format(Carbon::now()->addMonth(+3),'Y-m-d');
+        // $this->requestdate_from = "01-" . date_format(Carbon::now(),'M-Y');
+        // $this->requestdate_to = date('Y-m-t', strtotime(date_format(Carbon::now(),'d-M-Y'))); //หาวันที่สุดท้ายของเดือน
+        $this->requestdate_from = date_format(Carbon::now(),'Y-m') . "-01";
+        $this->requestdate_to = date('Y-m-t', strtotime(date_format(Carbon::now(),'Y-m-d'))); //หาวันที่สุดท้ายของเดือน
         $this->dispatchBrowserEvent('clear-select2');
     }
 

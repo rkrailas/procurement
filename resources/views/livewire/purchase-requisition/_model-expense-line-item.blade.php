@@ -73,14 +73,14 @@
                         @error('exchange_rate') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                     <div class="col-md-4">
-                        <label>Purchase Group</label>
+                        {{-- <label>Purchase Group</label>
                         <x-select2 id="purchase_group-select2" wire:model.defer="prItem.purchase_group">
                             @foreach($purchasegroup_dd as $row)
                             <option value='{{ $row->groupno }}'>
                                 {{ $row->groupno }} : {{ $row->description }}
                             </option>
                             @endforeach
-                        </x-select2>
+                        </x-select2> --}}
                     </div>
                     <div class="col-md-4">
                     </div>
@@ -221,6 +221,11 @@
                                 <i class="fas fa-trash-alt mr-1"></i>Delete</button>
                         </div>
                         <div>
+                            @if ($isCreateLineItem == true)
+                            <button type="button" class="btn btn-sm btn-light" wire:click.prevent="clearAll">
+                                <i class="fa fa-times mr-1"></i>Clear All</button>
+                            @endif
+                            
                             <button type="button" class="btn btn-sm btn-light" data-dismiss="modal" wire:click.prevent="closedModal">
                                 <i class="fa fa-times mr-1"></i>Close</button>
                             <button type="button" class="btn btn-sm btn-danger" wire:click.prevent="saveLineItem">

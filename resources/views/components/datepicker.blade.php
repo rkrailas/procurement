@@ -10,6 +10,7 @@
 <script type="text/javascript">
     $('#{{ $id }}').datetimepicker({
         format: 'YYYY-MM-DD'
+        //format: 'DD-MMM-YYYY'
     });
 </script>
 @endpush

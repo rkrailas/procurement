@@ -12,9 +12,13 @@ use Illuminate\Support\Facades\Validator;
 class RfqDetail extends Component
 {
     public $editRFQNo, $currentTab, $rfqHeader;
+    public $numberOfPage = 10;
 
     //Header
     public $buyer_dd, $buyergroup_dd, $currency_dd;
+
+    //Tab Item
+    public $supplierForAssign_dd, $selectedRows, $tabLineItem;
     
     //Tab Supplier
     public $tabSupplier, $supplier_dd;
@@ -22,7 +26,24 @@ class RfqDetail extends Component
 
     public function assignSupplier()
     {
+        //Validate
+        Validator::make($this->tabLineItem, [
+            'selectSupplierItem' => 'required',
+        ])->validate();
 
+        DB::statement("UPDATE rfq_item SET supplier=?, final_price=0, final_price_lc=0, changed_by=?, changed_on=?
+            WHERE id IN (?)"
+        , [$this->tabLineItem['selectSupplier'], auth()->user()->id, Carbon::now(), $this->selectedRows]);
+
+        $this->reset(['selectedRows']);
+
+        $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='100' AND class='RFQ'";
+        $data = DB::select($strsql);
+        if (count($data) > 0) {
+            $this->dispatchBrowserEvent('popup-success', [
+                'title' => str_replace("<RFQ No.>", $this->rfqHeader['rfqno'], $data[0]->msg_text),
+            ]);
+        }
     }
 
     public function deleteRFQSupplier($xSupplierID)
@@ -44,6 +65,7 @@ class RfqDetail extends Component
 
         //ถ้า Validate ผ่าน
         DB::statement("DELETE FROM rfq_supplier WHERE rfqno=? AND supplier=?", [$this->rfqHeader['rfqno'], $xSupplierID]);
+
         $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='108' AND class='RFQ'";
         $data = DB::select($strsql);
         if (count($data) > 0) {
@@ -55,12 +77,12 @@ class RfqDetail extends Component
     {
         //Validate-Required
         Validator::make($this->tabSupplier, [
-            'selectsupplier' => 'required',
+            'selectSupplier' => 'required',
         ])->validate();
 
         //Validate-มีอยู่แล้วหรือไม่
         $strsql = "SELECT supplier FROM rfq_supplier WHERE rfqno='" . $this->rfqHeader['rfqno'] . "' AND supplier='" 
-                . $this->tabSupplier['selectsupplier'] . "'";
+                . $this->tabSupplier['selectSupplier'] . "'";
         $data = DB::select($strsql);
         if ($data) {
             $this->dispatchBrowserEvent('popup-alert', [
@@ -79,7 +101,7 @@ class RfqDetail extends Component
 
         DB::statement("INSERT INTO rfq_supplier(rfqno, supplier, currency, create_by, create_on)
         VALUES(?,?,?,?,?)"
-        ,[$this->rfqHeader['rfqno'], $this->tabSupplier['selectsupplier'], $xCurrency, auth()->user()->id, Carbon::now()]);
+        ,[$this->rfqHeader['rfqno'], $this->tabSupplier['selectSupplier'], $xCurrency, auth()->user()->id, Carbon::now()]);
 
         $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='106' AND class='RFQ'";
         $data = DB::select($strsql);
@@ -107,6 +129,14 @@ class RfqDetail extends Component
         $this->supplier_dd = [];
         $strsql = "SELECT supplier, name1 + ' ' + name2 AS supplier_name FROM supplier ORDER BY supplier";
         $this->supplier_dd = DB::select($strsql);
+
+        $this->supplierForAssign_dd = [];
+        $strsql = "SELECT b.supplier, b.name1 + ' ' + b.name2 AS supplier_name
+                FROM rfq_supplier a
+                LEFT JOIN supplier b ON a.supplier=b.supplier
+                WHERE a.rfqno='" . $this->rfqHeader['rfqno'] . "'
+                ORDER BY supplier";
+        $this->supplierForAssign_dd = DB::select($strsql);
     }
 
     public function goto_prdetail()
@@ -148,7 +178,8 @@ class RfqDetail extends Component
     {
         $this->editRFQNo = $_GET['rfqno'];
         $this->currentTab = $_GET['tab'];
-        $this->tabSupplier['selectsupplier'] = "";
+        $this->tabSupplier['selectSupplier'] = "";
+        $this->tabLineItem['selectSupplierItem'] = "";
         $this->editRFQ();
     }
 
@@ -164,7 +195,8 @@ class RfqDetail extends Component
                 FROM rfq_item a
                 LEFT JOIN supplier b ON a.supplier=b.supplier
                 WHERE a.rfqno='" . $this->rfqHeader['rfqno'] . "'";
-        $itemList = json_decode(json_encode(DB::select($strsql)), true); 
+        //$itemList = json_decode(json_encode(DB::select($strsql)), true);
+        $itemList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
         //Tab Supplier ???ถึงตรงนี้
         $strsql = "SELECT a.id, a.supplier, b.name1 + ' ' + b.name2 AS supplier_name, b.location
@@ -172,7 +204,8 @@ class RfqDetail extends Component
                 FROM rfq_supplier a
                 LEFT JOIN supplier b ON a.supplier=b.supplier
                 WHERE a.rfqno='" . $this->rfqHeader['rfqno'] . "'";
-        $supplierList = json_decode(json_encode(DB::select($strsql)), true);
+        //$supplierList = json_decode(json_encode(DB::select($strsql)), true);
+        $supplierList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
 
         return view('livewire.purchase-requisition.rfq-detail', 
