@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\PurchaseRequisition;
+namespace App\Http\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +22,7 @@ class RequisitionInbox extends Component
 
     public function approvePR($prno)
     {
-        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $prno . "&tab=auth");
+        return redirect("purchaserequisitiondetails?mode=edit&prno=" . $prno . "&tab=auth");
     }
 
     public function resetSearch()
@@ -91,7 +91,7 @@ class RequisitionInbox extends Component
 
             $workflow_list = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
-        return view('livewire.purchase-requisition.requisition-inbox',[
+        return view('livewire.requisition-inbox',[
             'workflow_list' => $workflow_list,
         ]);
     }

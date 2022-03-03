@@ -7,10 +7,10 @@
                     <h1 class="m-0" style="color: #C3002F;">Purchase Requisition List</h1>
                 </div>
                 <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
+                    {{-- <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item">Purchase Requisition</li>
                         <li class="breadcrumb-item active" style="color: #C3002F;">Purchase Requisition List</li>
-                    </ol>
+                    </ol> --}}
                 </div>
             </div>
         </div>

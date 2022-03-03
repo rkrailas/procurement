@@ -1,8 +1,8 @@
-@props(['id', 'required'=>''])
+@props(['id', 'required'=>'', 'disabled'=>''])
 
 {{-- {{ $attributes }} --}}
 <div wire:ignore>
-    <select id="{{ $id }}" style="width: 100%;" {{ $required == 'true' ? 'required' : '' }}> 
+    <select id="{{ $id }}" style="width: 100%;" {{ $required == 'true' ? 'required' : '' }} {{ $disabled == 'true' ? 'disabled' : '' }}> 
         {{ $slot }}
     </select>
 </div>

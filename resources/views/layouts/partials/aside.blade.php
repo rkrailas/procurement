@@ -35,22 +35,35 @@
           </a>
           <ul class="nav nav-treeview">            
             <li class="nav-item">
-              <a href="{{ route('purchase-requisition.purchaserequisitionlist') }}"
-                class="nav-link {{ request()->is('purchase-requisition/purchaserequisitionlist') ? 'active' : '' }}">
+              <a href="{{ route('purchaserequisitionlist') }}"
+                class="nav-link {{ request()->is('purchaserequisitionlist') ? 'active' : '' }}">
                 <i class="far fa-circle nav-icon-submenu"></i>
                 <p>Purchase Requisition List</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ route('purchase-requisition.requisitioninbox') }}" 
-                class="nav-link {{ request()->is('purchase-requisition/requisitioninbox') ? 'active' : '' }}">
+              <a href="{{ route('requisitioninbox') }}" 
+                class="nav-link {{ request()->is('requisitioninbox') ? 'active' : '' }}">
                 <i class="far fa-circle nav-icon-submenu"></i>
                 <p>Requisition Inbox</p>
               </a>
             </li>
+          </ul>
+        </li>
+
+        <!-- RFQ -->
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="nav-icon far fa-file-alt"></i>
+            <p>
+              RFQ
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">            
             <li class="nav-item">
-              <a href="{{ route('purchase-requisition.rfqlist') }}" 
-                class="nav-link {{ request()->is('purchase-requisition/rfqlist') ? 'active' : '' }}">
+              <a href="{{ route('rfqlist') }}" 
+                class="nav-link {{ request()->is('rfqlist') ? 'active' : '' }}">
                 <i class="far fa-circle nav-icon-submenu"></i>
                 <p>RFQ List</p>
               </a>
@@ -58,7 +71,25 @@
           </ul>
         </li>
 
-        
+        <!-- Purchase Order -->
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="nav-icon far fa-file-alt"></i>
+            <p>
+              Purchase Order
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">            
+            <li class="nav-item">
+              <a href="{{ route('purchaseorderlist') }}" 
+                class="nav-link {{ request()->is('purchaseorderlist') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon-submenu"></i>
+                <p>Purchase Order List</p>
+              </a>
+            </li>
+          </ul>
+        </li>
 
       </ul>
     </nav>

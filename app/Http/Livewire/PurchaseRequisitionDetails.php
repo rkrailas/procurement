@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\PurchaseRequisition;
+namespace App\Http\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
@@ -225,7 +225,7 @@ class PurchaseRequisitionDetails extends Component
 
                     $this->reset(['selectedRows']);
 
-                    return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $newPrNo . "&tab=item");
+                    return redirect("purchaserequisitiondetails?mode=edit&prno=" . $newPrNo . "&tab=item");
                 });
 
             }else{
@@ -258,7 +258,7 @@ class PurchaseRequisitionDetails extends Component
                 
             //     $this->reset(['selectedRows']);
 
-            //     return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+            //     return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
 
             // }else{
             //     $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='105' AND class='PURCHASE REQUISITION'";
@@ -340,7 +340,7 @@ class PurchaseRequisitionDetails extends Component
                         'dear' => $approver,
                         'docno' => $this->prHeader['prno'],
                         'cancel_by' => $cancel_by,
-                        'link_url' => url('/purchase-requisition/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=item'),
+                        'link_url' => url('/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=item'),
                     ];
 
                     //??? ไม่แน่ใจเรื่องหลาย Mail 
@@ -361,7 +361,7 @@ class PurchaseRequisitionDetails extends Component
 
             $this->clearVariablePR();
 
-            return redirect("purchase-requisition/purchaserequisitionlist");
+            return redirect("purchaserequisitionlist");
         }
 
         public function releaseForSourcing()
@@ -476,7 +476,7 @@ class PurchaseRequisitionDetails extends Component
                                 'dear' => $approver_fullname,
                                 'docno' => $this->prHeader['prno'],
                                 'releasedby' => $requester_fullname,
-                                'link_url' => url('/purchase-requisition/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
+                                'link_url' => url('/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
                             ];
 
                             //Validate Email
@@ -505,7 +505,7 @@ class PurchaseRequisitionDetails extends Component
                     ]);
                 }
 
-                //return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+                //return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
             };
         }
 
@@ -541,7 +541,7 @@ class PurchaseRequisitionDetails extends Component
                 
                 $this->reset(['selectedRows']);
 
-                //return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+                //return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
 
             }else{
                 DB::statement("UPDATE pr_header SET deletion_flag=?, changed_by=?, changed_on=?
@@ -558,7 +558,7 @@ class PurchaseRequisitionDetails extends Component
 
                 $this->clearVariablePR();
 
-                return redirect("purchase-requisition/purchaserequisitionlist");
+                return redirect("purchaserequisitionlist");
             }
         }
 
@@ -566,7 +566,7 @@ class PurchaseRequisitionDetails extends Component
         {
             $this->clearVariablePR();
 
-            return redirect("purchase-requisition/purchaserequisitionlist");
+            return redirect("purchaserequisitionlist");
         }
 
         public function savePR()
@@ -649,7 +649,7 @@ class PurchaseRequisitionDetails extends Component
                         ]);
                     }
     
-                    return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+                    return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
     
                 } else {
                     //Edit PR
@@ -677,7 +677,7 @@ class PurchaseRequisitionDetails extends Component
                         ]);
                     }
     
-                    return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+                    return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
                 }
             }
 
@@ -995,7 +995,7 @@ class PurchaseRequisitionDetails extends Component
                             'dear' => $approver_fullname,
                             'docno' => $this->prHeader['prno'],
                             'releasedby' => $requester_fullname,
-                            'link_url' => url('/purchase-requisition/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
+                            'link_url' => url('/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
                         ];
 
                         //Validate Email
@@ -1183,7 +1183,7 @@ class PurchaseRequisitionDetails extends Component
                         'dear' => $requester_fullname,
                         'docno' => $this->prHeader['prno'],
                         'actionby' => $approver_fullname,
-                        'link_url' => url('/purchase-requisition/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
+                        'link_url' => url('/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
                     ];
 
                     //Validate Email
@@ -1211,7 +1211,7 @@ class PurchaseRequisitionDetails extends Component
                 ]);
             }
 
-            //return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
+            //return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
         }
 
         public function validatorDeciderReject()
@@ -1293,7 +1293,7 @@ class PurchaseRequisitionDetails extends Component
                                 'docno' => $this->prHeader['prno'],
                                 'actionby' => $approver_fullname,
                                 'reasons' => $this->rejectReason,
-                                'link_url' => url('/purchase-requisition/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
+                                'link_url' => url('/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
                             ];
 
                             //Validate Email
@@ -1311,7 +1311,7 @@ class PurchaseRequisitionDetails extends Component
                     //Send Mail End
 
                     $this->reset(['rejectReason']);
-                    //return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
+                    //return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=auth");
                 });
 
             } else {
@@ -1729,6 +1729,8 @@ class PurchaseRequisitionDetails extends Component
                 $this->prItem['skip_doa'] = tinyToBoolean($this->prItem['skip_doa']);
                 $this->prItem['over_1_year_life'] = tinyToBoolean($this->prItem['over_1_year_life']);
 
+                // $this->prItem['unit_price'] = round($this->prItem['unit_price'], 2);
+
                 //ต้องเป็น Array เพราะต้องใช้ FUnction Validation
                 $this->prItem = json_decode(json_encode($this->prItem), true);
             }
@@ -1780,7 +1782,7 @@ class PurchaseRequisitionDetails extends Component
                     'purchase_unit' => 'required',
                     'unit_price' => 'required',
                     'qty' => 'required|numeric|min:1|max:99999999.99',
-                    'req_date' => 'required',
+                    'req_date' => 'required|date|date_format:Y-m-d|after:yesterday',
                     'budget_code' => 'required',
                 ])->validate();
             }
@@ -1840,19 +1842,23 @@ class PurchaseRequisitionDetails extends Component
                             $this->prItem['partno'] = "";
                             $this->prItem['account_group'] = "";
                         }
+
+                        //3-3-22 ชั่วคร่าวเพราะ Abeam ยังตกลงเรื่องนี้ไม่ได้
+                        $this->prItem['purchase_group'] = "";
+                        $this->prItem['account_group'] = "";
         
                         DB::statement("INSERT INTO pr_item (prno, prno_id, [lineno], partno, description, purchase_unit, unit_price, unit_price_local
-                        , currency, exchange_rate, purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
-                        ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on)
+                            , currency, exchange_rate, purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
+                            ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on)
                         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-                        ,[$this->prHeader['prno'], $this->prHeader['id'], $lineno, $this->prItem['partno'], $this->prItem['description']
-                        , $this->prItem['purchase_unit'], $this->prItem['unit_price'], $this->prItem['unit_price'] * $this->prItem['exchange_rate']
-                        , $this->prItem['currency'], $this->prItem['exchange_rate']
-                        , $this->prItem['purchase_group'], $this->prItem['account_group'], $this->prItem['qty']
-                        , $this->prItem['req_date'], $this->prItem['internal_order'] ,$this->prItem['budget_code'], $this->prItem['over_1_year_life']
-                        , $this->prItem['snn_service'], $this->prItem['snn_production'] ,$this->prItem['nominated_supplier'], $this->prItem['remarks']
-                        , $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr'], "10" ,auth()->user()->id, Carbon::now()
-                        ]);
+                            ,[$this->prHeader['prno'], $this->prHeader['id'], $lineno, $this->prItem['partno'], $this->prItem['description']
+                            , $this->prItem['purchase_unit'], $this->prItem['unit_price'], $this->prItem['unit_price'] * $this->prItem['exchange_rate']
+                            , $this->prItem['currency'], $this->prItem['exchange_rate']
+                            , $this->prItem['purchase_group'], $this->prItem['account_group'], $this->prItem['qty']
+                            , $this->prItem['req_date'], $this->prItem['internal_order'] ,$this->prItem['budget_code'], $this->prItem['over_1_year_life']
+                            , $this->prItem['snn_service'], $this->prItem['snn_production'] ,$this->prItem['nominated_supplier'], $this->prItem['remarks']
+                            , $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr'], "10" ,auth()->user()->id, Carbon::now()
+                            ]);
         
                         $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
                         $data = DB::select($strsql);
@@ -2000,6 +2006,13 @@ class PurchaseRequisitionDetails extends Component
         }
     //Line Item End
 
+    // ไม่ Work กรณีกด Modal แล้วมันจะหลด
+    // public function disablePRHeader()
+    // {
+    //     if ($this->prHeader['status'] >= '30') {
+    //         $this->dispatchBrowserEvent('prheader-disable');
+    //     }
+    // }
 
     public function showAddItem()
     {
@@ -2059,15 +2072,6 @@ class PurchaseRequisitionDetails extends Component
         $this->skipRender();
     }
 
-    //???ยังติดตรงนี้ CR No.5 เรื่อง Disable
-    // public function disablePRDetail()
-    // {
-    //     //Disable PR Detail Where status > 10 AND < 30
-    //     if ($this->prHeader['status'] > '10' AND $this->prHeader['status'] < '30') {
-    //         $this->dispatchBrowserEvent('disable-prdetail');
-    //     }
-    // }
-
     public function revokePrHeader()
     {
         //26-2-22 Change for 'P2P-PR Process for UAT 20220224.pptx'
@@ -2090,55 +2094,55 @@ class PurchaseRequisitionDetails extends Component
             ]);
         }
 
-        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+        return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
     }
 
     public function editPR()
     {
         //PR Header
-            $strsql = "SELECT prh.id, prh.prno, ort.description AS ordertypename
-                    , isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requestor_name, req.email, req.extention
-                    , CASE 
-                        WHEN ISNULL(req.mobile,'') = '' THEN req.phone
-                        ELSE req.mobile
-                      END AS phone
-                    , prh.requested_for, reqf.email AS email_reqf, reqf.extention AS extention_reqf
-                    , CASE 
-                        WHEN ISNULL(reqf.mobile,'') = '' THEN reqf.phone
-                        ELSE reqf.mobile
-                      END AS phone_reqf
-                    , prh.company, company.name AS company_name, prh.site, prh.functions, prh.department, prh.division, prh.section
-                    , prh.cost_center, cc.description AS costcenter_desc
-                    , prh.buyer, prh.delivery_address, prh.delivery_location, prh.delivery_site, prh.budget_year, prh.purpose_pr
-                    , FORMAT(prh.request_date,'yyy-MM-dd') AS request_date                    
-                    , pr_status.description AS statusname, FORMAT(prh.valid_until,'yyy-MM-dd') AS valid_until, prh.days_to_notify, prh.notify_below_10
-                    , prh.notify_below_25, prh.notify_below_35, prh.ordertype, prh.requestor, prh.status
-                    FROM pr_header prh
-                    LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
-                    LEFT JOIN users req ON req.id=prh.requestor
-                    LEFT JOIN users reqf ON reqf.id=prh.requested_for
-                    LEFT JOIN pr_status ON pr_status.status=prh.status
-                    LEFT JOIN company ON company.company=prh.company
-                    LEFT JOIN cost_center cc ON cc.cost_center=prh.cost_center 
-                    WHERE prh.prno ='" . $this->editPRNo . "'";
-            $data = DB::select($strsql);
+        $strsql = "SELECT prh.id, prh.prno, ort.description AS ordertypename
+                , isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requestor_name, req.email, req.extention
+                , CASE 
+                    WHEN ISNULL(req.mobile,'') = '' THEN req.phone
+                    ELSE req.mobile
+                    END AS phone
+                , prh.requested_for, reqf.email AS email_reqf, reqf.extention AS extention_reqf
+                , CASE 
+                    WHEN ISNULL(reqf.mobile,'') = '' THEN reqf.phone
+                    ELSE reqf.mobile
+                    END AS phone_reqf
+                , prh.company, company.name AS company_name, prh.site, prh.functions, prh.department, prh.division, prh.section
+                , prh.cost_center, cc.description AS costcenter_desc
+                , prh.buyer, prh.delivery_address, prh.delivery_location, prh.delivery_site, prh.budget_year, prh.purpose_pr
+                , FORMAT(prh.request_date,'yyy-MM-dd') AS request_date                    
+                , pr_status.description AS statusname, FORMAT(prh.valid_until,'yyy-MM-dd') AS valid_until, prh.days_to_notify, prh.notify_below_10
+                , prh.notify_below_25, prh.notify_below_35, prh.ordertype, prh.requestor, prh.status
+                FROM pr_header prh
+                LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
+                LEFT JOIN users req ON req.id=prh.requestor
+                LEFT JOIN users reqf ON reqf.id=prh.requested_for
+                LEFT JOIN pr_status ON pr_status.status=prh.status
+                LEFT JOIN company ON company.company=prh.company
+                LEFT JOIN cost_center cc ON cc.cost_center=prh.cost_center 
+                WHERE prh.prno ='" . $this->editPRNo . "'";
+        $data = DB::select($strsql);
 
-            if (count($data)) {
-                $this->prHeader = collect($data[0]);
-                $this->prHeader['notify_below_10'] = boolval($this->prHeader['notify_below_10']);
-                $this->prHeader['notify_below_25'] = boolval($this->prHeader['notify_below_25']);
-                $this->prHeader['notify_below_35'] = boolval($this->prHeader['notify_below_35']);
-                $this->prHeader['company'] = $data[0]->company;
-                
-                $this->orderType = $this->prHeader['ordertype'];
+        if (count($data)) {
+            $this->prHeader = collect($data[0]);
+            $this->prHeader['notify_below_10'] = boolval($this->prHeader['notify_below_10']);
+            $this->prHeader['notify_below_25'] = boolval($this->prHeader['notify_below_25']);
+            $this->prHeader['notify_below_35'] = boolval($this->prHeader['notify_below_35']);
+            $this->prHeader['company'] = $data[0]->company;
+            
+            $this->orderType = $this->prHeader['ordertype'];
 
-                if ($this->prHeader['ordertype'] == "20" OR $this->prHeader['ordertype'] == "21"){
-                    $this->isBlanket = true;
-                }
-
-                //ถ้าไม่เป็น Array จะใช้ Valdation ไม่ได้
-                $this->prHeader = json_decode(json_encode($this->prHeader), true);
+            if ($this->prHeader['ordertype'] == "20" OR $this->prHeader['ordertype'] == "21"){
+                $this->isBlanket = true;
             }
+
+            //ถ้าไม่เป็น Array จะใช้ Valdation ไม่ได้
+            $this->prHeader = json_decode(json_encode($this->prHeader), true);
+        }
         //PR Header End ***ที่เป็น Tab ย้ายไปอยู่ที่ Render
 
         //ตรวจสอบว่าเป็น Buyer หรือไม่
@@ -2161,13 +2165,13 @@ class PurchaseRequisitionDetails extends Component
         }
 
         //Authorization
-            //ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่
-            $strsql = "SELECT approver FROM dec_val_workflow WHERE ref_doc_type='10' AND ref_doc_id=" . $this->prHeader['id'] . " 
-                AND approver = '" . auth()->user()->username . "'";
-            $data = DB::select($strsql);
-            if ($data) {
-                $this->isValidator_Decider = true;
-            }
+        //ตรวจสอบว่าเป็น Validator หรือ Decider หรือไม่
+        $strsql = "SELECT approver FROM dec_val_workflow WHERE ref_doc_type='10' AND ref_doc_id=" . $this->prHeader['id'] . " 
+            AND approver = '" . auth()->user()->username . "'";
+        $data = DB::select($strsql);
+        if ($data) {
+            $this->isValidator_Decider = true;
+        }
         //Authorization End
     }
 
@@ -2496,7 +2500,7 @@ class PurchaseRequisitionDetails extends Component
         $this->loadDropdownList();
 
         if ($this->isCreateMode){
-            return view('livewire.purchase-requisition.purchase-requisition-details');
+            return view('livewire.purchase-requisition-details');
 
         }else{
             //itemList
@@ -2566,7 +2570,7 @@ class PurchaseRequisitionDetails extends Component
             //Reset Pagination
             $this->resetPage();
 
-            return view('livewire.purchase-requisition.purchase-requisition-details',[
+            return view('livewire.purchase-requisition-details',[
                 'itemList' => $itemList,
                 'prListDeliveryPlan' => $prListDeliveryPlan,
                 'deciderList' => $this->deciderList,

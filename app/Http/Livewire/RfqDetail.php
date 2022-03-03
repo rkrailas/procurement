@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\PurchaseRequisition;
+namespace App\Http\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
@@ -141,7 +141,7 @@ class RfqDetail extends Component
 
     public function goto_prdetail()
     {
-        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $this->rfqHeader['prno'] . "&tab=item");
+        return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->rfqHeader['prno'] . "&tab=item");
     }
 
     public function editRFQ()
@@ -208,7 +208,7 @@ class RfqDetail extends Component
         $supplierList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
 
-        return view('livewire.purchase-requisition.rfq-detail', 
+        return view('livewire.rfq-detail', 
             [
                 'itemList' => $itemList,
                 'supplierList' => $supplierList,

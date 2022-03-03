@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\PurchaseRequisition;
+namespace App\Http\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +31,7 @@ class PurchaseRequisitionList extends Component
 
     public function edit($prno)
     {
-        return redirect("purchase-requisition/purchaserequisitiondetails?mode=edit&prno=" . $prno . "&tab=item");
+        return redirect("purchaserequisitiondetails?mode=edit&prno=" . $prno . "&tab=item");
     }
 
     public function sortBy($sortby)
@@ -54,7 +54,7 @@ class PurchaseRequisitionList extends Component
     {
         if ($this->selectedOrderType) {
             //return redirect(route('pr_detail'));
-            return redirect("purchase-requisition/purchaserequisitiondetails?mode=create&ordertype=" . $this->selectedOrderType);
+            return redirect("purchaserequisitiondetails?mode=create&ordertype=" . $this->selectedOrderType);
         } else {
             $this->dispatchBrowserEvent('popup-alert', [
                 'title' => "Please select Order Type",
@@ -210,7 +210,7 @@ class PurchaseRequisitionList extends Component
 
         $this->resetPage();
 
-        return view('livewire.purchase-requisition.purchase-requisition-list', 
+        return view('livewire.purchase-requisition-list', 
             [
                 'pr_list' => $pr_list
             ]);

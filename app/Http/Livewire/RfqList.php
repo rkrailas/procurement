@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\PurchaseRequisition;
+namespace App\Http\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
@@ -29,12 +29,12 @@ class RfqList extends Component
 
     public function edit($rfqno)
     {
-        return redirect("purchase-requisition/rfqdetail?rfqno=" . $rfqno . "&tab=item");
+        return redirect("rfqdetail?rfqno=" . $rfqno . "&tab=item");
     }
 
     public function goto_prlist()
     {
-        return redirect("purchase-requisition/purchaserequisitionlist");
+        return redirect("purchaserequisitionlist");
     }
 
     public function sortBy($sortby)
@@ -152,7 +152,7 @@ class RfqList extends Component
 
         $rfq_list = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
-        return view('livewire.purchase-requisition.rfq-list', 
+        return view('livewire.rfq-list', 
         [
             'rfq_list' => $rfq_list
         ]);
