@@ -35,8 +35,12 @@ class WelcomeMail extends Mailable
             $template = "emails.MAIL_PR01";
         } else if ($this->detailMail['template'] == "MAIL_PR02") {
             $template = "emails.MAIL_PR02";
-        } else if ($this->detailMail['template'] == "MAIL_PR03") {
-            $template = "emails.MAIL_PR03";
+        } else if ($this->detailMail['template'] == "MAIL_PR01_Approval") {
+            $template = "emails.MAIL_PR01_Approval";
+        } else if ($this->detailMail['template'] == "MAIL_PR02_Approval") {
+            $template = "emails.MAIL_PR02_Approval";
+        } else if ($this->detailMail['template'] == "MAIL_PR03_Approval") {
+            $template = "emails.MAIL_PR03_Approval";
         }
 
         return $this->markdown($template,['detailMail' => $this->detailMail,])

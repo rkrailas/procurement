@@ -4,6 +4,7 @@
     <x-loading-indicator target="releaseForSourcing" />
     <x-loading-indicator target="addAttachment" />
     <x-loading-indicator target="attachment_file" />
+    <x-loading-indicator target="cancelPrHeader" />    
 
     <div class="content-header">
         <div class="container-fluid">
@@ -1126,6 +1127,51 @@
             </div>
         </div>
     </div>
+
+    {{-- Confirm Cancel (Cancel Reason) --}}
+    <div class="modal" id="modelCancelReason" tabindex="-1" role="dialog" data-backdrop="static" wire:ignore.self>
+        <div class="modal-dialog" role="document" style="max-width: 40%;">
+            <div class="modal-content ">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel" style="font-size: 20px;">
+                        Do you want to cancel Purchase Requisition No. {{ $prHeader['prno'] }}
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label>Cancellation Reason</label>
+                            <textarea class="form-control form-control-sm" rows="3" maxlength="250" wire:model.defer="cancelReason"></textarea>
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-12 d-flex justify-content-end">
+                            <div>
+                                <button type="button" class="btn btn-sm btn-danger" wire:click.prevent="cancelPrHeader">
+                                    <i class="fa fa-save mr-1"></i>Save
+                                </button>
+                                <button type="button" class="btn btn-sm btn-light" data-dismiss="modal">
+                                    <i class="fa fa-times mr-1"></i>Close</button>
+                            </div>
+                        </div>
+                    </div>
+                    @if ($errors->any())
+                    <div class="row mb-2">
+                        <div class="col-md-12">
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{-- @push('styles')
@@ -1149,6 +1195,14 @@
 
     window.addEventListener('hide-modelEditAttachment', event => {
         $('#modelEditAttachment').modal('hide');
+    })
+
+    window.addEventListener('show-modelCancelReason', event => {
+        $('#modelCancelReason').modal('show');
+    })
+
+    window.addEventListener('hide-modelCancelReason', event => {
+        $('#modelCancelReason').modal('hide');
     })
 
     window.addEventListener('clear-select2', event => {
