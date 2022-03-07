@@ -1826,8 +1826,18 @@ class PurchaseRequisitionDetails extends Component
             //2022-01-30 > Add Validate End
 
             if ($xValidate){
+                //08-03-22
+                $blanket_order_type = "";                
+                if ($this->isBlanket == true) {
+                    if ($this->prItem['qty'] == 1) {
+                        $blanket_order_type  = "Amount-Based";
+                    } else if ($this->prItem['qty'] > 1)  {
+                        $blanket_order_type  = "Quantity-Based";
+                    }
+                }
+
                 if ($this->isCreateLineItem) {
-                    DB::transaction(function () {
+                    DB::transaction(function () use ($blanket_order_type) {
                         //หา Line no
                         $strsql = "SELECT MAX([lineno]) as max_lineno FROM pr_item WHERE prno='". $this->prHeader['prno'] . "'";
                         $data = DB::select($strsql);
@@ -1846,18 +1856,19 @@ class PurchaseRequisitionDetails extends Component
                         //3-3-22 ชั่วคร่าวเพราะ Abeam ยังตกลงเรื่องนี้ไม่ได้
                         $this->prItem['purchase_group'] = "";
                         $this->prItem['account_group'] = "";
-        
+
                         DB::statement("INSERT INTO pr_item (prno, prno_id, [lineno], partno, description, purchase_unit, unit_price, unit_price_local
                             , currency, exchange_rate, purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
-                            ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, status, create_by, create_on)
-                        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                            ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, blanket_order_type, status, create_by, create_on)
+                        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                             ,[$this->prHeader['prno'], $this->prHeader['id'], $lineno, $this->prItem['partno'], $this->prItem['description']
                             , $this->prItem['purchase_unit'], $this->prItem['unit_price'], $this->prItem['unit_price'] * $this->prItem['exchange_rate']
                             , $this->prItem['currency'], $this->prItem['exchange_rate']
                             , $this->prItem['purchase_group'], $this->prItem['account_group'], $this->prItem['qty']
                             , $this->prItem['req_date'], $this->prItem['internal_order'] ,$this->prItem['budget_code'], $this->prItem['over_1_year_life']
                             , $this->prItem['snn_service'], $this->prItem['snn_production'] ,$this->prItem['nominated_supplier'], $this->prItem['remarks']
-                            , $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr'], "10" ,auth()->user()->id, Carbon::now()
+                            , $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr'], $blanket_order_type 
+                            , "10" ,auth()->user()->id, Carbon::now()
                             ]);
         
                         $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
@@ -1881,7 +1892,8 @@ class PurchaseRequisitionDetails extends Component
     
                     DB::statement("UPDATE pr_item SET partno=?, description=?, purchase_unit=?, unit_price=?, unit_price_local=?, currency=?, exchange_rate=?
                         ,purchase_group=?, account_group=?, qty=?, req_date=?, internal_order=?, budget_code=?, over_1_year_life=?, snn_service=?
-                        ,snn_production=?, nominated_supplier=?, remarks=?, skip_rfq=?, skip_doa=?, reference_pr=?, changed_by=?, changed_on=?
+                        ,snn_production=?, nominated_supplier=?, remarks=?, skip_rfq=?, skip_doa=?, reference_pr=?, blanket_order_type=?
+                        , changed_by=?, changed_on=?
                         WHERE id=?"
                     , [
                         $this->prItem['partno'], $this->prItem['description'], $this->prItem['purchase_unit'], $this->prItem['unit_price']
@@ -1890,7 +1902,7 @@ class PurchaseRequisitionDetails extends Component
                         , $this->prItem['qty'], $this->prItem['req_date'], $this->prItem['internal_order'] ,$this->prItem['budget_code']
                         , $this->prItem['over_1_year_life'], $this->prItem['snn_service'], $this->prItem['snn_production'] ,$this->prItem['nominated_supplier']
                         , $this->prItem['remarks'], $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr']
-                        ,auth()->user()->id, Carbon::now(), $this->prItem['id']
+                        , $blanket_order_type, auth()->user()->id, Carbon::now(), $this->prItem['id']
                     ]);
 
                     $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
