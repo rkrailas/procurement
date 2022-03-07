@@ -2559,8 +2559,8 @@ class PurchaseRequisitionDetails extends Component
 
             //approval_history ที่อยู่ตรงนี้เพราะ pagination ไม่สามารถส่งค่าผ่ายตัวแปร $this->historylog ได้
             $strsql = "SELECT a.approver, b.name + ' ' + b.lastname as fullname, a.approval_type, b.company, b.department, b.position
-                , c.description as status, a.reject_reason, FORMAT(a.submitted_date, 'dd-MMM-yy, hh:mm') as submitted_date
-                , FORMAT(a.completed_date, 'dd-MMM-yy, hh:mm') as completed_date
+                , c.description as status, a.reject_reason, FORMAT(a.submitted_date, 'dd-MMM-yy hh:mm:ss') as submitted_date
+                , FORMAT(a.completed_date, 'dd-MMM-yy hh:mm:ss') as completed_date
                 FROM dec_val_workflow_log a
                 LEFT JOIN users b ON a.approver = b.username
                 LEFT JOIN dec_val_status c ON a.status = c.status_no

@@ -14,7 +14,7 @@
     </div>
 
     <!-- Search -->
-    <div class="container">
+    <div class="container-fluid">
         <div class="card shadow-none border rounded">
             <div class="card-body p-1">
                 <div class="row">
@@ -342,11 +342,11 @@
                     <label for="ordertype">Order Type</label>
                     <select class="form-control form-control-sm" wire:model.defer="selectedOrderType">
                         <option value="">--- Select ---</option>
-                        {{-- @foreach($ordertype_dd as $row)
+                        @foreach($ordertype_dd as $row)
                         <option value="{{ $row->ordertype }}">
                             {{ $row->ordertype }} : {{ $row->description }}
                         </option>
-                        @endforeach --}}
+                        @endforeach
                     </select>
                 </div>
                 <div class="modal-footer">

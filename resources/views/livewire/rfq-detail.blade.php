@@ -12,7 +12,7 @@
         </div>
     </div>
 
-    <div class="container">
+    <div class="container-fluid">
         {{-- Header --}}
         <div class="card shadow-none border rounded">
             <div class="card-header my-card-header">

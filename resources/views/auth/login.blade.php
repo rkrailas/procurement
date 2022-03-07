@@ -7,7 +7,7 @@
   <title>P2P System (NISSAN) </title>
 
   <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="{{ asset('backend/plugins/google/google-font.css') }}">
+  {{-- <link rel="stylesheet" href="{{ asset('backend/plugins/google/google-font.css') }}"> --}}
   <!-- Font Awesome -->
   <link rel="stylesheet" href="{{ asset('backend/plugins/fontawesome-free/css/all.min.css') }}" >
   <!-- icheck bootstrap -->
@@ -81,10 +81,10 @@
 <!-- /.login-box -->
 
 <!-- jQuery -->
-<script src="{{ asset('bankend/plugins/jquery/jquery.min.js') }}"></script>
+<script src="{{ asset('backend/plugins/jquery/jquery.min.js') }}"></script>
 <!-- Bootstrap 4 -->
-<script src="{{ asset('bankend/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ asset('backend/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <!-- AdminLTE App -->
-<script src="{{ asset('bankend/dist/js/adminlte.min.js') }}"></script>
+<script src="{{ asset('backend/dist/js/adminlte.min.js') }}"></script>
 </body>
 </html>

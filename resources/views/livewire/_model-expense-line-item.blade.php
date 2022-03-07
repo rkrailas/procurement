@@ -95,7 +95,7 @@
                         @error('qty') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-4">
-                        <label>Requested Delivery Date <span style="color: red">*</span></label>
+                        <label>Earliest Delivery Date <span style="color: red">*</span></label>
                         <div class="input-group mb-1">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">
@@ -217,8 +217,10 @@
                 <div class="row mb-2">
                     <div class="col-md-12 d-flex justify-content-between">
                         <div>
+                            @if ( $prHeader['status'] < '20' ) 
                             <button type="button" class="btn btn-sm btn-light" wire:click.prevent="deleteLineItem">
                                 <i class="fas fa-trash-alt mr-1"></i>Delete</button>
+                            @endif
                         </div>
                         <div>
                             @if ($isCreateLineItem == true)
@@ -228,9 +230,11 @@
                             
                             <button type="button" class="btn btn-sm btn-light" data-dismiss="modal" wire:click.prevent="closedModal">
                                 <i class="fa fa-times mr-1"></i>Close</button>
+                            @if ( $prHeader['status'] < '20' ) 
                             <button type="button" class="btn btn-sm btn-danger" wire:click.prevent="saveLineItem">
                                 <i class="fa fa-save mr-1"></i>Confirm
                             </button>
+                            @endif
                         </div>
                     </div>
                 </div>

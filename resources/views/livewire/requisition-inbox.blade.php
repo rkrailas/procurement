@@ -17,7 +17,7 @@
     </div>
 
     <!-- Search -->
-    <div class="container">
+    <div class="container-fluid">
         <div class="card shadow-none border rounded">
             <div class="card-body p-1">
                 <div class="row">
@@ -44,7 +44,7 @@
                             @endforeach
                         </select> --}}
                     </div>
-                    <div class="col-6 text-right my-auto">
+                    <div class="col-6 text-right mt-auto">
                         <button wire:click.prevent="resetSearch" class="btn btn-sm btn-light">CLEAR</button>
                         <button wire:click.prevent="search" class="btn btn-sm btn-danger">APPLY</button>
                     </div>

@@ -21,7 +21,7 @@
 
     <!-- Google Font: Source Sans Pro -->
     {{-- <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet"> --}}
-    <link rel="stylesheet" href="{{ asset('backend/plugins/google/google-font.css') }}">
+    {{-- <link rel="stylesheet" href="{{ asset('backend/plugins/google/google-font.css') }}"> --}}
 
     <!-- toastr Alert -->
     <link rel="stylesheet" type="text/css" href="{{ asset('backend/plugins/toastr/toastr.min.css') }}">
@@ -201,7 +201,7 @@
     <x-popup-image></x-popup-image>
 
     <!-- Dropzone -->
-    <script src="{{ asset('backend/plugins/dropzone/dropzone.min.js') }}"></script>
+    {{-- <script src="{{ asset('backend/plugins/dropzone/dropzone.min.js') }}"></script> --}}
     
     <script>
         $(document).ready(function() {
@@ -212,8 +212,14 @@
         });
 
         window.addEventListener('alert', event => {
-            toastr.success(event.detail.message, 'success!');
+            toas
+            tr.success(event.detail.message, 'success!');
         })
+
+        window.addEventListener('bindToSelect2', event => {
+            $(event.detail.selectName).html(" ");
+            $(event.detail.selectName).append(event.detail.newOption);
+        });
     </script>
 
     <!-- toastr Message -->

@@ -18,7 +18,7 @@
     </div>
 
     <!-- Search -->
-    <div class="container">
+    <div class="container-fluid">
         <div class="card shadow-none border rounded">
             <div class="card-body p-1">
                 <div class="row">

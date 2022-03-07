@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <div class="container">
+    <div class="container-fluid">
         {{-- Header --}}
         <div class="card shadow-none border rounded" id="PR_Header">
             <div class="card-header my-card-header">
@@ -158,7 +158,7 @@
                     <div class="col-md-3">
                         <label>Buyer <span style="color: red">*</span></label>
                         @if($prHeader['status'] >= '30' OR $isValidator_Decider == true)
-                        <x-select2 id="buyer-select2" wire:model.defer="prHeader.buyer" disabled="true">
+                        <x-select2 id="buyer-select2" wire:model.defer="prHeader.buyer">
                             <option value=" ">--- Please Select ---</option>
                             @foreach($buyer_dd as $row)
                             <option value="{{ $row->buyer }}">
@@ -299,9 +299,11 @@
                     <div class="tab-pane fade {{ $currentTab == 'item' ? 'show active' : '' }}" id="pills-lineitem" role="tabpanel" aria-labelledby="pills-lineitem-tab" wire:ignore.self>
                         <div class="row">
                             <div class="col-md-12">
+                                @if ( $prHeader['status'] < '20' ) 
                                 <div class="d-flex justify-content-end mb-2">
                                     <button wire:click.prevent="showAddItem" class="btn btn-sm btn-danger"><i class="fas fa-plus-square mr-1"></i>Add Item</button>
                                 </div>
+                                @endif
                             </div>
                         </div>                
                         <div class="row m-0 p-0">
@@ -415,8 +417,10 @@
                             </div>
                             <div class="col-md-3"></div>
                             <div class="col-md-3 d-flex justify-content-end">
+                                @if ( $prHeader['status'] < '20' ) 
                                 <button wire:click.prevent="addDeliveryPlan" class="btn btn-sm btn-danger mt-auto" {{ $enableAddPlan ? '' : 'disabled' }}>
                                     <i class="fas fa-plus-square mr-1"></i>Add Plan</button>
+                                @endif
                             </div>
                         </div>
                         <div class="row m-0 p-0">
@@ -445,11 +449,13 @@
                                         <td scope="col">{{ $row->purchase_unit }}</td>
                                         <td scope="col">{{ \Carbon\Carbon::parse( $row->delivery_date)->format('d-M-Y') }} </td>
                                         <td scope="col">
+                                            @if ( $prHeader['status'] < '20' ) 
                                             <center>
                                                 <a href="" wire:click.prevent="confirmDelete('{{ $row->id }}', 'deliveryPlan')">
                                                     <i class="fas fa-times text-center" style="color: red"></i>
                                                 </a>
                                             </center>
+                                            @endif
                                         </td>
                                     </tr>
                                     @endforeach
@@ -515,8 +521,10 @@
                                                         
                                                     </div>
                                                     <div class="col-md-3 text-right">
+                                                        @if ( $prHeader['status'] < '20' ) 
                                                         <button class="btn btn-sm btn-danger" {{ $deciderList ? 'disabled' : ''}} 
                                                             wire:click.prevent="addDecider"><i class="fas fa-plus-square mr-1"></i>Confirm</button>
+                                                        @endif
                                                     </div>
                                                 </div>
                                                 @endif
@@ -583,11 +591,13 @@
                                                                 <td scope="col">{{ $deciderList[$index]['position'] }}</td>
                                                                 <td scope="col">{{ $deciderList[$index]['statusname'] }}</td>
                                                                 <td scope="col">
+                                                                    @if ( $prHeader['status'] < '20' ) 
                                                                     <center>
                                                                         <a href="" wire:click.prevent="confirmDelete('{{ $deciderList[$index]['approver'] }}', 'decider')">
                                                                             <i class="fas fa-times text-center" style="color: red"></i>
                                                                         </a>
                                                                     </center>
+                                                                    @endif
                                                                 </td>
                                                             </tr>
                                                             @endforeach
@@ -641,8 +651,10 @@
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-md-12 text-right">
+                                                        @if ( $prHeader['status'] < '20' ) 
                                                         <button class="btn btn-sm btn-danger"
                                                             wire:click.prevent="addValidator"><i class="fas fa-plus-square mr-1"></i>Add</button>
+                                                        @endif
                                                     </div>
                                                 </div>
                                                 @endif
@@ -711,11 +723,13 @@
                                                                     <td scope="col">{{ $validatorList[$index]['position'] }}</td>
                                                                     <td scope="col">{{ $validatorList[$index]['statusname'] }}</td>
                                                                     <td scope="col">
+                                                                        @if ( $prHeader['status'] < '20' ) 
                                                                         <center>
                                                                             <a href="" wire:click.prevent="confirmDelete('{{ $validatorList[$index]['approver'] }}', 'validator')">
                                                                                 <i class="fas fa-times text-center" style="color: red"></i>
                                                                             </a>
                                                                         </center>
+                                                                        @endif
                                                                     </td>
                                                                 </tr>
                                                                 @endforeach
@@ -873,8 +887,10 @@
                                         </div>
                                     </div>
                                     <div class="col-md-3 text-left">
+                                        @if ( $prHeader['status'] < '20' ) 
                                         <button type="submit" class="btn btn-danger"><i class="fas fa-cloud-upload-alt mr-1"></i>Upload</button>
                                         <span style="vertical-align:bottom; color:red">max file size 5 mb.</span> 
+                                        @endif
                                     </div>
                                 </div>
                             </form>
@@ -908,7 +924,7 @@
                                         <td scope="col">{{ $row->create_by }}</td>
                                         <td scope="col">{{ $row->create_on }}</td>
                                         <td scope="col" class="d-flex justify-content-between">
-                                            @if ($isRequester_RequestedFor == true)
+                                            @if ($isRequester_RequestedFor == true AND $prHeader['status'] < '20' )
                                             <div>
                                                 <a href="" wire:click.prevent="confirmDelete('{{ $row->id }}', 'attachment')">
                                                     <i class="fas fa-times text-center mr-2" style="color: red"></i>
@@ -1008,7 +1024,8 @@
                             @endif
 
                             {{-- Between 30-PRAuthorized and 60-Closed --}}
-                            @if ( $prHeader['status'] >= '30' OR $isValidator_Decider == true AND  $prHeader['status'] <= '60') 
+                            {{-- @if ( $prHeader['status'] >= '30' OR $isValidator_Decider == true AND  $prHeader['status'] <= '60')  --}}
+                            @if ( $prHeader['status'] >= '30' AND  $prHeader['status'] <= '60') 
                             <a href="PRForm/{{ $prHeader['prno'] }}" target="_blank">
                                 <button class="btn btn-sm btn-danger">
                                     <i class="fas fa-print mr-2"></i>Print</button>
@@ -1083,7 +1100,7 @@
     @enderror --}}
 
     @if ($errors->any())
-    <div class="container">
+    <div class="container-fluid">
         <div class="alert alert-danger">
             <ul>
                 @foreach ($errors->all() as $error)
@@ -1242,10 +1259,11 @@
         clearSelect2('validator-select2'); 
     })
 
-    window.addEventListener('bindToSelect2', event => {
-        $(event.detail.selectName).html(" ");
-        $(event.detail.selectName).append(event.detail.newOption);
-    });
+    // ย้ายไปไว้ที่ App.blade.php
+    // window.addEventListener('bindToSelect2', event => {
+    //     $(event.detail.selectName).html(" ");
+    //     $(event.detail.selectName).append(event.detail.newOption);
+    // });
 
     window.addEventListener('prheader-disable', event => {
         $("#PR_Header :input").attr("disabled", true);

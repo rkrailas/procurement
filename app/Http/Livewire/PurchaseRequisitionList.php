@@ -12,7 +12,7 @@ class PurchaseRequisitionList extends Component
 {
     //for Pagination
     use WithPagination; 
-    //protected $paginationTheme = 'bootstrap';
+    // protected $paginationTheme = 'bootstrap';
 
     //for Grid
     public $sortDirection = "desc";
