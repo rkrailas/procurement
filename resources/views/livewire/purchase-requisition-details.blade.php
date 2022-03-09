@@ -44,13 +44,13 @@
                         <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.requestor_name">
                     </div>
                     <div class="col-md-3">
-                        <label for="prno">Phone (Requestor)</label>
+                        <label for="prno">Phone (Requestor)<span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.phone"
                             @if($prHeader['status'] >= '30' OR $isValidator_Decider == true OR $isValidator_Decider == true) readonly @endif>
                         @error('phone') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
-                        <label for="prno">Ext. (Requestor)</label>
+                        <label for="prno">Ext. (Requestor)<span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.extention"
                             @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
                         @error('extention') <span class="text-red">{{ $message }}</span> @enderror
@@ -93,13 +93,13 @@
                         @error('requested_for') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
-                        <label>Phone (Requestor For)</label>
+                        <label>Phone (Requestor For)<span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.phone_reqf"
                             @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
                         @error('phone_reqf') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
-                        <label>Ext. (Requestor For)</label>
+                        <label>Ext. (Requestor For)<span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.extention_reqf"
                             @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
                         @error('extention_reqf') <span class="text-red">{{ $message }}</span> @enderror
