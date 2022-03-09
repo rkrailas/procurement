@@ -366,6 +366,8 @@ class PurchaseRequisitionDetails extends Component
 
         public function releaseForSourcing()
         {
+            $this->savePR();
+
             //2022-01-30 IF there is no Decider selected (Ref. P2P-PUR-001-FS-Purchase Requisition_(2022-01-28))
             $strsql = "SELECT approver FROM dec_val_workflow WHERE ref_doc_no='" . $this->prHeader['prno'] . "' AND approval_type='DECIDER'";
 
@@ -2117,16 +2119,9 @@ class PurchaseRequisitionDetails extends Component
     {
         //PR Header
         $strsql = "SELECT prh.id, prh.prno, ort.description AS ordertypename
-                , isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requestor_name, req.email, req.extention
-                , CASE 
-                    WHEN ISNULL(req.mobile,'') = '' THEN req.phone
-                    ELSE req.mobile
-                    END AS phone
-                , prh.requested_for, reqf.email AS email_reqf, reqf.extention AS extention_reqf
-                , CASE 
-                    WHEN ISNULL(reqf.mobile,'') = '' THEN reqf.phone
-                    ELSE reqf.mobile
-                    END AS phone_reqf
+                , isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requestor_name, prh.requestor_ext AS extention, prh.requestor_phone AS phone
+                , prh.requested_for, prh.requested_for_email AS email_reqf, prh.requested_for_ext AS extention_reqf
+                , prh.requested_for_phone AS phone_reqf
                 , prh.company, company.name AS company_name, prh.site, prh.functions, prh.department, prh.division, prh.section
                 , prh.cost_center, cc.description AS costcenter_desc
                 , prh.buyer, prh.delivery_address, prh.delivery_location, prh.delivery_site, prh.budget_year, prh.purpose_pr
