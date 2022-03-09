@@ -125,8 +125,6 @@
         </div>
     </div>
 
-
-
     <!-- Table PR -->
     <div class="content">
         <div class="container-fluid">

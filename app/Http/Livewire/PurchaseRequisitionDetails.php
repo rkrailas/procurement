@@ -505,7 +505,7 @@ class PurchaseRequisitionDetails extends Component
                     ]);
                 }
 
-                //return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+                return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
             };
         }
 
@@ -573,6 +573,10 @@ class PurchaseRequisitionDetails extends Component
         {
             //Validaate required field
             Validator::make($this->prHeader, [
+                'phone' => 'required',
+                'extention' => 'required',
+                'phone_reqf' => 'required',
+                'extention_reqf' => 'required',
                 'requested_for' => 'required',
                 'delivery_address' => 'required',
                 'buyer' => 'required',
@@ -1780,7 +1784,7 @@ class PurchaseRequisitionDetails extends Component
                     'currency' => 'required',
                     'exchange_rate' => 'required',
                     'purchase_unit' => 'required',
-                    'unit_price' => 'required',
+                    'unit_price' => 'required|numeric|min:1|max:99999999.99',
                     'qty' => 'required|numeric|min:1|max:99999999.99',
                     'req_date' => 'required|date|date_format:Y-m-d|after:yesterday',
                     'budget_code' => 'required',

@@ -56,7 +56,7 @@
                     <div class="col-12">
                         <label>Description <span style="color: red">*</span></label>
                         {{-- Change to readonly Ref. 18-Jan-2022: update editable and non-editable fields --}}
-                        <input class="form-control form-control-sm" type="text" readonly maxlength="250" wire:model.defer="prItem.description">
+                        <input class="form-control form-control-sm" type="text" readonly maxlength="200" wire:model.defer="prItem.description">
                         @error('description') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                 </div>
@@ -71,6 +71,7 @@
                         {{-- Change to Not required & Readonly Ref. 18-Jan-2022: update editable and non-editable fields --}}
                         <label>Budget Price Per Unit</label>
                         <input class="form-control form-control-sm" type="number" readonly step="0.01" wire:model.lazy="prItem.unit_price">
+                        @error('unit_price') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                     <div class="col-md-4">
                         {{-- Change to Not required & Readonly & input=text Ref. 18-Jan-2022: update editable and non-editable fields --}}

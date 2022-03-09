@@ -47,11 +47,13 @@
                         <label for="prno">Phone (Requestor)</label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.phone"
                             @if($prHeader['status'] >= '30' OR $isValidator_Decider == true OR $isValidator_Decider == true) readonly @endif>
+                        @error('phone') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
                         <label for="prno">Ext. (Requestor)</label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.extention"
                             @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
+                        @error('extention') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-3">
                         <label class="">Request Date</label>
@@ -94,11 +96,13 @@
                         <label>Phone (Requestor For)</label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.phone_reqf"
                             @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
+                        @error('phone_reqf') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
                         <label>Ext. (Requestor For)</label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.extention_reqf"
                             @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
+                        @error('extention_reqf') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
                         <label>Email (Requestor For)</label>
@@ -749,7 +753,8 @@
                             <div class="row mb-3">
                                 <div class="col-md-12">
                                     <label>Rejection Reason</label>
-                                    @if (auth()->user()->username == $validatorList[$index]['approver'] 
+
+                                    {{-- @if (auth()->user()->username == $validatorList[$index]['approver'] 
                                         AND $validatorList[$index]['status'] == '20')                                        
                                     <textarea class="form-control form-control-sm" rows="2" maxlength="250" wire:model.defer="rejectReason"></textarea>
                                     
@@ -760,7 +765,9 @@
                                     @else
                                     <textarea class="form-control form-control-sm" rows="2" maxlength="250" disabled wire:model.defer="rejectReason"></textarea>
 
-                                    @endif
+                                    @endif --}}
+
+                                    <textarea class="form-control form-control-sm" rows="2" maxlength="200" wire:model.defer="rejectReason"></textarea>
                                     <div id="count" class="d-flex justify-content-end">
                                         <span id="current_count">0</span>
                                         <span id="maximum_count">/ 250</span>
@@ -1012,20 +1019,20 @@
                         @if ( $prHeader['prno'] <> '' )
 
                             {{-- 10-Planned --}}
-                            @if ( $prHeader['status'] == '10' ) 
+                            @if ( $prHeader['status'] == '10' AND $isValidator_Decider != true) 
                             <button wire:click.prevent="releaseForSourcing" class="btn btn-sm btn-danger">
                                 <i class="fas fa-check mr-2"></i>Release for Sourcing</button>
                             @endif
 
                             {{-- 40-ConfirmedFinalPrice, 50-ReleasedForPO --}}
-                            @if ( $prHeader['status'] == '40' OR  $prHeader['status'] == '50') 
+                            @if (($prHeader['status'] == '40' OR  $prHeader['status'] == '50') AND $isValidator_Decider != true) 
                             <button wire:click.prevent="releaseForPO" class="btn btn-sm btn-danger">
                                 <i class="fas fa-check mr-2"></i>Release for PO</button>
                             @endif
 
                             {{-- Between 30-PRAuthorized and 60-Closed --}}
                             {{-- @if ( $prHeader['status'] >= '30' OR $isValidator_Decider == true AND  $prHeader['status'] <= '60')  --}}
-                            @if ( $prHeader['status'] >= '30' AND  $prHeader['status'] <= '60') 
+                            @if ($prHeader['status'] >= '30' AND  $prHeader['status'] <= '60') 
                             <a href="PRForm/{{ $prHeader['prno'] }}" target="_blank">
                                 <button class="btn btn-sm btn-danger">
                                     <i class="fas fa-print mr-2"></i>Print</button>
@@ -1033,31 +1040,31 @@
                             @endif
 
                             {{-- Between 10=Planned and 40-Confirmed Final Price --}}
-                            @if ($prHeader['status'] >= '10' AND $prHeader['status'] <= '40')
+                            @if (($prHeader['status'] >= '10' AND $prHeader['status'] <= '40') AND $isValidator_Decider != true)
                             <button wire:click.prevent="confirmCancelPrHeader" class="btn btn-sm btn-light">
                                 <i class="fas fa-times mr-2"></i>Cancel</button>
                             @endif
 
                             {{-- 10=Planned --}}
-                            @if ($prHeader['status'] == '10')
+                            @if ($prHeader['status'] == '10' AND $isValidator_Decider != true)
                             <button wire:click.prevent="confirmDeletePrHeader_Detail" class="btn btn-sm btn-light">
                                 <i class="fas fa-trash-alt mr-2"></i>Delete</button>
                             @endif
 
                             {{--70-Cancelled --}}
-                            @if ($prHeader['status'] == '70')
+                            @if ($prHeader['status'] == '70' AND $isValidator_Decider != true)
                             <button wire:click.prevent="reopen" class="btn btn-sm btn-danger">
                                 <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
                             @endif
 
                             {{-- 50-ReleasedForPO --}}
-                            @if ($prHeader['status'] == '50' AND $isBuyer == true)
+                            @if (($prHeader['status'] == '50' AND $isBuyer == true) AND $isValidator_Decider != true)
                             <button wire:click.prevent="" class="btn btn-sm btn-danger">
                                 <i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
                             @endif
 
                             {{-- 20-ReleasedforSourcing, 21-PartiallyAuthorized --}}
-                            @if ($prHeader['status'] == '20' OR $prHeader['status'] == '21')
+                            @if (($prHeader['status'] == '20' OR $prHeader['status'] == '21') AND $isValidator_Decider != true)
                             <button wire:click.prevent="revokePrHeader" class="btn btn-sm btn-danger">
                                 <i class="fas fa-undo mr-1"></i>Revoke</button>
                             @endif

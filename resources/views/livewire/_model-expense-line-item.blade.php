@@ -25,7 +25,7 @@
                 <div class="row">
                     <div class="col-12">
                         <label>Description <span style="color: red">*</span></label>
-                        <input class="form-control form-control-sm" type="text" maxlength="250"
+                        <input class="form-control form-control-sm" type="text" maxlength="200"
                             wire:model.defer="prItem.description">
                         @error('description') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
