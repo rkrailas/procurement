@@ -231,12 +231,12 @@
                                 </span>
                             </th>
                             <th scope="col">Buyer
-                                <span wire:click="sortBy('buyer.name')" class="float-right text-sm"
+                                <span wire:click="sortBy('buyername.name')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
-                                        class="fa fa-arrow-up {{ $sortBy === 'buyer.name' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
+                                        class="fa fa-arrow-up {{ $sortBy === 'buyername.name' && $sortDirection === 'asc' ? '' : 'text-dark'}}"></i>
                                     <i
-                                        class="fa fa-arrow-down {{ $sortBy === 'buyer.name' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
+                                        class="fa fa-arrow-down {{ $sortBy === 'buyername.name' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
                             <th scope="col"></th>
