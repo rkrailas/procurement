@@ -825,12 +825,15 @@ class PurchaseRequisitionDetails extends Component
                         //Save ลงที่ public\storage\attachments
                         $attachments = $file->storeAs('/public/attachments', $newFileName);
 
-                        //ตรวจสอบว่าเป็น Header หรือไม่
-                        if (in_array("0", $this->attachment_lineno)) {
-                            $isHeader = true;
-                        }else{
-                            $isHeader = false;
+                        //ตรวจสอบว่าเป็น Header หรือไม่ is_array()
+                        if (is_array($this->attachment_lineno)) {
+                            if (in_array("0", $this->attachment_lineno)) {
+                                $isHeader = true;
+                            }else{
+                                $isHeader = false;
+                            }
                         }
+
 
                         DB::statement("INSERT INTO attactments ([file_name], file_type, file_path, ref_doctype, ref_docid, ref_docno
                             , edecision_no, isheader_level, ref_lineno, create_by, create_on)
@@ -1735,6 +1738,9 @@ class PurchaseRequisitionDetails extends Component
                 $this->prItem['skip_doa'] = tinyToBoolean($this->prItem['skip_doa']);
                 $this->prItem['over_1_year_life'] = tinyToBoolean($this->prItem['over_1_year_life']);
 
+                $this->prItem['snn_service'] = bitToRedio($this->prItem['snn_service']);
+                $this->prItem['snn_production'] = bitToRedio($this->prItem['snn_production']);
+
                 // $this->prItem['unit_price'] = round($this->prItem['unit_price'], 2);
 
                 //ต้องเป็น Array เพราะต้องใช้ FUnction Validation
@@ -1872,7 +1878,7 @@ class PurchaseRequisitionDetails extends Component
                             , $this->prItem['currency'], $this->prItem['exchange_rate']
                             , $this->prItem['purchase_group'], $this->prItem['account_group'], $this->prItem['qty']
                             , $this->prItem['req_date'], $this->prItem['internal_order'] ,$this->prItem['budget_code'], $this->prItem['over_1_year_life']
-                            , $this->prItem['snn_service'], $this->prItem['snn_production'] ,$this->prItem['nominated_supplier'], $this->prItem['remarks']
+                            , radioToBit($this->prItem['snn_service']), radioToBit($this->prItem['snn_production']) ,$this->prItem['nominated_supplier'], $this->prItem['remarks']
                             , $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr'], $blanket_order_type 
                             , "10" ,auth()->user()->id, Carbon::now()
                             ]);
@@ -1906,7 +1912,7 @@ class PurchaseRequisitionDetails extends Component
                         , $this->prItem['unit_price'] * $this->prItem['exchange_rate']
                         , $this->prItem['currency'], $this->prItem['exchange_rate'], $this->prItem['purchase_group'], $this->prItem['account_group']
                         , $this->prItem['qty'], $this->prItem['req_date'], $this->prItem['internal_order'] ,$this->prItem['budget_code']
-                        , $this->prItem['over_1_year_life'], $this->prItem['snn_service'], $this->prItem['snn_production'] ,$this->prItem['nominated_supplier']
+                        , $this->prItem['over_1_year_life'], radioToBit($this->prItem['snn_service']), radioToBit($this->prItem['snn_production']) ,$this->prItem['nominated_supplier']
                         , $this->prItem['remarks'], $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr']
                         , $blanket_order_type, auth()->user()->id, Carbon::now(), $this->prItem['id']
                     ]);

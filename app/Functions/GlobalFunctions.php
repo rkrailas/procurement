@@ -66,6 +66,25 @@
         return($xWhere);
     }
 
+    function radioToBit($xRadio)
+    {
+        if ($xRadio){
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    function bitToRedio($xBit)
+    {
+        if ($xBit){
+            return "on";
+        } else {
+            return "false";
+        }
+    }
+
+
     function tinyToBoolean($xTiny)
     {
         if ($xTiny == 1){

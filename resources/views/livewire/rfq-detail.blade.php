@@ -34,7 +34,7 @@
                         <input class="form-control form-control-sm" type="text" readonly wire:model.defer="rfqHeader.prno">
                     </div>
                     <div class="col-md-3">
-                        <label>Sitet</label>
+                        <label>Purpose of PR</label>
                         <input class="form-control form-control-sm" type="text" readonly wire:model.defer="rfqHeader.site">
                     </div>
                     <div class="col-md-3">
@@ -69,19 +69,12 @@
                         </x-select2>
                     </div>
                     <div class="col-md-3">
-                        <label>Delivery Location</label>
-                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="rfqHeader.delivery_location">
+                        <label>Site</label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="rfqHeader.site">
                     </div>
                     <div class="col-md-3">
-                        <label>Currency</label>
-                        <x-select2 id="currency-select2" wire:model.defer="rfqHeader.currency">
-                            @foreach($currency_dd as $row)
-                            <option value="{{ $row->currency }}">
-                                {{ $row->currency }}
-                            </option>
-                            @endforeach
-                        </x-select2>
-                        @error('currency') <span class="text-red">{{ $message }}</span> @enderror
+                        <label>Delivery Location</label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="rfqHeader.delivery_location">
                     </div>
                 </div>
 

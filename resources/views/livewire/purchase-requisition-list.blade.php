@@ -104,7 +104,7 @@
                         </x-select2-multiple>
                     </div>
                     <div class="col-md-3">
-                        <label>Staus</label>
+                        <label>Status</label>
                         <x-select2-multiple id="status-select2" wire:model.defer="status" >
                             @foreach($status_dd as $row)
                             <option value="{{ $row->status }}">

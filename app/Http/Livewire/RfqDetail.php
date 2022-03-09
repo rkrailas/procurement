@@ -147,7 +147,7 @@ class RfqDetail extends Component
     public function editRFQ()
     {
         //RFQ Header
-            $strsql = "SELECT a.rfqno, d.description AS ordertype, a.prno, e.description AS rfqstatus, c.site
+            $strsql = "SELECT a.rfqno, d.description AS ordertype, a.prno, e.description AS rfqstatus, j.site_code + ' : ' + j.description AS site
                     , a.total_base_price, a.total_final_price, a.currency, c.delivery_location
                     , f.name + ' ' + f.lastname AS requested_for, g.name + ' ' + g.lastname AS requestor
                     , i.name + ' ' + i.lastname AS buyer
@@ -162,6 +162,7 @@ class RfqDetail extends Component
                     LEFT JOIN users g ON c.requestor=g.id
                     LEFT JOIN buyer h ON c.buyer=h.buyer
                     LEFT JOIN users i ON h.username=i.username
+                    LEFT JOIN (SELECT site_code, description FROM site_location GROUP BY site_code, description) j ON c.site=j.site_code
                     WHERE a.rfqno='" . $this->editRFQNo . "'";
             $this->rfqHeader = DB::select($strsql);
             if ($this->rfqHeader) {

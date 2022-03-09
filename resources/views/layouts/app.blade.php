@@ -50,7 +50,6 @@
             margin-bottom: 8px;
         }
         
-        
         .nissanTB th {
             /* white-space: nowrap; */
             background-color:#c3002f;
