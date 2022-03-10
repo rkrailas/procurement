@@ -2056,6 +2056,7 @@ class PurchaseRequisitionDetails extends Component
         $this->prItem['model'] = "";
         $this->prItem['skip_rfq'] = false;
         $this->prItem['skip_doa'] = false;
+        //$this->prItem['req_date'] = " "; //10-03-22 Test For fixed calendar
 
         $this->dispatchBrowserEvent('clear-select2-modal');
 
@@ -2565,7 +2566,7 @@ class PurchaseRequisitionDetails extends Component
 
             //attachmentFileList
             $strsql = "SELECT a.id, a.file_name, a.file_path, a.file_type, a.edecision_no, a.ref_docno, a.ref_lineno
-            , FORMAT(a.create_on, 'dd-MMM-yy, hh:mm') AS create_on
+            , FORMAT(a.create_on, 'dd-MMM-yy hh:mm:ss') AS create_on
             , b.description AS ref_doctype, c.name + ' ' + c.lastname AS create_by
                 FROM attactments a
                 LEFT JOIN document_file_type b ON a.ref_doctype = b.doc_type_no
