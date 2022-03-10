@@ -4,6 +4,7 @@
     {{ $readonly == 'true' ? 'readonly' : '' }}
     data-toggle="datetimepicker" data-target="#{{ $id }}"
     onchange="this.dispatchEvent(new InputEvent('input'))"
+    autocomplete="off"
     />
 
 @push('js')
