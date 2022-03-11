@@ -573,11 +573,7 @@ class PurchaseRequisitionDetails extends Component
 
         public function savePR()
         {
-            //Validaate required field substr(string,start,length)
-            $xYear = date_format(Carbon::now(), 'Y');
-            $xEndFiscalYear = $xYear . '-03-31';
-            $this->prHeader['endfiscalyear'] = $xEndFiscalYear;
-
+            //Validaate required field
             Validator::make($this->prHeader, [
                 'phone' => 'required',
                 'extention' => 'required',
@@ -591,14 +587,38 @@ class PurchaseRequisitionDetails extends Component
                 'budget_year' => 'required',
             ])->validate();
 
-            if ($this->prHeader['ordertype'] == '21') {
+            //11-03-2022 ตรวจสอบว่ามี Item ที่มี Unit เป็น Project หรือไม่
+            $xHaveUOMProject = "N";
+            $xYear = "";
+            $xEndFiscalYear = "";
+            $strsql = "SELECT purchase_unit FROM pr_item WHERE prno_id=" . $this->prHeader['id'] . " AND purchase_unit='Project'";
+            $data = DB::select($strsql);
+                if ($data) {
+                    $xHaveUOMProject = "Y";
+                    $xYear = date_format(Carbon::now(), 'Y');
+                    $xEndFiscalYear = $xYear . '-03-31';
+                    $this->prHeader['endfiscalyear'] = $xEndFiscalYear;
+                }
+
+            if ($this->prHeader['ordertype'] == '21' AND $xHaveUOMProject = "N") {
                 Validator::make($this->prHeader, [
                     'budget_year' => 'required',
                     'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday|before_or_equal:endfiscalyear',
                 ])->validate();
-            } else if ($this->prHeader['ordertype'] == '20') {
+            } else if ($this->prHeader['ordertype'] == '20' AND $xHaveUOMProject = "N") {
                 Validator::make($this->prHeader, [
                     'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday|before_or_equal:endfiscalyear',
+                ])->validate();
+            }
+
+            if ($this->prHeader['ordertype'] == '21' AND $xHaveUOMProject = "Y") {
+                Validator::make($this->prHeader, [
+                    'budget_year' => 'required',
+                    'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday',
+                ])->validate();
+            } else if ($this->prHeader['ordertype'] == '20' AND $xHaveUOMProject = "Y") {
+                Validator::make($this->prHeader, [
+                    'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday',
                 ])->validate();
             }
 
