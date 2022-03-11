@@ -35,8 +35,8 @@
                 <div class="row">
                     <div class="col-md-4">
                         <label>Purchase Unit <span style="color: red">*</span></label>
-                        <x-select2 id="purchase_unit-select2"
-                            wire:model.defer="prItem.purchase_unit">
+                        <x-select2 id="purchase_unit-select2" wire:model.defer="prItem.purchase_unit">
+                            <option value=" ">--- Please Select ---</option>
                             @foreach($purchaseunit_dd as $row)
                             <option value='{{ $row->uomno }}'>
                                 {{ $row->uomno }}
@@ -54,6 +54,7 @@
                     <div class="col-md-4">
                         <label>Currency <span style="color: red">*</span></label>
                         <x-select2 id="currency-select2" wire:model.defer="prItem.currency">
+                            <option value=" ">--- Please Select ---</option>
                             @foreach($currency_dd as $row)
                             <option value="{{ $row->currency }}">
                                 {{ $row->currency }}
@@ -109,6 +110,7 @@
                     <div class="col-md-4">
                         <label>Internal Order</label>
                         <x-select2 id="internalorder-select2" wire:model.defer="prItem.internal_order">
+                            <option value=" ">--- Please Select ---</option>
                             @foreach($internal_order_dd as $row)
                             <option value='{{ $row->internal_order }}'>
                                 {{ $row->internal_order }}
@@ -123,6 +125,7 @@
                     <div class="col-md-4">
                         <label>Budget Code <span style="color: red">*</span></label>
                         <x-select2 id="budgetcode-select2" wire:model.defer="prItem.budget_code">
+                            <option value=" ">--- Please Select ---</option>
                             @foreach($budgetcode_dd as $row)
                             <option value='{{ $row->account }}'>
                                 {{ $row->account }} : {{ $row->description }}

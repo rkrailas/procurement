@@ -573,7 +573,11 @@ class PurchaseRequisitionDetails extends Component
 
         public function savePR()
         {
-            //Validaate required field
+            //Validaate required field substr(string,start,length)
+            $xYear = date_format(Carbon::now(), 'Y');
+            $xEndFiscalYear = $xYear . '-03-31';
+            $this->prHeader['endfiscalyear'] = $xEndFiscalYear;
+
             Validator::make($this->prHeader, [
                 'phone' => 'required',
                 'extention' => 'required',
@@ -590,11 +594,11 @@ class PurchaseRequisitionDetails extends Component
             if ($this->prHeader['ordertype'] == '21') {
                 Validator::make($this->prHeader, [
                     'budget_year' => 'required',
-                    'valid_until' => 'required',
+                    'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday|before_or_equal:endfiscalyear',
                 ])->validate();
             } else if ($this->prHeader['ordertype'] == '20') {
                 Validator::make($this->prHeader, [
-                    'valid_until' => 'required',
+                    'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday|before_or_equal:endfiscalyear',
                 ])->validate();
             }
 
@@ -1357,6 +1361,11 @@ class PurchaseRequisitionDetails extends Component
 
         public function addValidator() 
         {
+            //Validaate required field
+            Validator::make($this->validator, [
+                'username' => 'required',
+            ])->validate();
+
             $myValidate = true;
             $maxValidator = 0;
 
@@ -1480,6 +1489,11 @@ class PurchaseRequisitionDetails extends Component
 
         public function addDecider() 
         {
+            //Validaate required field
+            Validator::make($this->decider, [
+                'username' => 'required',
+            ])->validate();
+
             if ($this->decider == ""){
                 $this->dispatchBrowserEvent('popup-alert', [
                     'title' => 'Please Select Decider',
@@ -2095,6 +2109,7 @@ class PurchaseRequisitionDetails extends Component
         $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#buyer-select2']);
 
         $this->skipRender();
+
     }
 
     public function revokePrHeader()
@@ -2363,7 +2378,17 @@ class PurchaseRequisitionDetails extends Component
         //division
         $this->prHeader['division'] =  auth()->user()->division;
         $this->prHeader['section'] =  auth()->user()->section;
-        $this->prHeader['cost_center'] = auth()->user()->cost_center;
+
+        //11-03-2022 ตรวจสอบว่า Cost Center ที่อยู่ใน TB users มีใน TB costcenter หรือไม่
+        $strsql = "SELECT cost_center FROM cost_center WHERE company='" . auth()->user()->company . "' 
+                AND cost_center='" . auth()->user()->cost_center . "'";
+        $data = DB::select($strsql);
+        if (count($data)) {
+            $this->prHeader['cost_center'] = auth()->user()->cost_center;
+        } else {
+            $this->prHeader['cost_center'] = "";
+        }
+
         $strsql = "SELECT cost_center, description FROM cost_center WHERE cost_center='" . auth()->user()->cost_center . "'";
         $data = DB::select($strsql);
         if (count($data)) {

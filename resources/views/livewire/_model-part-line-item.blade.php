@@ -125,6 +125,7 @@
                     <div class="col-md-4">
                         <label>Internal Order</label>
                         <x-select2 id="internalorder-select2" wire:model.defer="prItem.internal_order">
+                            <option value=" ">--- Please Select ---</option>
                             @foreach($internal_order_dd as $row)
                             <option value='{{ $row->internal_order }}'>
                                 {{ $row->internal_order }}
@@ -139,6 +140,7 @@
                     <div class="col-md-4">
                         <label>Budget Code <span style="color: red">*</span></label>
                         <x-select2 id="budgetcode-select2" wire:model.defer="prItem.budget_code">
+                            <option value=" ">--- Please Select ---</option>
                             @foreach($budgetcode_dd as $row)
                             <option value='{{ $row->account }}'>
                                 {{ $row->account }} : {{ $row->description }}

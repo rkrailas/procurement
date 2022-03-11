@@ -841,7 +841,7 @@
                                 <div class="col-md-4">
                                     <label>Attachment Level <span style="color: blue; font-weight: normal">(Please select before add new files.)</span></label>
                                     <x-select2-multiple id="attachment_lineno-select2" wire:model.defer="attachment_lineno">
-                                        <option value="0">0 : Level PR Header</option>
+                                        <option value="0" selected="selected">0 : Level PR Header</option> 
                                         @foreach($prLineNoAtt_dd as $row)
                                         <option value="{{ $row->lineno }}">
                                             {{ $row->lineno }} : {{ $row->description }}
