@@ -184,7 +184,7 @@
                                         class="fa fa-arrow-down {{ $sortBy === 'c.site' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
-                            <th scope="col">Total Base Price 
+                            {{-- <th scope="col">Total Base Price 
                                 <span wire:click="sortBy('a.total_base_price')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
@@ -210,7 +210,7 @@
                                     <i
                                         class="fa fa-arrow-down {{ $sortBy === 'a.currency' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
-                            </th>
+                            </th> --}}
                             <th scope="col">Requested For
                                 <span wire:click="sortBy('c.requested_for')" class="float-right text-sm"
                                     style="cursor: pointer;">
@@ -258,9 +258,9 @@
                                 <td scope="col">{{ $row->prno }} </td>
                                 <td scope="col">{{ $row->rfqstatus }} </td>
                                 <td scope="col">{{ $row->site }} </td>
-                                <td scope="col" class="text-right">{{ number_format($row->total_base_price, 2) }} </td>
+                                {{-- <td scope="col" class="text-right">{{ number_format($row->total_base_price, 2) }} </td>
                                 <td scope="col" class="text-right">{{ number_format($row->total_final_price, 2) }} </td>
-                                <td scope="col">{{ $row->currency }} </td>
+                                <td scope="col">{{ $row->currency }} </td> --}}
                                 <td scope="col">{{ $row->requested_for }} </td>
                                 <td scope="col">{{ $row->requestor }} </td>
                                 <td scope="col">{{ $row->buyer }} </td>

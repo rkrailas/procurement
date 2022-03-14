@@ -343,7 +343,6 @@ class PurchaseRequisitionDetails extends Component
                         'link_url' => url('/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=item'),
                     ];
 
-                    //??? ไม่แน่ใจเรื่องหลาย Mail 
                     Mail::to($approver_email)->cc([$requested_for_email])
                         ->send(New WelcomeMail($detailMail));
 
@@ -587,18 +586,21 @@ class PurchaseRequisitionDetails extends Component
                 'budget_year' => 'required',
             ])->validate();
 
-            //11-03-2022 ตรวจสอบว่ามี Item ที่มี Unit เป็น Project หรือไม่
-            $xHaveUOMProject = "N";
-            $xYear = "";
-            $xEndFiscalYear = "";
-            $strsql = "SELECT purchase_unit FROM pr_item WHERE prno_id=" . $this->prHeader['id'] . " AND purchase_unit='Project'";
-            $data = DB::select($strsql);
+            //13-03-2022 Fixed ตรวจสอบว่าต้องไม่ใช่การสร้างครั้งแรก
+            if (!empty($this->prHeader['id'])) {
+                //11-03-2022 ตรวจสอบว่ามี Item ที่มี Unit เป็น Project หรือไม่
+                $xHaveUOMProject = "N";
+                $xYear = "";
+                $xEndFiscalYear = "";
+                $strsql = "SELECT purchase_unit FROM pr_item WHERE prno_id=" . $this->prHeader['id'] . " AND purchase_unit='Project'";
+                $data = DB::select($strsql);
                 if ($data) {
                     $xHaveUOMProject = "Y";
                     $xYear = date_format(Carbon::now(), 'Y');
                     $xEndFiscalYear = $xYear . '-03-31';
                     $this->prHeader['endfiscalyear'] = $xEndFiscalYear;
                 }
+            }
 
             if ($this->prHeader['ordertype'] == '21' AND $xHaveUOMProject = "N") {
                 Validator::make($this->prHeader, [
@@ -850,6 +852,7 @@ class PurchaseRequisitionDetails extends Component
                         $attachments = $file->storeAs('/public/attachments', $newFileName);
 
                         //ตรวจสอบว่าเป็น Header หรือไม่ is_array()
+                        $isHeader = true;
                         if (is_array($this->attachment_lineno)) {
                             if (in_array("0", $this->attachment_lineno)) {
                                 $isHeader = true;
@@ -857,7 +860,6 @@ class PurchaseRequisitionDetails extends Component
                                 $isHeader = false;
                             }
                         }
-
 
                         DB::statement("INSERT INTO attactments ([file_name], file_type, file_path, ref_doctype, ref_docid, ref_docno
                             , edecision_no, isheader_level, ref_lineno, create_by, create_on)
@@ -1046,135 +1048,186 @@ class PurchaseRequisitionDetails extends Component
                 //Send Mail End
 
             } else if ($xApproval_type == 'DECIDER'){
-                //Update status > pr_header & pr_item
-                DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=?
-                    WHERE prno_id=?" 
-                    , ['30', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
-
-                //status=Confirmed Final Price when skip_rfq=true (CR No.9)
-                DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=?
-                    WHERE prno_id=? AND skip_rfq=?" 
-                    , ['40', auth()->user()->id, Carbon::now(), $this->prHeader['id'], 1]);
-
-                //Add pr_authorized_date
-                DB::statement("UPDATE pr_header SET status=?, pr_authorized_date=?, changed_by=?, changed_on=?
-                    WHERE id=?" 
-                    , ['30', Carbon::now(), auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
-
-                $this->prHeader['statusname'] = 'PR Authorized'; //ใช้วิธีนี้เพราะไม่ต้องการ Redirect
-
-                //Setup Reminder (CR No.9)
-                if ( $this->prHeader['valid_until'] AND ($this->prHeader['ordertype'] == '20' OR $this->prHeader['ordertype'] == '21') ){
-                    $interval = Carbon::now()->diff($this->prHeader['valid_until']);
-                    $days = $interval->format('%a');
-
-                    $reminder1 = new DateTime($this->prHeader['valid_until']);
-                    $reminder2 = new DateTime($this->prHeader['valid_until']);
-                    $reminder3 = new DateTime($this->prHeader['valid_until']);
-
-                    if ($days >= 30){
-                        $interval = new DateInterval('P30D');
-                        $reminder1 = $reminder1->sub($interval);
-
-                        $interval = new DateInterval('P15D');
-                        $reminder2 = $reminder2->sub($interval);
-
-                        $interval = new DateInterval('P7D');
-                        $reminder3 = $reminder3->sub($interval);
-
-                        DB::statement("UPDATE pr_header SET reminder1=?, reminder2=?, reminder3=?
-                            WHERE id=?" 
-                            , [$reminder1, $reminder2, $reminder3, $this->prHeader['id']]);
-
-                    }else if ($days < 30 AND $days >= 15){
-                        $date = new DateTime($this->prHeader['valid_until']);
-
-                        $interval = new DateInterval('P15D');
-                        $reminder1 = $reminder1->sub($interval);
-
-                        $interval = new DateInterval('P7D');
-                        $reminder2 = $reminder2->sub($interval);
-
-                        DB::statement("UPDATE pr_header SET reminder1=?, reminder2=?
-                            WHERE id=?" 
-                            , [$reminder1, $reminder2, $this->prHeader['id']]);
-
-                    }else if ($days < 15 AND $days >= 7){
-                        $interval = new DateInterval('P7D');
-                        $reminder1 = $reminder1->sub($interval);
-
-                        DB::statement("UPDATE pr_header SET reminder1=?
-                            WHERE id=?" 
-                            , [$reminder1, $this->prHeader['id']]);
-                    }
-                }
-
-                //Create RFQ & update status pr_header and pr_item (Ref. On PR to RFQ in file P2P-PUR-002-FS-RFQ_20220221)
+                //Create RFQ & update status pr_header and pr_item
                 DB::transaction(function() 
                 {
-                    //Create RFQ HEADER
                     $xNewRFQNo = $this->getNewRFQNo();
 
+                    //Find Buyer Group
                     $xBuyerGrp = '';
                     $strsql = "SELECT b.buyer_group
                         FROM buyer a
                         LEFT JOIN buyer_group_mapping b ON a.buyer=b.buyer
-                        WHERE a.buyer='" . $this->prHeader['buyer'] . "'";
+                        WHERE b.ismaskdelete=0 AND a.buyer='" . $this->prHeader['buyer'] . "'";
                     $data = DB::select($strsql);
                     if ($data) {
                         $xBuyerGrp = $data[0]->buyer_group;
                     }
-        
-                    $xTotalBasePrice = 0;
-                    $strsql = "SELECT SUM(unit_price_local * qty) AS total_base_price 
-                        FROM pr_item
-                        WHERE prno='" . $this->prHeader['prno'] ."'";
+
+                    //Create RFQ HEADER
+                    DB::statement("INSERT INTO rfq_header(rfqno, prno, prno_id, status, company, site, buyer, buyer_group, workflow_step
+                    , total_base_price_local, total_final_price_local, cr_amount_local, cr_percent_local, create_by, create_on)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                    ,[$xNewRFQNo, $this->prHeader['prno'], $this->prHeader['id'], '10', $this->prHeader['company'], $this->prHeader['site']
+                    , $this->prHeader['buyer'], $xBuyerGrp, 1, 0, 0, 0, 0, auth()->user()->id, Carbon::now()]);
+
+                    //Create RFQ SUPPLIER (If there is at least one PR Item.Skip RFQ = TRUE) 
+                    //$strsql = "SELECT prno FROM pr_item WHERE skip_rfq=1 AND prno_id=" . $this->prHeader['id'];
+                    $strsql = "SELECT * FROM pr_item WHERE skip_rfq=1 AND prno='" . $this->prHeader['prno'] . "' AND status BETWEEN '20' AND '30'";
+                    $data = DB::select($strsql);
+
+                    if ($data) {
+                        $data = json_decode(json_encode($data), true);
+
+                        foreach ($data as $row) {
+                            //Total Base Price, Total Final Price, Total Base Price (Local Currency), Total Final Price (Local Currency)
+                            $total_base_price = 0;
+                            $total_final_price = 0;
+                            $total_base_price_local = 0;
+                            $total_final_price_local = 0;
+                            $strsql = "SELECT ISNULL(ROUND(SUM(unit_price * qty), 2), 0) AS total_base_price
+                                    , ISNULL(ROUND(SUM(final_price), 2), 0) AS total_final_price
+                                    , ISNULL(ROUND(SUM(unit_price * qty * exchange_rate),2), 0) AS total_base_price_local
+                                    , ISNULL(ROUND(SUM(final_price_local), 2), 0) AS total_final_price_local
+                                    FROM pr_item where prno='" . $this->prHeader['prno'] . "'";
+                            $data2 = DB::select($strsql);
+                            if ($data2) {
+                                $total_base_price = $data2[0]->total_base_price;
+                                $total_final_price = $data2[0]->total_final_price;
+                                $total_base_price_local = $data2[0]->total_base_price_local;
+                                $total_final_price_local = $data2[0]->total_final_price_local;
+                            }
+
+                            $strsql = "INSERT INTO rfq_supplier_quotation(rfqno, company, supplier_quotationno, supplier, supplier_name, main_contact_person
+                                , telephone_number, email, payment_term, exchange_rate, quotation_expiry_term, quotation_expiry, payment_pattern
+                                , total_base_price, total_final_price, total_base_price_local, total_final_price_local, create_by, create_on) 
+                                SELECT '" . $xNewRFQNo . "', '" . $this->prHeader['company'] . "', '', a.nominated_supplier, b.name1 + ' ' + b.name2 
+                                , b.contact_person, b.telphone_number, b.email, b.payment_key, a.exchange_rate, '', '', ''
+                                ," . $total_base_price ." ," . $total_final_price . ", " . $total_base_price_local . ", " . $total_final_price_local . "
+                                , '" . auth()->user()->id . "', '" . Carbon::now() . "'
+                                FROM pr_item a
+                                LEFT JOIN supplier b ON a.nominated_supplier=b.supplier
+                                WHERE a.id='" . $row['id'] . "'";
+                            DB::statement($strsql);
+                        }
+                    }
+
+                    //Create RFQ ITEM
+                    $strsql = "SELECT * FROM pr_item WHERE prno='" . $this->prHeader['prno'] . "' AND status BETWEEN '20' AND '30'";
                     $data = DB::select($strsql);
                     if ($data) {
-                        $xTotalBasePrice = $data[0]->total_base_price;
-                    }
-        
-                    DB::statement("INSERT INTO rfq_header(rfqno, prno, prno_id, status, buyer, buyer_group, currency, total_base_price
-                        , total_final_price, workflow_step, create_by, create_on)
-                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
-                    ,[$xNewRFQNo, $this->prHeader['prno'], $this->prHeader['id'], '10', $this->prHeader['buyer'], $xBuyerGrp, 'THB', $xTotalBasePrice
-                        , 0, 1, auth()->user()->id, Carbon::now()]);
+                        $data = json_decode(json_encode($data), true);
+                        foreach ($data as $row) {
+                            //If PR Item.Skip RFQ = TRUE
+                            if ($row['skip_rfq']) {
+                                $xBasePrice = $row['unit_price'];
+                                $xTotalBasePrice = $row['unit_price'] * $row['qty'];
+                                $xBasePriceLocal = $row['unit_price_local'];
+                                $xTotalBasePriceLocal = $row['unit_price_local'] * $row['qty'];
+                                $xFinalPrice = $row['unit_price'];
+                                $xTotalFinalPrice = $row['unit_price'] * $row['qty'];
+                                $xFinalPriceLocal = $row['unit_price_local'];
+                                $xTotalFinalPriceLocal = $row['unit_price_local'] * $row['qty'];
+                                $xCrAmount = $xTotalFinalPrice - $xTotalBasePrice;
+                                $xCrPercent = ($xCrAmount / $xTotalBasePrice) * 100;
+                                $xCrAmountLocal = $xTotalFinalPriceLocal - $xTotalBasePriceLocal;
+                                $xCrPercentLocal = ($xCrAmountLocal / $xTotalBasePriceLocal) * 100;
 
-                    //Create RFQ SUPPLIER
-                    $strsql = "INSERT INTO rfq_supplier(rfqno, supplier, currency, create_by, create_on) 
-                        SELECT '" . $xNewRFQNo . "', a.nominated_supplier, b.po_currency, " 
-                        . auth()->user()->id . ",'" . Carbon::now() . "' 
-                        FROM pr_item a
-                        LEFT JOIN supplier b ON a.nominated_supplier=b.supplier
-                        WHERE a.prno='" . $this->prHeader['prno'] . "'
-                        GROUP BY a.nominated_supplier, b.po_currency";
-                    DB::statement($strsql);
-                    
-                    //Create RFQ ITEM
-                    $strsql = "INSERT INTO rfq_item(rfqno, prno, prlineno, prlineno_id, line_no, partno, description, status, qty, uom
-                            , delivery_date, total_price_lc, final_price, currency, final_price_lc, supplier
-                            , edecision, create_by, create_on) 
-                        SELECT '" . $xNewRFQNo . "', prno, [lineno], id, ROW_NUMBER() OVER(ORDER BY id) AS line_no
-                            , partno, description, '10', qty, purchase_unit, req_date, qty * unit_price_local
-                            , final_price, currency, final_price_local, nominated_supplier, edecision_no
-                            ," . auth()->user()->id . ",'" . Carbon::now() . "' 
-                            FROM pr_item 
-                            WHERE prno='" . $this->prHeader['prno'] . "' AND status='30'";
+                                DB::statement("INSERT INTO rfq_item(rfqno, prno, prlineno_id, prlineno, partno, description, skip_rfq, non_stock_control
+                                , over1_year_life, status, qty, uom, delivery_date, currency
+                                , base_price, total_base_price, base_price_local, total_base_price_local
+                                , exchange_rate, blanket_order_type, edecisionno, edecision_fileid
+                                , rfq_supplier_quotation, final_price, total_final_price, final_price_local
+                                , total_final_price_local, cr_amount, cr_percent, cr_amount_local, cr_percent_local
+                                , supplier, create_by, create_on)
+                                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                                ,[$xNewRFQNo, $row['prno'], $row['id'], $row['lineno'], $row['partno'], $row['description'], $row['skip_rfq'], $row['nonstock_control']
+                                    , $row['over_1_year_life'], '11', $row['qty'], $row['purchase_unit'], $row['req_date'], $row['currency']
+                                    , round($xBasePrice, 2), round($xTotalBasePrice, 2), round($xBasePriceLocal, 2), round($xTotalBasePriceLocal, 2)
+                                    , $row['exchange_rate'], $row['blanket_order_type'], $row['edecision_no'], $row['edecision_file']
+                                    , $row['nominated_supplier'] , round($xFinalPrice, 2), round($xTotalFinalPrice, 2), round($xFinalPriceLocal, 2)
+                                    , round($xTotalFinalPriceLocal, 2), round($xCrAmount , 2), round($xCrPercent, 2), round($xCrAmountLocal, 2)
+                                    , round($xCrPercentLocal, 2), $row['nominated_supplier'], auth()->user()->id, Carbon::now()
+                                ]);
+
+                            } else {
+                                DB::statement("INSERT INTO rfq_item(rfqno, prno, prlineno_id, prlineno, partno, description, skip_rfq, non_stock_control
+                                , over1_year_life, status, qty, uom, delivery_date, currency, base_price, total_base_price, base_price_local
+                                ,total_base_price_local, exchange_rate, blanket_order_type, edecisionno, edecision_fileid, create_by, create_on)
+                                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                                ,[$xNewRFQNo, $row['prno'], $row['id'], $row['lineno'], $row['partno'], $row['description'], $row['skip_rfq']
+                                    , $row['nonstock_control'], $row['over_1_year_life'], '10', $row['qty'], $row['purchase_unit'], $row['req_date']
+                                    , $row['currency'], $row['unit_price'], round($row['unit_price'] * $row['qty'], 2), $row['unit_price_local']
+                                    , round($row['unit_price_local'] * $row['qty'], 2) , $row['exchange_rate'], $row['blanket_order_type']
+                                    , $row['edecision_no'], $row['edecision_file'], auth()->user()->id, Carbon::now()]);
+                            }
+                        }
+                    }
+
+                    //Update PR Item Reference RFQ, Reference RFQ Item
+                    $strsql = "UPDATE pr_item SET reference_rfq=a.rfqno, reference_rfqitem=a.id
+                            FROM rfq_item a
+                            JOIN pr_item b ON a.prlineno_id=b.id
+                            WHERE a.rfqno='" . $xNewRFQNo . "'";
                     DB::statement($strsql);
 
                     //Update status pr_header & pr_item to RFQ Created (31)
-                    DB::statement("UPDATE pr_header SET status='31' WHERE id=" . $this->prHeader['id']);
-                    DB::statement("UPDATE pr_item SET status='31' WHERE prno='" . $this->prHeader['prno'] ."' AND status='30'");
+                    DB::statement("UPDATE pr_header SET status=?, pr_authorized_date=?, changed_by=?, changed_on=? WHERE id=?" 
+                        , ['31', Carbon::now(), auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+
+                    DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=? WHERE prno_id=?" 
+                        , ['31', auth()->user()->id, Carbon::now(), $this->prHeader['id']]);
+
+                    //Update PR Item Status="Pending Review" If PR Item.Skip RFQ = TRUE
+                    DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=? WHERE prno_id=? AND skip_rfq=?" 
+                        , ['32', auth()->user()->id, Carbon::now(), $this->prHeader['id'], 1]);
 
                     //Update Pr Header Status Name
-                    $strsql = "SELECT description FROM pr_status WHERE status='31'";
-                    $data = DB::select($strsql);
-                    if ($data) {
-                        $this->prHeader['statusname'] = $data[0]->description;
+                    $this->prHeader['statusname'] = 'RFQ Created';
+
+                    //Setup Reminder (CR No.9)
+                    if ( $this->prHeader['valid_until'] AND ($this->prHeader['ordertype'] == '20' OR $this->prHeader['ordertype'] == '21') ){
+                        $interval = Carbon::now()->diff($this->prHeader['valid_until']);
+                        $days = $interval->format('%a');
+
+                        $reminder1 = new DateTime($this->prHeader['valid_until']);
+                        $reminder2 = new DateTime($this->prHeader['valid_until']);
+                        $reminder3 = new DateTime($this->prHeader['valid_until']);
+
+                        if ($days >= 30){
+                            $interval = new DateInterval('P30D');
+                            $reminder1 = $reminder1->sub($interval);
+
+                            $interval = new DateInterval('P15D');
+                            $reminder2 = $reminder2->sub($interval);
+
+                            $interval = new DateInterval('P7D');
+                            $reminder3 = $reminder3->sub($interval);
+
+                            DB::statement("UPDATE pr_header SET reminder1=?, reminder2=?, reminder3=? WHERE id=?" 
+                                , [$reminder1, $reminder2, $reminder3, $this->prHeader['id']]);
+
+                        }else if ($days < 30 AND $days >= 15){
+                            $date = new DateTime($this->prHeader['valid_until']);
+
+                            $interval = new DateInterval('P15D');
+                            $reminder1 = $reminder1->sub($interval);
+
+                            $interval = new DateInterval('P7D');
+                            $reminder2 = $reminder2->sub($interval);
+
+                            DB::statement("UPDATE pr_header SET reminder1=?, reminder2=? WHERE id=?" 
+                                , [$reminder1, $reminder2, $this->prHeader['id']]);
+
+                        }else if ($days < 15 AND $days >= 7){
+                            $interval = new DateInterval('P7D');
+                            $reminder1 = $reminder1->sub($interval);
+
+                            DB::statement("UPDATE pr_header SET reminder1=? WHERE id=?" 
+                                , [$reminder1, $this->prHeader['id']]);
+                        }
                     }
                 });
-                //Create RFQ & update status pr_header and pr_item End
-
 
                 //Send Mail
                 if (config('app.sendmail') == "Yes") {
@@ -2064,7 +2117,7 @@ class PurchaseRequisitionDetails extends Component
         }
     //Line Item End
 
-    // ไม่ Work กรณีกด Modal แล้วมันจะหลด
+    // ไม่ Work กรณีกด Modal แล้วมันจะกลับมา Enable
     // public function disablePRHeader()
     // {
     //     if ($this->prHeader['status'] >= '30') {

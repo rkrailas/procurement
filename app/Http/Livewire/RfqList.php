@@ -81,8 +81,8 @@ class RfqList extends Component
     public function resetSearch()
     {
         $this->reset(['prno', 'buyer', 'buyer_group', 'createon_from', 'createon_to', 'rfqno', 'requested_for', 'requester', 'site', 'status']);
-        $this->createon_from = date_format(Carbon::now()->addMonth(-1),'Y-m-d');
-        $this->createon_to = date_format(Carbon::now()->addMonth(+2),'Y-m-d');
+        $this->createon_from = date_format(Carbon::now(),'Y-m') . "-01";
+        $this->createon_to = date('Y-m-t', strtotime(date_format(Carbon::now(),'Y-m-d'))); //หาวันที่สุดท้ายของเดือน
         $this->dispatchBrowserEvent('clear-select2');
     }
 
@@ -137,7 +137,6 @@ class RfqList extends Component
         }
 
         $strsql = "SELECT a.rfqno, d.description AS ordertype, a.prno, e.description AS rfqstatus, c.site, '' AS partno, '' AS part_desc
-            , a.total_base_price, a.total_final_price, a.currency
             , f.name + ' ' + f.lastname AS requested_for, g.name + ' ' + g.lastname AS requestor
             , i.name + ' ' + i.lastname AS buyer, a.create_on
             FROM rfq_header a

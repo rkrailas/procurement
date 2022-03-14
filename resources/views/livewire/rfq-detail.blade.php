@@ -79,31 +79,43 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-1">
+                        <label>L. Currency</label>
+                        <input class="form-control form-control-sm text-right" type="text" readonly value="THB">
+                    </div>
+                    <div class="col-md-2">
                         <label>Total Base Price</label>
-                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.total_base_price">
+                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.total_base_price_local">
                     </div>
                     <div class="col-md-3">
                         <label>Total Final Price</label>
-                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model="rfqHeader.total_final_price">
-                    </div>
-                    <div class="col-md-3">
-                        <label>CR%</label>
-                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.cr">
+                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model="rfqHeader.total_final_price_local">
                     </div>
                     <div class="col-md-3">
                         <label>C/R Amount</label>
-                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.cramt">
+                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.cramount_local">
+                    </div>
+                    <div class="col-md-3">
+                        <label>CR%</label>
+                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.crpercent_local">
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-3">
-                        <label>Create On</label>
+                        <label>eDecision No.</label>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="rfqHeader.edecisionno">
+                    </div>
+                    <div class="col-md-3">
+                        <label>RFQ Remark</label>
+                        <input class="form-control form-control-sm" type="text" wire:model.defer="rfqHeader.rfq_remark">
+                    </div>
+                    <div class="col-md-3">
+                        <label>RFQ Created Date</label>
                         <input class="form-control form-control-sm" type="text" readonly wire:model.defer="rfqHeader.create_on">
                     </div>
                     <div class="col-md-3">
-                        <label>Change On</label>
+                        <label>RFQ Last Modified Date</label>
                         <input class="form-control form-control-sm" type="text" readonly wire:model="rfqHeader.changed_on">
                     </div>
 
@@ -144,97 +156,131 @@
         {{-- Tab Content --}}
         <div class="tab-content m-0 pb-0" id="pills-tabContent">
             <div class="tab-pane fade {{ $currentTab == 'item' ? 'show active' : '' }}" id="pills-lineitem" role="tabpanel" aria-labelledby="pills-lineitem-tab" wire:ignore.self>
-                <div class="row">
-                    <div class="col-md-6">
-                        <label>Supplier</label>
-                        <select class="form-control form-control-sm" wire:model="tabLineItem.selectSupplierItem">
-                            <option value="">--- Please Select ---</option>
-                            @foreach($supplierForAssign_dd as $row)
-                            <option value="{{ $row->supplier }}">
-                                {{ $row->supplier }} : {{ $row->supplier_name }}
-                            </option> 
-                            @endforeach
-                        </select>
-                        @error('selectSupplierItem') <span class="text-red">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="col-md-6 mt-auto">
-                        <button wire:click.prevent="assignSupplier" class="btn btn-sm btn-danger"><i class="fas fa-plus-square mr-1"></i>APPLY</button>
-                    </div>
-                </div>                
                 <div class="row m-0 p-0">
                     <div class="col-md-12">
                         <table class="table table-sm nissanTB">
                             <thead>
                             <tr class="text-center">
-                                <th scope="col">Line No.</th>
-                                <th scope="col">Part No.</th>
-                                <th scope="col">Description</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Qty</th>
-                                <th scope="col">UoM</th>
-                                <th scope="col">Delivery Date</th>
-                                <th scope="col">Total Price</th>
-                                <th scope="col">Final Price</th>
-                                <th scope="col">Currency</th>
-                                <th scope="col">C/R Amount</th>
-                                <th scope="col">C/R %</th>
-                                <th scope="col">Supplier</th>
-                                <th scope="col">e-Decision</th>
-                                <th scope="col">PO No.</th>
+                                <tr>
+                                    <th colspan="6" style="background-color: white; border-color: white;"></th>
+                                    <th colspan="2" class="text-center">Base Price</th>
+                                    <th colspan="2" class="text-center">Final Price</th>
+                                    <th colspan="7" style="background-color: white; border-color: white;"></th>
+                                </tr>
+                                <tr>
+                                    <th scope="col">Line No.</th>
+                                    <th scope="col">Part No.</th>
+                                    <th scope="col">Description</th>                                
+                                    <th scope="col">Qty</th>
+                                    <th scope="col">UoM</th>
+                                    <th scope="col">Currency</th>
+                                    <th scope="col">Base Price</th>
+                                    <th scope="col">Total Base Price</th>
+                                    <th scope="col">Final Price</th>
+                                    <th scope="col">Total Final Price</th>
+                                    <th scope="col">C/R Amount</th>
+                                    <th scope="col">C/R %</th>
+                                    <th scope="col">Delivery Date</th>
+                                    <th scope="col">e-Decision</th>
+                                    <th scope="col">PO No.</th>
+                                    <th scope="col">Status</th>
+                                    <th></th>
+                                </tr>
                             </tr>
                             </thead>
                             <tbody>
-                            @foreach ($itemList as $row)
+                            {{-- Edit in line notuse
+                            @foreach ($itemList as $index => $row)
                             <tr>
-                                <td>
-                                    <div d-inline ml-2 mt-auto>
-                                        <input wire:model="selectedRows" type="checkbox" value="{{ $row->id }}"
-                                            id="{{ $row->line_no }}">
-                                        <span>{{ $row->line_no }}</span>
+                                <td scope="col" class="text-center">{{$index}}</td>
+                                <td scope="col">{{ $row['partno'] }}</td>
+                                <td scope="col">
+                                    <input type="text" class="form-control form-control-sm" maxlength="200" wire:model.lazy="itemList.{{$index}}.description">
+                                </td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row['qty'], 2) }}</td>
+                                <td scope="col" class="text-center">{{ $row['uom'] }}</td>
+                                <td scope="col" class="text-center">{{ $row['currency'] }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row['base_price'], 2) }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format( $row['total_base_price'], 2) }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row['final_price'], 2) }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format( $row['total_final_price'], 2) }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row['cr_amount'], 2) }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row['cr_percent'], 2) }}</td>
+                                <td scope="col" class="text-center">
+                                    <div class="input-group mb-1">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="fas fa-calendar"></i>
+                                            </span>
+                                        </div>
+                                        <x-datepicker wire:model="itemList.{{$index}}.delivery_date" id="delivery_date{{$index}}"
+                                            :error="'date'"/>
                                     </div>
                                 </td>
+                                <td scope="col">{{ $row['edecisionno'] }}</td>
+                                <td scope="col">{{ $row['pono'] }}</td>
+                                <td scope="col">{{ $row['status'] }}</td>
+                            </tr>
+                            @endforeach --}}
+                            @foreach ($itemList as $row)
+                            <tr>
+                                <td scope="col" class="text-center">{{ $loop->iteration + $itemList->firstitem()-1 }}</td>
                                 <td scope="col">{{ $row->partno }}</td>
-                                <td scope="col">{{ $row->description }}</td>                                
-                                <td scope="col">{{ $row->status }}</td>
-                                <td scope="col" class="text-right pr-2">{{ number_format($row->qty, 0) }}</td>
+                                <td scope="col">{{ $row->description }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row->qty, 2) }}</td>
                                 <td scope="col" class="text-center">{{ $row->uom }}</td>
-                                <td scope="col" class="text-center">{{ \Carbon\Carbon::parse( $row->delivery_date)->format('d-M-Y') }} </td>
-                                <td scope="col" class="text-right pr-2">{{ number_format($row->total_price_lc, 2) }}</td>
-                                <td scope="col" class="text-right pr-2">{{ number_format( $row->final_price_lc, 2) }}</td>
                                 <td scope="col" class="text-center">{{ $row->currency }}</td>
-                                <td scope="col" class="text-right pr-2">{{ number_format($row->cr, 2) }}</td>
-                                <td scope="col" class="text-right pr-2">{{ number_format($row->cramt, 2) }}</td>
-                                <td scope="col">{{ $row->supplier }}</td>
-                                <td scope="col">{{ $row->edecision }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row->base_price, 2) }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format( $row->total_base_price, 2) }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row->final_price, 2) }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format( $row->total_final_price, 2) }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row->cr_amount, 2) }}</td>
+                                <td scope="col" class="text-right pr-2">{{ number_format($row->cr_percent, 2) }}</td>
+                                <td scope="col" class="text-center">{{ \Carbon\Carbon::parse( $row->delivery_date)->format('d-M-Y') }} </td>
+                                <td scope="col">{{ $row->edecisionno }}</td>
                                 <td scope="col">{{ $row->pono }}</td>
+                                <td scope="col">{{ $row->status }}</td>
+                                <td>
+                                    <a href="" wire:click.prevent="editLineItem('{{ $row->id }}')">
+                                        <i class="fa fa-edit mr-2"></i>
+                                    </a>
+                                </td>
+
                             </tr>
                             @endforeach
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div class="row">
+                {{-- <div class="row">
                     <div class="col-md-12 mb-1">
                         {{ $itemList->links() }}
                     </div>
-                </div>
+                </div> --}}
             </div>
 
             <div class="tab-pane fade {{ $currentTab == 'Suppliers' ? 'show active' : '' }}" id="pills-Suppliers" role="tabpanel" aria-labelledby="pills-Suppliers-tab" wire:ignore.self>
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label>Supplier</label>
-                        <select class="form-control form-control-sm" wire:model="tabSupplier.selectSupplier">
+                        <x-select2 id="supplier-select2" wire:model.defer="tabSupplier.selectSupplier">
                             <option value="">--- Please Select ---</option>
                             @foreach($supplier_dd as $row)
                             <option value="{{ $row->supplier }}">
                                 {{ $row->supplier }} : {{ $row->supplier_name }}
                             </option> 
                             @endforeach
-                        </select>
+                        </x-select2>
                         @error('selectSupplier') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
-                    <div class="col-md-6 mt-auto">
+                    <div class="col-md-4">
+                        <label>Supplier Contact</label>
+                        <x-select2 id="supplierContact-select2" wire:model.defer="tabSupplier.selectSupplierContact">
+                            {{-- รอค่าจากการ Bind --}}
+                        </x-select2>
+                        @error('selectSupplierContact') <span class="text-red">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-4 mt-auto">
                         <button wire:click.prevent="addSupplier" class="btn btn-sm btn-danger"><i class="fas fa-plus-square mr-1"></i>ADD</button>
                     </div>
                 </div>
@@ -259,10 +305,10 @@
                             <tr>
                                 <td scope="col">{{ $row->supplier }}</td>
                                 <td scope="col">{{ $row->supplier_name }}</td>
-                                <td scope="col">{{ $row->location }}</td>
-                                <td scope="col">{{ $row->po_currency }}</td>
-                                <td scope="col">{{ $row->contact_person }}</td>
-                                <td scope="col">{{ $row->telphone_number }}</td>
+                                <td scope="col">{{ $row->address }}</td>
+                                <td scope="col">{{ $row->supplier_currency }}</td>
+                                <td scope="col">{{ $row->contact_person_name }}</td>
+                                <td scope="col">{{ $row->telephone_number }}</td>
                                 <td scope="col">{{ $row->email }}</td>
                                 <td scope="col">
                                     <a href="" wire:click.prevent="deleteRFQSupplier('{{ $row->supplier }}')">
@@ -290,4 +336,71 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Edit Line Item --}}
+    <div class="modal" id="modelEditLineItem" tabindex="-1" role="dialog" data-backdrop="static" wire:ignore.self>
+        <div class="modal-dialog" role="document" style="max-width: 60%;">
+            <div class="modal-content ">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel" style="font-size: 20px;">
+                        Edit Item
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label>Part No.</label>
+                            <input class="form-control form-control-sm" type="text" readonly wire:model.defer="editItem.partno">
+                        </div>
+                        <div class="col-md-6">
+                            <label>Delivery Date</label>
+                            <div class="input-group mb-1">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-calendar"></i>
+                                    </span>
+                                </div>
+                                <x-datepicker wire:model="editItem.delivery_date" id="delivery_date"
+                                    :error="'date'"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label>Description</label>
+                            <input class="form-control form-control-sm" type="text" maxlength="200" wire:model.defer="editItem.description">
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-12 d-flex justify-content-end">
+                            <div>
+                                <button type="button" class="btn btn-sm btn-light" data-dismiss="modal">
+                                    <i class="fa fa-times mr-1"></i>Cancel</button>
+                                <button type="button" class="btn btn-sm btn-danger" wire:click.prevent="editItem_Save">
+                                    <i class="fa fa-save mr-1"></i>Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+
+@push('js')
+<script>
+
+    window.addEventListener('show-modelEditLineItem', event => {
+        $('#modelEditLineItem').modal('show');
+    })
+
+    window.addEventListener('hide-modelEditLineItem', event => {
+        $('#modelEditLineItem').modal('hide');
+    })
+
+</script>
+
+@endpush
