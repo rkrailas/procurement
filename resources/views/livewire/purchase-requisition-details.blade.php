@@ -343,7 +343,7 @@
                                         <td scope="col">{{ $row->partno }}</td>
                                         <td scope="col">{{ $row->description }}</td>                                
                                         <td scope="col">{{ $row->status }}</td>
-                                        <td scope="col" class="text-right pr-2">{{ number_format($row->qty, 0) }}</td>
+                                        <td scope="col" class="text-right pr-2">{{ number_format($row->qty, 2) }}</td>
                                         <td scope="col" class="text-center">{{ $row->purchase_unit }}</td>
                                         <td scope="col" class="text-right pr-2">{{ number_format($row->unit_price, 2) }}</td>
                                         <td scope="col" class="text-right pr-2">{{ number_format( $row->budgettotal, 2) }}</td>
