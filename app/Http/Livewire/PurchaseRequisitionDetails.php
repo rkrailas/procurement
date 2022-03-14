@@ -1469,8 +1469,9 @@ class PurchaseRequisitionDetails extends Component
                 $myValidate = false;
             };
 
-            //ตรวจสอบว่า Validator ซ้ำหรือไม่
-            $strsql = "SELECT COUNT(*) AS val_count FROM dec_val_workflow WHERE approval_type='VALIDATOR' AND ref_doc_type='10' 
+            //14-03-2022 ตรวจสอบว่า Validator & Decider ซ้ำหรือไม่
+            $strsql = "SELECT COUNT(*) AS val_count FROM dec_val_workflow 
+                WHERE ref_doc_type='10' 
                 AND ref_doc_id=" . $this->prHeader['id'] . " AND approver='" . $this->validator['username'] . "'";
             $data = DB::select($strsql);
 
@@ -1495,41 +1496,6 @@ class PurchaseRequisitionDetails extends Component
                     VALUES(?,?,?,?,?,?,?,?,?)"
                 ,[$maxSeq, 'VALIDATOR', $this->validator['username'], '10', '10', $this->prHeader['prno'], $this->prHeader['id']
                     , auth()->user()->id, Carbon::now()]);
-
-                //History Log
-                    // DB::transaction(function() 
-                    // {
-                    //     $xRandom = Str::random(20);
-                    //     DB::statement(
-                    //         "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
-                    //         , changed_by, changed_on)
-                    //         VALUES(?,?,?,?,?,?,?,?,?,?)",
-                    //             [
-                    //                 'PR', $this->prHeader['prno'], 'Insert', 'Validator', 0, 'history_validator', $xRandom, auth()->user()->company
-                    //                 , auth()->user()->id, Carbon::now()
-                    //             ]
-                    //     );
-
-                    //     DB::statement(
-                    //         "INSERT INTO history_validator(history_ref, approval_type, approver, status, ref_doc_type, ref_doc_no, ref_doc_id
-                    //         , create_by, create_on, changed_by, changed_on)
-                    //         SELECT '" . $xRandom . "', approval_type, approver, status, ref_doc_type, ref_doc_no, ref_doc_id
-                    //         , create_by, create_on, changed_by, changed_on
-                    //         FROM dec_val_workflow
-                    //         WHERE ref_docno='" . $this->prHeader['prno'] . "' AND ref_lineid=" . $this->attachment_lineno
-                    //     );
-                    // });
-                //History Log End
-
-                //ยังไม่ต้อง Insert ตอนนี้ Insert เฉพาะตอน Approve หรือ Reject
-                //Approval History 
-                    // DB::statement("INSERT INTO dec_val_workflow_log (approval_type, approver, status, refdoc_type, refdoc_no, refdoc_id
-                    // , submitted_date, submitted_by, create_by, create_on)
-                    // VALUES(?,?,?,?,?,?,?,?,?,?)"
-                    // ,['VALIDATOR', $this->validator['username'], '10', '10', $this->prHeader['prno'], $this->prHeader['id']
-                    // , Carbon::now(), auth()->user()->id, auth()->user()->id, Carbon::now()]);
-                //Approval History End
-
 
                 $this->reset(['validator']);
                 $this->dispatchBrowserEvent('clear-select2');
@@ -1562,16 +1528,40 @@ class PurchaseRequisitionDetails extends Component
 
         public function addDecider() 
         {
+            $myValidate = true;
+
             //Validaate required field
             Validator::make($this->decider, [
                 'username' => 'required',
             ])->validate();
 
+            //14-03-2022 ตรวจสอบว่า Validator & Decider ซ้ำหรือไม่
+            $strsql = "SELECT COUNT(*) AS val_count FROM dec_val_workflow 
+                WHERE ref_doc_type='10' 
+                AND ref_doc_id=" . $this->prHeader['id'] . " AND approver='" . $this->decider['username'] . "'";
+            $data = DB::select($strsql);
+
+            if ($data[0]->val_count > 0){
+                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='106' AND class='DECIDER VALIDATOR'";
+                $data2 = DB::select($strsql);
+
+                if (count($data2) > 0) {
+                    $this->dispatchBrowserEvent('popup-alert', [
+                        'title' => $data2[0]->msg_text,
+                    ]);
+                }
+                $myValidate = false;
+            };
+
             if ($this->decider == ""){
                 $this->dispatchBrowserEvent('popup-alert', [
                     'title' => 'Please Select Decider',
                 ]);
-            } else {
+
+                $myValidate = false;
+            }
+
+            if ($myValidate){
                 DB::statement("INSERT INTO dec_val_workflow (approval_type, approver, status, ref_doc_type, ref_doc_no, ref_doc_id, create_by, create_on)
                 VALUES(?,?,?,?,?,?,?,?)"
                 ,['DECIDER', $this->decider['username'], '10', '10', $this->prHeader['prno'], $this->prHeader['id'], auth()->user()->id, Carbon::now()]);

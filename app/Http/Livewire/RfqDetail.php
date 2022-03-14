@@ -14,14 +14,17 @@ class RfqDetail extends Component
     public $editRFQNo, $currentTab, $rfqHeader;
     public $numberOfPage = 10;
 
-    //Header
+    // Header
     public $buyer_dd, $buyergroup_dd, $currency_dd;
 
-    //Tab Item ไม่ได้ใช้งาน $supplierForAssign_dd, $selectedRows, $tabLineItem
+    // Tab Item ไม่ได้ใช้งาน $supplierForAssign_dd, $selectedRows, $tabLineItem
     public $editItem;
 
-    //Tab Supplier
+    // Tab Supplier
     public $tabSupplier, $supplier_dd, $supplierContact_dd;
+
+    // Tab Quotation Details
+    public $tabQuotationDetails, $quotationEexpiryTerm_dd, $paymentTerm_dd;
 
 
     // public function assignSupplier()
@@ -46,6 +49,48 @@ class RfqDetail extends Component
     //     }
     // }
 
+    // Tab Quotation Details Start
+    public function updatedTabQuotationDetailsCurrency()
+    {
+        $strsql = "SELECT from_currency, exchange_rate FROM currency_exchange_rate 
+                WHERE rate_type='Y' AND valid_from <= FORMAT(GETDATE(),'yyyy-MM-dd')
+                AND from_currency='" . $this->tabQuotationDetails['currency'] . "'";
+        $data = DB::select($strsql);
+        if ($data) {
+            $this->tabQuotationDetails['exchange_rate'] = $data[0]->exchange_rate;
+        }
+    }
+
+    public function updatedTabQuotationDetailsMainContactPerson()
+    {
+        $strsql = "SELECT phone, email FROM supplier_contact WHERE company='" . $this->rfqHeader['company'] . "' AND supplier='" 
+            . $this->tabQuotationDetails['selectSupplier2'] . "'";
+        $data = DB::select($strsql);
+        if ($data) {
+            $this->tabQuotationDetails['telephone_number'] = $data[0]->phone;
+            $this->tabQuotationDetails['email'] = $data[0]->email; 
+        }         
+    }
+
+    public function updatedTabQuotationDetailsSelectSupplier2()
+    {
+        //Bind ค่า mainContactPersonier-select2
+        $strsql = "SELECT id, name, phone, email
+            FROM supplier_contact 
+            WHERE company='" . $this->rfqHeader['company'] . "' AND supplier='" . $this->tabQuotationDetails['selectSupplier2'] . "'";
+        $data = DB::select($strsql);
+        $newOption = "<option value=''>--- Please Select ---</option>";
+        if ($data) {
+            foreach ($data as $row) {
+                $newOption = $newOption . "<option value='" . $row->id . "'>" . $row->name . "</option>";
+            }
+        }
+
+        $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#mainContactPerson-select2']);
+    }
+    // Tab Quotation Details End
+
+    // Tab Suppliers Start
     public function deleteRFQSupplier($xSupplierID)
     {
         dd('here');
@@ -63,16 +108,6 @@ class RfqDetail extends Component
         //     //ถ้า Validate ไม่ผ่าน
         //     return;
     }
-
-    //     //ถ้า Validate ผ่าน
-    //     DB::statement("DELETE FROM rfq_supplier WHERE rfqno=? AND supplier=?", [$this->rfqHeader['rfqno'], $xSupplierID]);
-
-    //     $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='108' AND class='RFQ'";
-    //     $data = DB::select($strsql);
-    //     if (count($data) > 0) {
-    //         $this->dispatchBrowserEvent('popup-success', ['title' => $data[0]->msg_text]);
-    //     }
-    // }
 
     public function updatedTabSupplierSelectSupplier()
     {
@@ -173,6 +208,10 @@ class RfqDetail extends Component
         $this->reset(['tabSupplier']);
     }
 
+    // Tab Suppliers End
+
+    // Tab Line Items Start
+
     // Edit in Line เก็บไว้ก่อน
     // public function updatedItemList($value, $key) //No Refresh
     // {
@@ -210,6 +249,8 @@ class RfqDetail extends Component
         $this->dispatchBrowserEvent('hide-modelEditLineItem');
     }
 
+    // Tab Line Items End
+
     public function loadDropdownList()
     {
         $strsql = "SELECT a.buyer, b.name + ' ' + b.lastname AS fullname
@@ -228,6 +269,15 @@ class RfqDetail extends Component
         $strsql = "SELECT supplier, name1 + ' ' + name2 AS supplier_name FROM supplier 
             WHERE company='" . $this->rfqHeader['company'] . "' ORDER BY supplier";
         $this->supplier_dd = DB::select($strsql);
+
+        $this->quotationEexpiryTerm_dd = [];
+        $strsql = "SELECT termno, description FROM rfq_quotation_expiration_term ORDER BY termno";
+        $this->quotationEexpiryTerm_dd = DB::select($strsql);
+
+        $this->paymentTerm_dd = [];
+        $strsql = "SELECT payment_code, description FROM payment_term ORDER BY payment_code";
+        $this->paymentTerm_dd = DB::select($strsql);
+
     }
 
     public function goto_prdetail()
@@ -295,14 +345,20 @@ class RfqDetail extends Component
             LEFT JOIN rfq_supplier_contact_person b ON a.id=b.rfq_supplier_quotation
             LEFT JOIN supplier c ON a.supplier=c.supplier AND c.company='" . $this->rfqHeader['company'] . "'
             WHERE a.rfqno='" . $this->rfqHeader['rfqno'] . "'";
-        //$supplierList = json_decode(json_encode(DB::select($strsql)), true);
         $supplierList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
-
+        
+        //Tab Quotation Details
+        $strsql = "SELECT a.partno, a.description, b.description AS status, a.supplier, a.qty, a.uom, a.base_price, a.final_price, a.total_final_price, a.currency
+            FROM rfq_item a
+            LEFT JOIN rfq_status b ON a.status=b.status
+            WHERE a.rfqno='" . $this->rfqHeader['rfqno'] . "'";
+        $quotationDetailsList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
         return view('livewire.rfq-detail', 
             [
                 'itemList' => $itemList,
                 'supplierList' => $supplierList,
+                'quotationDetailsList' => $quotationDetailsList,
             ]);
     }
 }

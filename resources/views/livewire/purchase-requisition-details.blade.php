@@ -162,7 +162,7 @@
                     <div class="col-md-3">
                         <label>Buyer <span style="color: red">*</span></label>
                         @if($prHeader['status'] >= '30' OR $isValidator_Decider == true)
-                        <x-select2 id="buyer-select2" wire:model.defer="prHeader.buyer">
+                        <x-select2 id="buyer-select2" disabled="true" wire:model.defer="prHeader.buyer">
                             <option value=" ">--- Please Select ---</option>
                             @foreach($buyer_dd as $row)
                             <option value="{{ $row->buyer }}">
@@ -228,7 +228,7 @@
             <div class="card-body my-card-body">
                 <div class="row">
                     <div class="col-md-3">
-                        <label class="">Valid Until</label>
+                        <label class="">Valid Until <span style="color: red">*</span></label>
                         <div class="input-group mb-1">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">

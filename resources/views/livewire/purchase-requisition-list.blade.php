@@ -254,7 +254,7 @@
                                 <td scope="col">{{ $row->item_desc }} </td>
                                 <td scope="col" class="text-right">{{ number_format($row->total_budget, 2) }} </td>
                                 <td scope="col" class="text-right">{{ number_format($row->total_final_price, 2) }} </td>
-                                <td scope="col" class="text-center">{{ \Carbon\Carbon::parse($row->request_date)->format('d-M-Y') }} </td>
+                                <td scope="col" class="text-center">{{ \Carbon\Carbon::parse($row->request_date)->format('d-M-Y h:m A') }} </td>
                                 <td scope="col">{{ $row->buyer }} </td>
                                 <td>
                                     <center>

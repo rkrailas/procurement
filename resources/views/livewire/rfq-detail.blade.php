@@ -135,8 +135,8 @@
                     aria-controls="pills-Suppliers" aria-selected="false">Suppliers</a>
             </li>
             <li class="nav-item" wire:ignore>
-                <a class="nav-link {{ $currentTab == 'Quotation' ? 'active' : '' }}" id="pills-Quotation-tab" data-toggle="pill" href="#pills-Quotation" role="tab" 
-                    aria-controls="pills-Quotation" aria-selected="false">Quotation Detail</a>
+                <a class="nav-link {{ $currentTab == 'QuotationDetails' ? 'active' : '' }}" id="pills-QuotationDetails-tab" data-toggle="pill" href="#pills-QuotationDetails" role="tab" 
+                    aria-controls="pills-QuotationDetails" aria-selected="false">Quotation Detail</a>
             </li>
             <li class="nav-item" wire:ignore>
                 <a class="nav-link {{ $currentTab == 'auth' ? 'active' : '' }}" id="pills-auth-tab" data-toggle="pill" href="#pills-auth" role="tab" 
@@ -155,6 +155,7 @@
 
         {{-- Tab Content --}}
         <div class="tab-content m-0 pb-0" id="pills-tabContent">
+            {{-- Tab Line Item --}}
             <div class="tab-pane fade {{ $currentTab == 'item' ? 'show active' : '' }}" id="pills-lineitem" role="tabpanel" aria-labelledby="pills-lineitem-tab" wire:ignore.self>
                 <div class="row m-0 p-0">
                     <div class="col-md-12">
@@ -259,6 +260,7 @@
                 </div> --}}
             </div>
 
+            {{-- Suppliers --}}
             <div class="tab-pane fade {{ $currentTab == 'Suppliers' ? 'show active' : '' }}" id="pills-Suppliers" role="tabpanel" aria-labelledby="pills-Suppliers-tab" wire:ignore.self>
                 <div class="row">
                     <div class="col-md-4">
@@ -327,6 +329,189 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Quotation Details --}}
+            <div class="tab-pane fade {{ $currentTab == 'QuotationDetails' ? 'show active' : '' }}" id="pills-QuotationDetails" role="tabpanel" aria-labelledby="pills-QuotationDetails-tab" wire:ignore.self>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>Supplier</label>
+                        <x-select2 id="supplier2-select2" wire:model.defer="tabQuotationDetails.selectSupplier2">
+                            <option value="">--- Please Select ---</option>
+                            @foreach($supplier_dd as $row)
+                            <option value="{{ $row->supplier }}">
+                                {{ $row->supplier }} : {{ $row->supplier_name }}
+                            </option> 
+                            @endforeach
+                        </x-select2>
+                        @error('selectSupplier2') <span class="text-red">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-6"></div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Supplier Quotation No. <span style="color: red"> *</span></label>
+                        <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="tabQuotationDetails.edecisionno">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Main Contact Person <span style="color: red"> *</span></label>
+                        <x-select2 id="mainContactPerson-select2" wire:model.defer="tabQuotationDetails.main_contact_person">
+                            {{-- รอค่าจากการ Bind --}}
+                        </x-select2>
+                        @error('main_contact_person') <span class="text-red">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-3">
+                        <label>Phone</label>
+                        <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="tabQuotationDetails.telephone_number">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Email</label>
+                        <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="tabQuotationDetails.email">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Expiration Term <span style="color: red">*</span></label>
+                        <select class="form-control form-control-sm" wire:model="tabQuotationDetails.quotation_expiry_term">
+                            <option value="">--- Please Select ---</option>
+                            @foreach($quotationEexpiryTerm_dd as $row)
+                            <option value="{{ $row->termno }}">
+                                {{ $row->description }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="">Expiry Date <span style="color: red">*</span></label>
+                        <div class="input-group mb-1">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-calendar"></i>
+                                </span>
+                            </div>
+                            <x-datepicker wire:model.defer="tabQuotationDetails.quotation_expiry" id="quotation_expiry"
+                                :error="'date'"/>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Payment Terms</label>
+                        <x-select2 id="paymentTerm-select2" wire:model.defer="tabQuotationDetails.payment_term">
+                            <option value="">--- Please Select ---</option>
+                            @foreach($paymentTerm_dd as $row)
+                            <option value="{{ $row->payment_code }}">
+                                {{ $row->description }}
+                            </option> 
+                            @endforeach
+                        </x-select2>
+                        @error('payment_term') <span class="text-red">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-3">
+                        <label>Payment Term Pattern</label>
+                        <x-select2 id="payment_pattern-select2" wire:model.defer="tabQuotationDetails.payment_pattern">
+                            <option value="">--- Please Select ---</option>
+                            {{-- @foreach($paymentTerm_dd as $row)
+                            <option value="{{ $row->supplier }}">
+                                {{ $row->supplier }} : {{ $row->supplier_name }}
+                            </option> 
+                            @endforeach --}}
+                        </x-select2>
+                        @error('payment_pattern') <span class="text-red">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Currency <span style="color: red">*</span></label>
+                        <select class="form-control form-control-sm" wire:model="tabQuotationDetails.currency">
+                            <option value="">--- Please Select ---</option>
+                            @foreach($currency_dd as $row)
+                            <option value="{{ $row->currency }}">
+                                {{ $row->currency }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Exchange Rate</label>
+                        <input class="form-control form-control-sm" type="number" step="0.01" wire:model.defer="tabQuotationDetails.exchange_rate">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Total Base Price</label>
+                        <input class="form-control form-control-sm" type="number" step="0.01" wire:model.defer="tabQuotationDetails.total_base_price">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Total Final Price</label>
+                        <input class="form-control form-control-sm" type="number" step="0.01" wire:model.defer="tabQuotationDetails.total_final_price">
+                    </div>
+                </div>
+    
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Local Currency</label>
+                        <input class="form-control form-control-sm" type="text" readonly value="THB">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Total Base Price (Local)</label>
+                        <input class="form-control form-control-sm" type="number" step="0.01" wire:model.defer="tabQuotationDetails.total_base_price_local">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Total Final Price (Local)</label>
+                        <input class="form-control form-control-sm" type="number" step="0.01" wire:model.defer="tabQuotationDetails.total_final_price_local">
+                    </div>
+                    <div class="col-md-3">
+                    </div>
+                </div>
+
+                <div class="row m-0 p-0">
+                    <div class="col-md-12">
+                        <table class="table table-sm nissanTB">
+                            <thead>
+                            <tr class="text-center">
+                                <th scope="col">Line No.</th>
+                                <th scope="col">Part No.</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Supplier</th>
+                                <th scope="col">Qty</th>
+                                <th scope="col">UOM</th>
+                                <th scope="col">Base Price</th>
+                                <th scope="col">Final Price</th>
+                                <th scope="col">Total Final Price</th>
+                                <th scope="col">Currency</th>
+                                <th scope="col"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach ($quotationDetailsList as $row)
+                            <tr>
+                                <td scope="col">{{ $loop->iteration + $itemList->firstitem()-1 }}</td>
+                                <td scope="col">{{ $row->partno }}</td>
+                                <td scope="col">{{ $row->description }}</td>
+                                <td scope="col">{{ $row->status }}</td>
+                                <td scope="col">{{ $row->supplier }}</td>
+                                <td scope="col">{{ $row->qty }}</td>
+                                <td scope="col">{{ $row->uom }}</td>
+                                <td scope="col">{{ $row->base_price }}</td>
+                                <td scope="col">{{ $row->final_price }}</td>
+                                <td scope="col">{{ $row->total_final_price }}</td>
+                                <td scope="col">{{ $row->currency }}</td>
+                                <td scope="col">
+
+                                </td>
+                            </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-1">
+                        {{ $supplierList->links() }}
+                    </div>
+                </div>
+            </div>
+
         </div>
         {{-- Tab Content End--}} 
 
