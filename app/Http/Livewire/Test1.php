@@ -11,7 +11,7 @@ class Test1 extends Component
 {
     public function callFromBlade()
     {
-        return ('55555555555');
+        return ('55555555555 5555555');
     }
 
     public function myRandom()
