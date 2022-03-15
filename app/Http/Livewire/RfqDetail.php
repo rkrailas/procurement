@@ -13,6 +13,7 @@ class RfqDetail extends Component
 {
     public $editRFQNo, $currentTab, $rfqHeader;
     public $numberOfPage = 10;
+    public $selectedRows = [];
 
     // Header
     public $buyer_dd, $buyergroup_dd, $currency_dd;
@@ -24,7 +25,7 @@ class RfqDetail extends Component
     public $tabSupplier, $supplier_dd, $supplierContact_dd;
 
     // Tab Quotation Details
-    public $tabQuotationDetails, $quotationEexpiryTerm_dd, $paymentTerm_dd;
+    public $tabQuotationDetails, $quotationEexpiryTerm_dd, $paymentTerm_dd, $supplierQuotation_dd;
 
 
     // public function assignSupplier()
@@ -50,6 +51,21 @@ class RfqDetail extends Component
     // }
 
     // Tab Quotation Details Start
+    public function saveQuotation()
+    {
+        //???ถึงตรงนี้
+        dd($this->selectedRows);
+    }
+
+    public function updatedTabQuotationDetailsQuotationExpiryTerm()
+    {
+        $strsql = "SELECT expired_days FROM rfq_quotation_expiration_term WHERE termno='" . $this->tabQuotationDetails['quotation_expiry_term'] . "'";
+        $data = DB::select($strsql);
+        if ($data) {
+            $this->tabQuotationDetails['quotation_expiry'] = date_format(Carbon::now()->addDay($data[0]->expired_days),'Y-m-d');
+        }
+    }
+
     public function updatedTabQuotationDetailsCurrency()
     {
         $strsql = "SELECT from_currency, exchange_rate FROM currency_exchange_rate 
@@ -261,22 +277,21 @@ class RfqDetail extends Component
         $strsql = "SELECT buyer_group FROM buyer_group ORDER BY buyer_group";
         $this->buyergroup_dd = DB::select($strsql);
 
-        $this->currency_dd = [];
         $strsql = "SELECT currency FROM currency_master ORDER BY currency";
         $this->currency_dd = DB::select($strsql);
 
-        $this->supplier_dd = [];
         $strsql = "SELECT supplier, name1 + ' ' + name2 AS supplier_name FROM supplier 
             WHERE company='" . $this->rfqHeader['company'] . "' ORDER BY supplier";
         $this->supplier_dd = DB::select($strsql);
 
-        $this->quotationEexpiryTerm_dd = [];
         $strsql = "SELECT termno, description FROM rfq_quotation_expiration_term ORDER BY termno";
         $this->quotationEexpiryTerm_dd = DB::select($strsql);
 
-        $this->paymentTerm_dd = [];
         $strsql = "SELECT payment_code, description FROM payment_term ORDER BY payment_code";
         $this->paymentTerm_dd = DB::select($strsql);
+
+        $strsql = "SELECT supplier, supplier_name FROM rfq_supplier_quotation WHERE rfqno='" . $this->rfqHeader['rfqno'] . "' ORDER BY supplier";
+        $this->supplierQuotation_dd = DB::select($strsql);
 
     }
 
@@ -348,7 +363,7 @@ class RfqDetail extends Component
         $supplierList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
         
         //Tab Quotation Details
-        $strsql = "SELECT a.partno, a.description, b.description AS status, a.supplier, a.qty, a.uom, a.base_price, a.final_price, a.total_final_price, a.currency
+        $strsql = "SELECT a.id, a.partno, a.description, b.description AS status, a.supplier, a.qty, a.uom, a.base_price, a.final_price, a.total_final_price, a.currency
             FROM rfq_item a
             LEFT JOIN rfq_status b ON a.status=b.status
             WHERE a.rfqno='" . $this->rfqHeader['rfqno'] . "'";

@@ -40,7 +40,7 @@ use App\Http\Controllers\PHPJasperController;
 // });
 
 Route::get('/', function () {
-    return view('clickjacking');
+    return view('auth.login');
 });
 
 Route::group(['middleware' => 'auth'], function () {

@@ -337,7 +337,7 @@
                         <label>Supplier</label>
                         <x-select2 id="supplier2-select2" wire:model.defer="tabQuotationDetails.selectSupplier2">
                             <option value="">--- Please Select ---</option>
-                            @foreach($supplier_dd as $row)
+                            @foreach($supplierQuotation_dd as $row)
                             <option value="{{ $row->supplier }}">
                                 {{ $row->supplier }} : {{ $row->supplier_name }}
                             </option> 
@@ -362,11 +362,11 @@
                     </div>
                     <div class="col-md-3">
                         <label>Phone</label>
-                        <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="tabQuotationDetails.telephone_number">
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="tabQuotationDetails.telephone_number">
                     </div>
                     <div class="col-md-3">
                         <label>Email</label>
-                        <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="tabQuotationDetails.email">
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="tabQuotationDetails.email">
                     </div>
                 </div>
 
@@ -396,7 +396,8 @@
                     </div>
                     <div class="col-md-3">
                         <label>Payment Terms</label>
-                        <x-select2 id="paymentTerm-select2" wire:model.defer="tabQuotationDetails.payment_term">
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="tabQuotationDetails.payment_term">
+                        {{-- <x-select2 id="paymentTerm-select2" wire:model.defer="tabQuotationDetails.payment_term">
                             <option value="">--- Please Select ---</option>
                             @foreach($paymentTerm_dd as $row)
                             <option value="{{ $row->payment_code }}">
@@ -404,7 +405,7 @@
                             </option> 
                             @endforeach
                         </x-select2>
-                        @error('payment_term') <span class="text-red">{{ $message }}</span> @enderror
+                        @error('payment_term') <span class="text-red">{{ $message }}</span> @enderror --}}
                     </div>
                     <div class="col-md-3">
                         <label>Payment Term Pattern</label>
@@ -434,15 +435,15 @@
                     </div>
                     <div class="col-md-3">
                         <label>Exchange Rate</label>
-                        <input class="form-control form-control-sm" type="number" step="0.01" wire:model.defer="tabQuotationDetails.exchange_rate">
+                        <input class="form-control form-control-sm" type="number" readonly wire:model.defer="tabQuotationDetails.exchange_rate">
                     </div>
                     <div class="col-md-3">
                         <label>Total Base Price</label>
-                        <input class="form-control form-control-sm" type="number" step="0.01" wire:model.defer="tabQuotationDetails.total_base_price">
+                        <input class="form-control form-control-sm" type="number" readonly wire:model.defer="tabQuotationDetails.total_base_price">
                     </div>
                     <div class="col-md-3">
                         <label>Total Final Price</label>
-                        <input class="form-control form-control-sm" type="number" step="0.01" wire:model.defer="tabQuotationDetails.total_final_price">
+                        <input class="form-control form-control-sm" type="number" readonly wire:model.defer="tabQuotationDetails.total_final_price">
                     </div>
                 </div>
     
@@ -453,11 +454,11 @@
                     </div>
                     <div class="col-md-3">
                         <label>Total Base Price (Local)</label>
-                        <input class="form-control form-control-sm" type="number" step="0.01" wire:model.defer="tabQuotationDetails.total_base_price_local">
+                        <input class="form-control form-control-sm" type="number" readonly wire:model.defer="tabQuotationDetails.total_base_price_local">
                     </div>
                     <div class="col-md-3">
                         <label>Total Final Price (Local)</label>
-                        <input class="form-control form-control-sm" type="number" step="0.01" wire:model.defer="tabQuotationDetails.total_final_price_local">
+                        <input class="form-control form-control-sm" type="number" readonly wire:model.defer="tabQuotationDetails.total_final_price_local">
                     </div>
                     <div class="col-md-3">
                     </div>
@@ -485,7 +486,13 @@
                             <tbody>
                             @foreach ($quotationDetailsList as $row)
                             <tr>
-                                <td scope="col">{{ $loop->iteration + $itemList->firstitem()-1 }}</td>
+                                <td scope="col">
+                                    <div d-inline ml-2>
+                                        <input wire:model="selectedRows" type="checkbox" value="{{ $row->id }}"
+                                            id="{{ $row->id }}">
+                                        <span>{{ $loop->iteration + $itemList->firstitem()-1 }}</span>
+                                    </div>                                    
+                                </td>
                                 <td scope="col">{{ $row->partno }}</td>
                                 <td scope="col">{{ $row->description }}</td>
                                 <td scope="col">{{ $row->status }}</td>
@@ -497,7 +504,6 @@
                                 <td scope="col">{{ $row->total_final_price }}</td>
                                 <td scope="col">{{ $row->currency }}</td>
                                 <td scope="col">
-
                                 </td>
                             </tr>
                             @endforeach
@@ -508,6 +514,12 @@
                 <div class="row">
                     <div class="col-md-12 mb-1">
                         {{ $supplierList->links() }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 d-flex justify-content-end">
+                        <button wire:click.prevent="saveQuotation" class="btn btn-sm btn-danger">
+                            <i class="fas fa-save mr-1"></i>Save Quotation</button>
                     </div>
                 </div>
             </div>
