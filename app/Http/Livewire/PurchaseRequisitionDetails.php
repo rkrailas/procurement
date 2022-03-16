@@ -743,12 +743,13 @@ class PurchaseRequisitionDetails extends Component
             unset($this->attachment_file[$index]);
         }
 
-        public function updatedAttachmentFile()
-        {
-            // $this->validate([
-            //     'attachment_file.*' => 'max:5120', // 5MB Max 
-            // ]);
-        }
+        // เตรียมลบออก
+        // public function updatedAttachmentFile()
+        // {
+        //     $this->validate([
+        //         'attachment_file.*' => 'max:5120', // 5MB Max 
+        //     ]);
+        // }
 
         public function formatSizeUnits($fileSize)
         {
@@ -771,10 +772,20 @@ class PurchaseRequisitionDetails extends Component
                 $isHeader = false;
             }
 
-            DB::statement("UPDATE attactments SET file_name=?, ref_lineno=?, file_type=?, edecision_no=?, isheader_level=?, changed_by=?, changed_on=?
+            DB::transaction(function() use ($isHeader)
+            {
+                DB::statement("UPDATE attactments SET file_name=?, ref_lineno=?, file_type=?, edecision_no=?, isheader_level=?, changed_by=?, changed_on=?
                 WHERE id=?" 
                 , [$this->editAttachment['file_name'], json_encode($this->editAttachment['ref_lineno']), $this->editAttachment['file_type']
                 , $this->editAttachment['edecision_no'], $isHeader, auth()->user()->id, Carbon::now(), $this->editAttachment['id']]);
+
+                //Add History Log
+                $xNewValue = "File : " . $this->editAttachment['file_path'] . " apply to " . $this->editAttachment['ref_lineno'] . " has been updated.";
+                DB::statement("INSERT INTO history_logs(id_original, obj_type, line_no, refdocno, field, new_value, created_by, created_on, changed_by, changed_on)
+                VALUES(?,?,?,?,?,?,?,?,?,?)"
+                ,[$this->deleteID, "PR", "", $this->prHeader['prno'], "FILE ATTACHMENT", $xNewValue, auth()->user()->id, Carbon::now()
+                    , auth()->user()->id, Carbon::now() ]);
+            });
 
             $strsql = "SELECT msg_text FROM message_list WHERE msg_no='100' AND class='FILE ATTACHMENT'";
             $data = DB::select($strsql);
@@ -791,7 +802,7 @@ class PurchaseRequisitionDetails extends Component
         public function editAttachment($rowID)
         {
             //แสดง Modal สำหรับ Edit
-            $strsql = "SELECT a.id, a.file_name, a.ref_lineno, a.file_type, a.edecision_no
+            $strsql = "SELECT a.id, a.file_name, a.file_path, a.ref_lineno, a.file_type, a.edecision_no
                 ,b.name + ' ' + b.lastname as create_by
                 , CASE 
                     WHEN ISNULL(a.create_on,'') = '' THEN a.changed_on
@@ -841,7 +852,17 @@ class PurchaseRequisitionDetails extends Component
                 }
             }
 
-            DB::statement("DELETE FROM attactments WHERE id=?" , [$this->deleteID]);
+            DB::transaction(function() use ($data)
+            {
+                //Add History Log
+                $xNewValue = "File : " . $data[0]->file_path . " has been removed.";
+                DB::statement("INSERT INTO history_logs(id_original, obj_type, line_no, refdocno, field, new_value, created_by, created_on, changed_by, changed_on)
+                VALUES(?,?,?,?,?,?,?,?,?,?)"
+                ,[$this->deleteID, "PR", "", $this->prHeader['prno'], "FILE ATTACHMENT", $xNewValue, auth()->user()->id, Carbon::now()
+                    , auth()->user()->id, Carbon::now() ]);
+    
+                DB::statement("DELETE FROM attactments WHERE id=?" , [$this->deleteID]);
+            });
 
             $strsql = "SELECT msg_text FROM message_list WHERE msg_no='102' AND class='FILE ATTACHMENT'";
             $data = DB::select($strsql);
@@ -886,35 +907,22 @@ class PurchaseRequisitionDetails extends Component
                         VALUES(?,?,?,?,?,?,?,?,?,?,?)"
                         ,[$file->getClientOriginalName(), $this->attachment_filetype, $newFileName, '10'
                         , $this->prHeader['id'], $this->prHeader['prno'], $this->attachment_edecisionno, $isHeader
-                        ,json_encode($this->attachment_lineno), auth()->user()->id, Carbon::now()]);
+                        , json_encode($this->attachment_lineno), auth()->user()->id, Carbon::now()]);
+
+                        //Add History Log
+                        //Get last id in table attactments
+                        $strsql = "SELECT id FROM attactments WHERE file_path='" . $newFileName . "'";
+                        $data = DB::select($strsql);
+                        if ($data) {
+                            $xNewValue = "File : " . $newFileName . " apply to " . implode(", ",$this->attachment_lineno) . " has been created.";
+                            DB::statement("INSERT INTO history_logs(id_original, obj_type, line_no, refdocno, field, new_value, created_by, created_on, changed_by, changed_on)
+                            VALUES(?,?,?,?,?,?,?,?,?,?)"
+                            ,[$data[0]->id, "PR", "", $this->prHeader['prno'], "FILE ATTACHMENT", $xNewValue, auth()->user()->id, Carbon::now()
+                                , auth()->user()->id, Carbon::now() ]);
+                        }                        
                     }
                 });
                 
-                //History Log
-                    // DB::transaction(function() 
-                    // {
-                    //     $xRandom = Str::random(20);
-                    //     DB::statement(
-                    //         "INSERT INTO history_log(object_type, object_id, action_type, action_where, line_no, history_table, history_ref, company
-                    //         , changed_by, changed_on)
-                    //     VALUES(?,?,?,?,?,?,?,?,?,?)",
-                    //         [
-                    //             'PR', $this->prHeader['prno'], 'Insert', 'Attachments', 0, 'history_attachments', $xRandom, auth()->user()->company
-                    //             , auth()->user()->id, Carbon::now()
-                    //         ]
-                    //     );
-
-                    //     DB::statement(
-                    //         "INSERT INTO history_attachments(history_ref, file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
-                    //         , ref_lineid, create_by, create_on, changed_by, changed_on)
-                    //         SELECT '" . $xRandom . "', file_path, [file_name], ref_doctype, ref_docno, ref_docid, ref_lineno
-                    //         , ref_lineid, create_by, create_on, changed_by, changed_on
-                    //         FROM attactments
-                    //         WHERE ref_docno='" . $this->prHeader['prno'] . "' AND ref_lineid=" . $this->attachment_lineno
-                    //     );
-                    // });
-                //History Log End
-
                 $this->reset(['attachment_lineno', 'attachment_filetype', 'attachment_edecisionno', 'attachment_file']);
                 $this->dispatchBrowserEvent('clear-select2');
 
@@ -1075,13 +1083,13 @@ class PurchaseRequisitionDetails extends Component
 
                     //Find Buyer Group
                     $xBuyerGrp = '';
-                    $strsql = "SELECT b.buyer_group
+                    $strsql = "SELECT b.buyer_group_code
                         FROM buyer a
-                        LEFT JOIN buyer_group_mapping b ON a.buyer=b.buyer
-                        WHERE b.ismaskdelete=0 AND a.buyer='" . $this->prHeader['buyer'] . "'";
+                        LEFT JOIN buyer_group b ON a.username=b.buyer_id
+                        WHERE b.ismark_delete=0 AND a.buyer='" . $this->prHeader['buyer'] . "'";
                     $data = DB::select($strsql);
                     if ($data) {
-                        $xBuyerGrp = $data[0]->buyer_group;
+                        $xBuyerGrp = $data[0]->buyer_group_code;
                     }
 
                     //Create RFQ HEADER
@@ -2193,8 +2201,8 @@ class PurchaseRequisitionDetails extends Component
         $xBuyer_dd = json_decode(json_encode($this->buyer_dd), true);
         $newOption = "<option value=' '>--- Please Select ---</option>";
         foreach ($xBuyer_dd as $row) {
-            $newOption = $newOption . "<option value='" . $row['buyer'] . "' ";
-            if ($row['buyer'] == $this->prHeader['buyer']) {
+            $newOption = $newOption . "<option value='" . $row['username'] . "' ";
+            if ($row['username'] == $this->prHeader['buyer']) {
                 $newOption = $newOption . "selected='selected'";
             }
             $newOption = $newOption . ">" . $row['fullname'] . "</option>";
@@ -2350,6 +2358,7 @@ class PurchaseRequisitionDetails extends Component
 
             //9-2-2022 Update partno for CR No.10
             $this->loadDD_partno_dd(true);
+            $this->loadDD_buyer_dd(true);            
 
         } else {
             $this->prHeader['company'] = "";
@@ -2522,6 +2531,27 @@ class PurchaseRequisitionDetails extends Component
         }
     }
 
+    public function loadDD_buyer_dd($myRender=false)
+    {
+        //16-03-2022
+        $this->buyer_dd = [];
+        $strsql = "SELECT a.username, b.name + ' ' + b.lastname AS fullname
+            FROM buyer a
+            JOIN users b ON a.username=b.username
+            JOIN buyer_company_mapping c ON a.username=c.buyer
+            WHERE c.company='" . $this->prHeader['company'] . "' AND c.site='" . $this->prHeader['site'] . "'";
+        $this->buyer_dd = DB::select($strsql);
+
+        if ($myRender){
+            $newOption = "<option value=' '>--- Please Select ---</option>";
+            $xbuyer_dd = json_decode(json_encode($this->buyer_dd), true);
+            foreach ($xbuyer_dd as $row) {
+                $newOption = $newOption . "<option value='" . $row['username'] . "'>" . $row['fullname'] . "</option>";
+            }
+            $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#buyer-select2']);
+        }
+    }
+
     public function loadDropdownList()
     {
         //Herder
@@ -2529,9 +2559,12 @@ class PurchaseRequisitionDetails extends Component
             $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users WHERE company='" . auth()->user()->company . "' ORDER BY users.name";
             $this->requested_for_dd = DB::select($strsql);
 
-            $strsql = "SELECT a.buyer, b.name + ' ' + b.lastname AS fullname
-                FROM buyer a 
-                left join users b ON a.username=b.username";
+            //16-03-22 แก้เพิ่มเพราะเปลี่ยน Table
+            $strsql = "SELECT a.username, b.name + ' ' + b.lastname AS fullname
+                FROM buyer a
+                JOIN users b ON a.username=b.username
+                JOIN buyer_company_mapping c ON a.username=c.buyer
+                WHERE c.company='" . $this->prHeader['company'] . "' AND c.site='" . $this->prHeader['site'] . "'";
             $this->buyer_dd = DB::select($strsql);
 
             //Delivery Address

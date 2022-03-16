@@ -106,7 +106,7 @@ class PurchaseRequisitionList extends Component
         $this->requestor_dd = DB::select($strsql);
         $this->requestedfor_dd = DB::select($strsql);
 
-        $strsql = "SELECT a.buyer, b.name + ' ' + b.lastname AS fullname
+        $strsql = "SELECT a.username, b.name + ' ' + b.lastname AS fullname
                 FROM buyer a 
                 left join users b ON a.username=b.username";
         $this->buyer_dd = DB::select($strsql);
@@ -192,8 +192,7 @@ class PurchaseRequisitionList extends Component
                 LEFT JOIN users req_f ON req_f.id=prh.requested_for
                 LEFT JOIN users req ON req.id=prh.requestor
                 LEFT JOIN pr_status ON pr_status.status=prh.status
-                LEFT JOIN buyer ON buyer.buyer=prh.buyer
-                LEFT JOIN users buyername ON buyername.username=buyer.username
+                LEFT JOIN users buyername ON prh.buyer=buyername.username
                 LEFT JOIN (SELECT site, delivery_location FROM site WHERE address_id LIKE '%-EN') site ON site.site=prh.site
                 LEFT JOIN (SELECT prno, MIN(id) AS id
                             FROM pr_item 

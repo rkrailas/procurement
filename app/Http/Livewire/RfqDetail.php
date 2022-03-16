@@ -269,12 +269,12 @@ class RfqDetail extends Component
 
     public function loadDropdownList()
     {
-        $strsql = "SELECT a.buyer, b.name + ' ' + b.lastname AS fullname
+        $strsql = "SELECT a.username, b.name + ' ' + b.lastname AS fullname
             FROM buyer a 
             left join users b ON a.username=b.username";
         $this->buyer_dd = DB::select($strsql);
 
-        $strsql = "SELECT buyer_group FROM buyer_group ORDER BY buyer_group";
+        $strsql = "SELECT buyer_group_code FROM buyer_group ORDER BY buyer_group_code";
         $this->buyergroup_dd = DB::select($strsql);
 
         $strsql = "SELECT currency FROM currency_master ORDER BY currency";
@@ -317,8 +317,7 @@ class RfqDetail extends Component
             LEFT JOIN rfq_status e ON a.status=e.status 
             LEFT JOIN users f ON c.requested_for=f.id 
             LEFT JOIN users g ON c.requestor=g.id 
-            LEFT JOIN buyer h ON c.buyer=h.buyer 
-            LEFT JOIN users i ON h.username=i.username 
+            LEFT JOIN users i ON c.buyer=i.username 
             LEFT JOIN (SELECT site_code, description FROM site_location GROUP BY site_code, description) j ON c.site=j.site_code 
             WHERE a.rfqno='" . $this->editRFQNo . "'";
 

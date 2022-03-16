@@ -165,7 +165,7 @@
                         <x-select2 id="buyer-select2" disabled="true" wire:model.defer="prHeader.buyer">
                             <option value=" ">--- Please Select ---</option>
                             @foreach($buyer_dd as $row)
-                            <option value="{{ $row->buyer }}">
+                            <option value="{{ $row->username }}">
                                 {{ $row->fullname }}
                             </option>
                             @endforeach
@@ -174,7 +174,7 @@
                         <x-select2 id="buyer-select2" wire:model.defer="prHeader.buyer">
                             <option value=" ">--- Please Select ---</option>
                             @foreach($buyer_dd as $row)
-                            <option value="{{ $row->buyer }}">
+                            <option value="{{ $row->username }}">
                                 {{ $row->fullname }}
                             </option>
                             @endforeach

@@ -52,7 +52,7 @@
                         <label>Buyer</label>
                         <x-select2 id="buyer-select2" wire:model.defer="rfqHeader.buyer">
                             @foreach($buyer_dd as $row)
-                            <option value="{{ $row->buyer }}">
+                            <option value="{{ $row->username }}">
                                 {{ $row->fullname }}
                             </option>
                             @endforeach
@@ -62,8 +62,8 @@
                         <label>Buyer Group</label>
                         <x-select2 id="buyergroup-select2" wire:model.defer="rfqHeader.buyer_group">
                             @foreach($buyergroup_dd as $row)
-                            <option value="{{ $row->buyer_group }}">
-                                {{ $row->buyer_group }}
+                            <option value="{{ $row->buyer_group_code }}">
+                                {{ $row->buyer_group_code }}
                             </option>
                             @endforeach
                         </x-select2>

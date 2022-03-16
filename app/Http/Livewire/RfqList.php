@@ -60,12 +60,12 @@ class RfqList extends Component
         $this->requestor_dd = DB::select($strsql);
         $this->requestedfor_dd = DB::select($strsql);
 
-        $strsql = "SELECT a.buyer, b.name + ' ' + b.lastname AS fullname
+        $strsql = "SELECT a.username, b.name + ' ' + b.lastname AS fullname
             FROM buyer a 
             left join users b ON a.username=b.username";
         $this->buyer_dd = DB::select($strsql);
 
-        $strsql = "SELECT buyer_group FROM buyer_group ORDER BY buyer_group";
+        $strsql = "SELECT buyer_group_code FROM buyer_group ORDER BY buyer_group_code";
         $this->buyergroup_dd = DB::select($strsql);
 
         $strsql = "SELECT site FROM site 
@@ -89,14 +89,13 @@ class RfqList extends Component
     public function mount()
     {
         $this->myBuyerGroup = "";
-        $strsql = "SELECT c.buyer_group
-                FROM users a
-                JOIN buyer b ON a.username=b.username
-                JOIN buyer_group_mapping c ON b.buyer=c.buyer
+        $strsql = "SELECT c.buyer_group_code
+                FROM buyer a
+                JOIN buyer_group c ON a.username=c.buyer_id
                 WHERE a.username='" . auth()->user()->username . "'";
         $data = DB::select($strsql);
         if ($data) {
-            $this->myBuyerGroup = $data[0]->buyer_group;
+            $this->myBuyerGroup = $data[0]->buyer_group_code;
         }
 
         $this->resetSearch();
@@ -145,8 +144,7 @@ class RfqList extends Component
             LEFT JOIN rfq_status e ON a.status=e.status
             LEFT JOIN users f ON c.requested_for=f.id
             LEFT JOIN users g ON c.requestor=g.id
-            LEFT JOIN buyer h ON c.buyer=h.buyer
-            LEFT JOIN users i ON h.username=i.username";
+            LEFT JOIN users i ON c.buyer=i.username";
         $strsql = $strsql . $xWhere;
 
         $rfq_list = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);

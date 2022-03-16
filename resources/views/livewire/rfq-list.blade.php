@@ -31,7 +31,7 @@
                         <label>Buyer</label>
                         <x-select2-multiple id="buyer-select2" wire:model.defer="buyer">
                             @foreach($buyer_dd as $row)
-                            <option value='{{ $row->buyer }}'>
+                            <option value='{{ $row->username }}'>
                                 {{ $row->fullname }}
                             </option>
                             @endforeach
@@ -41,8 +41,8 @@
                         <label>Buyer Group</label>
                         <x-select2-multiple id="buyergroup-select2" wire:model.defer="buyer_group">
                             @foreach($buyergroup_dd as $row)
-                            <option value='{{ $row->buyer_group }}'>
-                                {{ $row->buyer_group }}
+                            <option value='{{ $row->buyer_group_code }}'>
+                                {{ $row->buyer_group_code }}
                             </option>
                             @endforeach
                         </x-select2-multiple>
@@ -229,7 +229,7 @@
                                         class="fa fa-arrow-down {{ $sortBy === 'c.requestor' && $sortDirection === 'desc' ? '' : 'text-dark'}}"></i>
                                 </span>
                             </th>
-                            <th scope="col">buyer
+                            <th scope="col">Buyer
                                 <span wire:click="sortBy('c.buyer')" class="float-right text-sm"
                                     style="cursor: pointer;">
                                     <i
