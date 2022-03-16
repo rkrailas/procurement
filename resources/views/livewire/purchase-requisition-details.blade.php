@@ -347,7 +347,7 @@
                                             <div d-inline ml-2>
                                                 <input wire:model="selectedRows" type="checkbox" value="{{ $row->id }}"
                                                     id="{{ $row->lineno }}">
-                                                <span>{{ $row->lineno }}</span>
+                                                <span>{{ $loop->iteration + $itemList->firstitem()-1 }}</span>
                                             </div>
                                         </td>
                                         <td scope="col">{{ $row->partno }}</td>

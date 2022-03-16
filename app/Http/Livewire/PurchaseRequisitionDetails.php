@@ -2647,7 +2647,7 @@ class PurchaseRequisitionDetails extends Component
                 FROM pr_item pri
                 LEFT JOIN pr_status sts ON sts.status=pri.[status]
                 WHERE pri.prno='" . $this->prHeader['prno'] . "'
-                ORDER BY pri.[lineno]";
+                ORDER BY pri.id";
             $itemList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
             //prListDeliveryPlan
