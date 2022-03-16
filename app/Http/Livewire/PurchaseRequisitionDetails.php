@@ -1826,7 +1826,7 @@ class PurchaseRequisitionDetails extends Component
                 , a.snn_service, a.snn_production, b.supplier AS nominated_supplier, b.name1 + ' ' + b.name2 AS nominated_supplier_name, a.remarks
                 , a.skip_rfq, a.skip_doa, a.final_price
                 , FORMAT(a.quotation_expiry_date,'yyyy-MM-dd') AS quotation_expiry_date, a.reference_pr, c.min_order_qty, c.supplier_lead_time
-                , d.status + ':' + d.description AS status_des, d.status
+                , d.status + ':' + d.description AS status_des, d.status, a.nonstock_control
                 FROM pr_item a
                 LEFT JOIN supplier b ON b.supplier = a.nominated_supplier
                 LEFT JOIN part_master c ON c.partno = a.partno
@@ -2045,8 +2045,9 @@ class PurchaseRequisitionDetails extends Component
 
                         $result = DB::statement("INSERT INTO pr_item (prno, prno_id, [lineno], partno, description, purchase_unit, unit_price, unit_price_local
                             , currency, exchange_rate, purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
-                            ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, blanket_order_type, status, create_by, create_on)
-                        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                            ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, blanket_order_type, status, nonstock_control
+                            , create_by, create_on)
+                        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                             ,[$this->prHeader['prno'], $this->prHeader['id'], $lineno, $this->prItem['partno'], $this->prItem['description']
                             , $this->prItem['purchase_unit'], $this->prItem['unit_price'], $this->prItem['unit_price'] * $this->prItem['exchange_rate']
                             , $this->prItem['currency'], $this->prItem['exchange_rate']
@@ -2054,7 +2055,7 @@ class PurchaseRequisitionDetails extends Component
                             , $this->prItem['req_date'], $this->prItem['internal_order'] ,$this->prItem['budget_code'], $this->prItem['over_1_year_life']
                             , radioToBit($this->prItem['snn_service']), radioToBit($this->prItem['snn_production']) ,$this->prItem['nominated_supplier'], $this->prItem['remarks']
                             , $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr'], $blanket_order_type 
-                            , "10" ,auth()->user()->id, Carbon::now()
+                            , "10", $this->prItem['nonstock_control'] ,auth()->user()->id, Carbon::now()
                             ]);
 
                         //History log
@@ -2082,7 +2083,7 @@ class PurchaseRequisitionDetails extends Component
     
                     DB::statement("UPDATE pr_item SET partno=?, description=?, purchase_unit=?, unit_price=?, unit_price_local=?, currency=?, exchange_rate=?
                         ,purchase_group=?, account_group=?, qty=?, req_date=?, internal_order=?, budget_code=?, over_1_year_life=?, snn_service=?
-                        ,snn_production=?, nominated_supplier=?, remarks=?, skip_rfq=?, skip_doa=?, reference_pr=?, blanket_order_type=?
+                        ,snn_production=?, nominated_supplier=?, remarks=?, skip_rfq=?, skip_doa=?, reference_pr=?, blanket_order_type=?, nonstock_control=?
                         , changed_by=?, changed_on=?
                         WHERE id=?"
                     , [
@@ -2092,7 +2093,7 @@ class PurchaseRequisitionDetails extends Component
                         , $this->prItem['qty'], $this->prItem['req_date'], $this->prItem['internal_order'] ,$this->prItem['budget_code']
                         , $this->prItem['over_1_year_life'], radioToBit($this->prItem['snn_service']), radioToBit($this->prItem['snn_production']) ,$this->prItem['nominated_supplier']
                         , $this->prItem['remarks'], $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr']
-                        , $blanket_order_type, auth()->user()->id, Carbon::now(), $this->prItem['id']
+                        , $blanket_order_type, $this->prItem['nonstock_control'], auth()->user()->id, Carbon::now(), $this->prItem['id']
                     ]);
 
                     //Histroy Log
@@ -2160,21 +2161,28 @@ class PurchaseRequisitionDetails extends Component
                         $this->prItem['unit_price'] = round($data[0]->base_price,2);
                     }
 
-                    //16-03-22 หา Budget Code
                     if ($data[0]->gl_account <> ''){
-                        // รอลบ 16-03-22
-                        // ถ้า Item มี gl_account ให้ Budget_code=gl_account
-                        // $this->prItem['budget_code'] = $data[0]->gl_account;
-                        // $newOption = "<option value=' '>--- Please Select ---</option>";
-                        // $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
-                        // foreach ($xBudgetcode_dd as $row) {
-                        //     $newOption = $newOption . "<option value='" . $row['account'] . "' ";
-                        //     if ($row['account'] == $this->prItem['budget_code']) {
-                        //         $newOption = $newOption . "selected='selected'";
-                        //     }
-                        //     $newOption = $newOption . ">" . $row['account'] . ':' . $row['description'] . "</option>";
-                        // }
 
+                        //16-03-22 non stock control
+                        $strsql = "SELECT id FROM gl_mapping_nonstockcontrol
+                                WHERE company ='" . $this->prHeader['company'] . "'
+                                AND notin_costcenter <> '" . $this->prHeader['cost_center'] . "'
+                                AND gl_account = '" . $data[0]->gl_account ."'
+                                AND isactive=1";
+                        $this->prItem['nonstock_control'] = true;
+                        $data2 = DB::select($strsql);
+                        if ($data2) {
+                            $this->prItem['nonstock_control'] = true;
+                            $newOption = "<input class='form-check-input' type='checkbox' checked wire:model.defer='prItem.nonstock_control' disabled>";
+                            $this->dispatchBrowserEvent('bindToCheckbox', ['newOption' => $newOption, 'selectName' => '#nonstock_control']);
+
+                        } else {
+                            $this->prItem['nonstock_control'] = false;
+                            $newOption = "<input class='form-check-input' type='checkbox' wire:model.defer='prItem.nonstock_control' disabled>";
+                            $this->dispatchBrowserEvent('bindToCheckbox', ['newOption' => $newOption, 'selectName' => '#nonstock_control']);
+                        }
+
+                        //16-03-22 หา Budget Code
                         $this->prItem['budget_code'] = $data[0]->gl_account;
                         $strsql = "SELECT account, description FROM gl_master 
                             WHERE company='" . $this->prHeader['company'] . "' 
@@ -2191,7 +2199,10 @@ class PurchaseRequisitionDetails extends Component
                         $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
 
                     }else{
-                        //ถ้า Item ไม่มี gl_account ให้หาจาก gl_mapping_noninv
+                        //16-03-22 non stock control
+                        $this->prItem['nonstock_control'] = true;
+
+                        //16-03-22 ถ้า Item ไม่มี gl_account ให้หาจาก gl_mapping_noninv
                         $this->budgetcode_dd = [];
                         $strsql = "SELECT account, description FROM gl_master 
                                 WHERE category IN ('Inventory', 'Asset Noninventory')
@@ -2252,6 +2263,9 @@ class PurchaseRequisitionDetails extends Component
             $this->dispatchBrowserEvent('show-modelPartLineItem');
 
         } else if ($this->orderType == "11" or $this->orderType == "21") {
+            //16-03-22 Non Stock Control
+            $this->prItem['nonstock_control'] = true;
+
             $this->dispatchBrowserEvent('show-modelExpenseLineItem');
 
             //16-03-2022 ถ้าเป็น Free Text ให้หา Budget Code จาก gl_mapping_noninv

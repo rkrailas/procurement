@@ -23,11 +23,19 @@
 
                 {{-- Description --}}
                 <div class="row">
-                    <div class="col-12">
+                    <div class="col-9">
                         <label>Description <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="200"
                             wire:model.defer="prItem.description">
                         @error('description') <span class="text-red">{{ $message }}.</span> @enderror
+                    </div>
+                    <div class="col-md-3">
+                        <label>Non Stock Control</label>
+                        <div>
+                            <div class="form-check form-check-inline" id="nonstock_control">
+                                <input class="form-check-input" type="checkbox" wire:model.defer="prItem.nonstock_control" disabled>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

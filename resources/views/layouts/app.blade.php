@@ -219,6 +219,11 @@
             $(event.detail.selectName).html(" ");
             $(event.detail.selectName).append(event.detail.newOption);
         });
+
+        window.addEventListener('bindToCheckbox', event => {
+            $(event.detail.selectName).html(" ");
+            $(event.detail.selectName).append(event.detail.newOption);
+        });
     </script>
 
     <!-- toastr Message -->

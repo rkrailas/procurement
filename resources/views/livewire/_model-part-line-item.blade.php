@@ -44,7 +44,7 @@
                     <div class="col-md-3">
                         <label>Non Stock Control</label>
                         <div>
-                            <div class="form-check form-check-inline">
+                            <div class="form-check form-check-inline" id="nonstock_control">
                                 <input class="form-check-input" type="checkbox" wire:model.defer="" disabled>
                             </div>
                         </div>
