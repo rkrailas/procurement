@@ -1758,14 +1758,15 @@ class PurchaseRequisitionDetails extends Component
                     $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#internalorder-select2']);
 
                     //budgetcode-select2
-                    $newOption = "<option value=' '>--- Please Select ---</option>";
+                    // $newOption = "<option value=' '>--- Please Select ---</option>";
+                    $newOption = "";
                     $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
                     foreach ($xBudgetcode_dd as $row) {
                         $newOption = $newOption . "<option value='" . $row['account'] . "' ";
                         if ($row['account'] == $this->prItem['budget_code']) {
                             $newOption = $newOption . "selected='selected'";
                         }
-                        $newOption = $newOption . ">" . $row['account'] . ':' . $row['description'] . "</option>";
+                        $newOption = $newOption . ">" . $row['account'] . ' : ' . $row['description'] . "</option>";
                     }
                     $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
 
@@ -1795,14 +1796,15 @@ class PurchaseRequisitionDetails extends Component
                     $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#internalorder-select2']);
 
                     //budgetcode-select2
-                    $newOption = "<option value=' '>--- Please Select ---</option>";
+                    //$newOption = "<option value=' '>--- Please Select ---</option>";
+                    $newOption = "";
                     $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
                     foreach ($xBudgetcode_dd as $row) {
                         $newOption = $newOption . "<option value='" . $row['account'] . "' ";
                         if ($row['account'] == $this->prItem['budget_code']) {
                             $newOption = $newOption . "selected='selected'";
                         }
-                        $newOption = $newOption . ">" . $row['account'] . ':' . $row['description'] . "</option>";
+                        $newOption = $newOption . ">" . $row['account'] . ' : ' . $row['description'] . "</option>";
                     }
                     $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
                 }
@@ -1852,6 +1854,71 @@ class PurchaseRequisitionDetails extends Component
                 $this->prItem = json_decode(json_encode($this->prItem), true);
             }
 
+            //16-03-2022 Bind ค่าใน Budget Code
+            if ($this->orderType == "10" or $this->orderType == "20" ) {
+                //ถ้าเป็น Part
+                $strsql = "SELECT ISNULL(gl_account,'') AS gl_account FROM part_master WHERE partno='" . $this->prItem['partno'] . "'";
+                $data = DB::select($strsql);
+
+                if ($data) {
+                    if ($data[0]->gl_account) {
+                        //ถ้า Item มี Set gl_account
+                        $this->prItem['budget_code'] = $data[0]->gl_account;
+                        $strsql = "SELECT account, description FROM gl_master 
+                            WHERE company='" . $this->prHeader['company'] . "' 
+                            AND account = '" . $data[0]->gl_account . "'";
+                        $this->budgetcode_dd = DB::select($strsql);
+            
+                        $newOption = "";
+                        $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
+                        foreach ($xBudgetcode_dd as $row) {
+                            $newOption = $newOption . "<option value='" . $row['account'] . "' ";
+                            $newOption = $newOption . ">" . $row['account'] . ' : ' . $row['description'] . "</option>";
+                        }
+            
+                        $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
+
+                    } else {
+                        //ถ้า Item ไม่มี gl_account ให้หาจาก gl_mapping_noninv
+                        $this->budgetcode_dd = [];
+                        $strsql = "SELECT account, description FROM gl_master 
+                                WHERE category IN ('Inventory', 'Asset Noninventory')
+                                AND company = '" . $this->prHeader['company'] . "'
+                                AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
+                        $this->budgetcode_dd = DB::select($strsql);
+
+                        $newOption = "";
+                        $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
+                        foreach ($xBudgetcode_dd as $row) {
+                            $newOption = $newOption . "<option value='" . $row['account'] . "' ";
+                            $newOption = $newOption . ">" . $row['account'] . ' : ' . $row['description'] . "</option>";
+                        }
+
+                        $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
+                    }
+
+                }
+
+            } else if ($this->orderType == "11" or $this->orderType == "21") {
+                    //ถ้า Item เป็น Free Text
+                    $this->budgetcode_dd = [];
+                    $strsql = "SELECT account, description FROM gl_master 
+                            WHERE category IN ('Inventory', 'Asset Noninventory')
+                            AND company = '" . $this->prHeader['company'] . "'
+                            AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
+                    $this->budgetcode_dd = DB::select($strsql);
+
+                    $newOption = "";
+                    $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
+                    foreach ($xBudgetcode_dd as $row) {
+                        $newOption = $newOption . "<option value='" . $row['account'] . "' ";
+                        $newOption = $newOption . ">" . $row['account'] . ' : ' . $row['description'] . "</option>";
+                    }
+
+                    $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
+            }
+
+ 
             $this->setDefaultSelect2InModelLineItem();
         }
 
@@ -1972,7 +2039,7 @@ class PurchaseRequisitionDetails extends Component
                             $this->prItem['account_group'] = "";
                         }
 
-                        //3-3-22 ชั่วคร่าวเพราะ Abeam ยังตกลงเรื่องนี้ไม่ได้
+                        //03-03-22 ชั่วคร่าวเพราะ Abeam ยังตกลงเรื่องนี้ไม่ได้ (สรุปว่าไม่ได้ใช้งาน)
                         $this->prItem['purchase_group'] = "";
                         $this->prItem['account_group'] = "";
 
@@ -2063,12 +2130,10 @@ class PurchaseRequisitionDetails extends Component
         {
             $strsql = "SELECT a.partno, a.part_name, a.purchase_uom, a.purchase_group, ISNULL(a.account_group,'') AS account_group, a.brand
                     , a.model, a.skip_rfq, a.skip_doa, a.primary_supplier, a.base_price, a.final_price, a.currency, b.exchange_rate
-                    , a.min_order_qty, a.supplier_lead_time, c.debit_gl as budget_code, a.supplier_id
+                    , a.min_order_qty, a.supplier_lead_time, a.supplier_id, ISNULL(a.gl_account,'') AS gl_account
                     FROM part_master a
                     LEFT JOIN currency_exchange_rate b ON a.currency = b.from_currency
-                    LEFT JOIN gl_mapping c ON a.account_group = c.account_group
                     WHERE partno = '" . $this->prItem['partno'] . "'";
-            //เปลียนเดิม LEFT JOIN currency_trans_ratios b ON a.currency = b.from_currency
             $data = DB::select($strsql);
 
             if ($data) {
@@ -2095,50 +2160,56 @@ class PurchaseRequisitionDetails extends Component
                         $this->prItem['unit_price'] = round($data[0]->base_price,2);
                     }
 
-                    //Check if Part is Inventory managed or not by seeing if the 'Accounting Group' field is populated.
-                    if ($this->prItem['account_group'] <> ''){
-                        //Inventory managed
-                        if ($data[0]->budget_code) {
-                            $this->prItem['budget_code'] = $data[0]->budget_code;
+                    //16-03-22 หา Budget Code
+                    if ($data[0]->gl_account <> ''){
+                        // รอลบ 16-03-22
+                        // ถ้า Item มี gl_account ให้ Budget_code=gl_account
+                        // $this->prItem['budget_code'] = $data[0]->gl_account;
+                        // $newOption = "<option value=' '>--- Please Select ---</option>";
+                        // $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
+                        // foreach ($xBudgetcode_dd as $row) {
+                        //     $newOption = $newOption . "<option value='" . $row['account'] . "' ";
+                        //     if ($row['account'] == $this->prItem['budget_code']) {
+                        //         $newOption = $newOption . "selected='selected'";
+                        //     }
+                        //     $newOption = $newOption . ">" . $row['account'] . ':' . $row['description'] . "</option>";
+                        // }
 
-                            //Default budgetcode-select2
-                            $newOption = "<option value=' '>--- Please Select ---</option>";
-                            $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
-                            foreach ($xBudgetcode_dd as $row) {
-                                $newOption = $newOption . "<option value='" . $row['account'] . "' ";
-                                if ($row['account'] == $this->prItem['budget_code']) {
-                                    $newOption = $newOption . "selected='selected'";
-                                }
-                                $newOption = $newOption . ">" . $row['account'] . ':' . $row['description'] . "</option>";
-                            }
-                            $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
+                        $this->prItem['budget_code'] = $data[0]->gl_account;
+                        $strsql = "SELECT account, description FROM gl_master 
+                            WHERE company='" . $this->prHeader['company'] . "' 
+                            AND account = '" . $data[0]->gl_account . "'";
+                        $this->budgetcode_dd = DB::select($strsql);
 
-                        }else{
-                            //Get ค่าใน budgetcode_dd ใหม่
-                            $this->budgetcode_dd = [];
-                            $strsql = "select c.account, c.description
-                                FROM pr_header a
-                                LEFT JOIN cost_center b ON a.cost_center = b.cost_center
-                                LEFT JOIN gl_master c ON c.category = b.gl_category
-                                WHERE a.cost_center='" . $this->prHeader['cost_center'] . "' AND (GETDATE() between c.valid_from AND c.valid_to) 
-                                GROUP BY c.account, c.description
-                                ORDER BY c.account";
-                            $this->budgetcode_dd = DB::select($strsql);
-
-                            $newOption = "<option value=' '>--- Please Select ---</option>";
-                            $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
-                            foreach ($xBudgetcode_dd as $row) {
-                                $newOption = $newOption . "<option value='" . $row['account'] . "' ";
-                                $newOption = $newOption . ">" . $row['account'] . ':' . $row['description'] . "</option>";
-                            }
-                            $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
+                        $newOption = "";
+                        $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
+                        foreach ($xBudgetcode_dd as $row) {
+                            $newOption = $newOption . "<option value='" . $row['account'] . "' ";
+                            $newOption = $newOption . ">" . $row['account'] . ' : ' . $row['description'] . "</option>";
                         }
 
-                    }else{
-                        //No Stock Control
+                        $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
 
+                    }else{
+                        //ถ้า Item ไม่มี gl_account ให้หาจาก gl_mapping_noninv
+                        $this->budgetcode_dd = [];
+                        $strsql = "SELECT account, description FROM gl_master 
+                                WHERE category IN ('Inventory', 'Asset Noninventory')
+                                AND company = '" . $this->prHeader['company'] . "'
+                                AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
+                        $this->budgetcode_dd = DB::select($strsql);
+
+                        $newOption = "<option value=' '>--- Please Select ---</option>";
+                        $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
+                        foreach ($xBudgetcode_dd as $row) {
+                            $newOption = $newOption . "<option value='" . $row['account'] . "' ";
+                            $newOption = $newOption . ">" . $row['account'] . ' : ' . $row['description'] . "</option>";
+                        }
+
+                        $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
                     }
                 }else{
+
                     $this->dispatchBrowserEvent('popup-alert', ['title' => "Minimum order quantity in part master not config"]);
                 }
             }
@@ -2176,9 +2247,28 @@ class PurchaseRequisitionDetails extends Component
         $this->dispatchBrowserEvent('clear-select2-modal');
 
         if ($this->orderType == "10" or $this->orderType == "20" ) {
+            //Clear ค่าใน Dropdown
+            $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => "", 'selectName' => '#budgetcode-select2']);
             $this->dispatchBrowserEvent('show-modelPartLineItem');
+
         } else if ($this->orderType == "11" or $this->orderType == "21") {
             $this->dispatchBrowserEvent('show-modelExpenseLineItem');
+
+            //16-03-2022 ถ้าเป็น Free Text ให้หา Budget Code จาก gl_mapping_noninv
+            $strsql = "SELECT account, description FROM gl_master 
+                    WHERE category IN ('Inventory', 'Asset Noninventory')
+                    AND company = '" . $this->prHeader['company'] . "'
+                    AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
+            $this->budgetcode_dd = DB::select($strsql);
+
+            $newOption = "<option value=' '>--- Please Select ---</option>";
+            $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
+            foreach ($xBudgetcode_dd as $row) {
+                $newOption = $newOption . "<option value='" . $row['account'] . "' ";
+                $newOption = $newOption . ">" . $row['account'] . ' : ' . $row['description'] . "</option>";
+            }
+
+            $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
         }
     }
 
@@ -2615,9 +2705,9 @@ class PurchaseRequisitionDetails extends Component
             $this->purchasegroup_dd = DB::select($strsql);
             
             //budget_code
-            $this->budgetcode_dd = [];
-            $strsql = "SELECT account, description FROM gl_master WHERE company = '" . $this->prHeader['company'] . "' ORDER BY account";
-            $this->budgetcode_dd = DB::select($strsql);
+            // $this->budgetcode_dd = [];
+            // $strsql = "SELECT account, description FROM gl_master WHERE company = '" . $this->prHeader['company'] . "' ORDER BY account";
+            // $this->budgetcode_dd = DB::select($strsql);
 
             //Delivery Plan
             $this->prLineNo_dd = [];
@@ -2811,8 +2901,6 @@ class PurchaseRequisitionDetails extends Component
                 PurchaseRequisitionLog::insertLog($data);
             }
         }
-
-        
     }
 
     public function writePrItemLog($selectId){

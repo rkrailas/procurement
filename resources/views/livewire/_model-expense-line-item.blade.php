@@ -125,12 +125,7 @@
                     <div class="col-md-4">
                         <label>Budget Code <span style="color: red">*</span></label>
                         <x-select2 id="budgetcode-select2" wire:model.defer="prItem.budget_code">
-                            <option value=" ">--- Please Select ---</option>
-                            @foreach($budgetcode_dd as $row)
-                            <option value='{{ $row->account }}'>
-                                {{ $row->account }} : {{ $row->description }}
-                            </option>
-                            @endforeach
+                            {{-- รอ Bind ค่า --}}
                         </x-select2>
                         @error('budget_code') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
