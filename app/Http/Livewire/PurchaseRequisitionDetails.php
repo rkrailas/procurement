@@ -15,6 +15,8 @@ use DateTime;
 use Livewire\WithPagination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\PurchaseRequisitionLog;
+use Exception;
 
 class PurchaseRequisitionDetails extends Component
 {
@@ -176,12 +178,12 @@ class PurchaseRequisitionDetails extends Component
                     $newPrNo = $this->getNewPrNo();
                     $strsql = "INSERT INTO pr_header(prno, ordertype, status, requestor, requested_for, buyer, delivery_address, request_date, company
                         , site, functions, department, division, section, cost_center, valid_until, days_to_notify, notify_below_10
-                        , notify_below_25, notify_below_35, rejection_reason, budget_year, purpose_pr, deletion_flag
+                        , notify_below_25, notify_below_35, rejection_reason, budget_year, purpose_pr, capexno
                         , create_by, create_on)
                         SELECT '" . $newPrNo . "', ordertype, '10', requestor, requested_for, buyer, delivery_address, '" 
                         . date_format(Carbon::now(), 'Y-m-d') . "', company
                         , site, functions, department, division, section, cost_center, valid_until, days_to_notify, notify_below_10
-                        , notify_below_25, notify_below_35, rejection_reason, budget_year, purpose_pr, deletion_flag
+                        , notify_below_25, notify_below_35, rejection_reason, budget_year, purpose_pr, capexno
                         , '" . auth()->user()->id . "', '" . Carbon::now() . "'
                         FROM pr_header 
                         WHERE id=" . $this->prHeader['id'];
@@ -365,20 +367,32 @@ class PurchaseRequisitionDetails extends Component
 
         public function releaseForSourcing()
         {
-            $this->savePR();
+            //Validate
+            $myValidate = true;
 
-            //2022-01-30 IF there is no Decider selected (Ref. P2P-PUR-001-FS-Purchase Requisition_(2022-01-28))
+            //16-03-22 ตรวจสอบว่ามี Line Item หรือไม่
+            $strsql = "SELECT id FROM pr_item WHERE prno_id=" . $this->prHeader['id'];
+            $data = DB::select($strsql);
+            if (!$data){
+                $myValidate = false;
+                $this->dispatchBrowserEvent('popup-alert', ['title' => 'There must be at least one product.']);
+            }
+
+            //03-01-22 IF there is no Decider selected (Ref. P2P-PUR-001-FS-Purchase Requisition_(2022-01-28))
             $strsql = "SELECT approver FROM dec_val_workflow WHERE ref_doc_no='" . $this->prHeader['prno'] . "' AND approval_type='DECIDER'";
+            if (count(DB::select($strsql)) == 0) { //ถ้ายังไม่เลือก Decider
+                $myValidate = false;
 
-            //ถ้ายังไม่เลือก Decider
-            if (count(DB::select($strsql)) == 0) {
                 $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='113' AND class='PURCHASE REQUISITION'";
                 $data = DB::select($strsql);
                 if (count($data) > 0) {
                     $this->dispatchBrowserEvent('popup-alert', ['title' => $data[0]->msg_text]);
                 }
+            }
+            
+            if ($myValidate) {
+                $this->savePR();
 
-            } else {
                 DB::transaction(function () {
                     //2022-01-30 Set PR ITEM Status to 'RELEASED FOR SOURCING' (20), disable editting for the PR
                     DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=?
@@ -529,8 +543,13 @@ class PurchaseRequisitionDetails extends Component
         public function deletePrHeader_Detail()
         {
             if ($this->selectedRows) {
+
                 $xID = myWhereInID($this->selectedRows);
                 DB::statement("DELETE FROM pr_item WHERE id IN (" . $xID . ")");
+
+                 //Histroy Log
+                 $this->writePrItemLog($this->selectedRows);
+                 //END Histroy Log
 
                 $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='104' AND class='PURCHASE REQUISITION'";
                 $data = DB::select($strsql);
@@ -655,9 +674,9 @@ class PurchaseRequisitionDetails extends Component
                             , delivery_address, delivery_location, delivery_site
                             , requestor_phone, requestor_ext, requested_for_phone, requested_for_ext, requested_for_email
                             , request_date, company, site, functions, department, division, section, cost_center, valid_until
-                            , days_to_notify, notify_below_10, notify_below_25, notify_below_35, budget_year, purpose_pr, create_by, create_on)
+                            , days_to_notify, notify_below_10, notify_below_25, notify_below_35, budget_year, purpose_pr, capexno, create_by, create_on)
                             
-                            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                                 [
                                     $this->prHeader['prno'], $this->prHeader['ordertype'], $this->prHeader['status'], $this->prHeader['requestor']
                                     , $this->prHeader['requested_for'], $this->prHeader['buyer'], $this->prHeader['delivery_address']
@@ -668,7 +687,7 @@ class PurchaseRequisitionDetails extends Component
                                     , $this->prHeader['division'], $this->prHeader['section'], $this->prHeader['cost_center']
                                     , $this->prHeader['valid_until'], $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10']
                                     , $this->prHeader['notify_below_25'], $this->prHeader['notify_below_35'], $this->prHeader['budget_year']
-                                    , $this->prHeader['purpose_pr'], auth()->user()->id, Carbon::now()
+                                    , $this->prHeader['purpose_pr'], $this->prHeader['capexno'], auth()->user()->id, Carbon::now()
                                 ]
                         );
                     });
@@ -690,7 +709,7 @@ class PurchaseRequisitionDetails extends Component
                         , request_date=?, site=?, functions=?, department=?
                         , requestor_phone=?, requestor_ext=?, requested_for_phone=?, requested_for_ext=?, requested_for_email=?
                         , division=?, section=?, buyer=?, cost_center=?, valid_until=?, days_to_notify=?, notify_below_10=?, notify_below_25=?
-                        , notify_below_35=?,budget_year=?, purpose_pr=?, status=?, changed_by=?, changed_on=?
+                        , notify_below_35=?,budget_year=?, purpose_pr=?, capexno=?, status=?, changed_by=?, changed_on=?
                         where prno=?" 
                         , [$this->prHeader['requested_for'], $this->prHeader['delivery_address'], $this->prHeader['delivery_location'], $this->prHeader['delivery_site']
                         , $this->prHeader['request_date'], $this->prHeader['site'], $this->prHeader['functions'], $this->prHeader['department']
@@ -698,7 +717,8 @@ class PurchaseRequisitionDetails extends Component
                         , $this->prHeader['email_reqf'], $this->prHeader['division'], $this->prHeader['section']
                         , $this->prHeader['buyer'], $this->prHeader['cost_center'], $this->prHeader['valid_until']
                         , $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10'], $this->prHeader['notify_below_25'], $this->prHeader['notify_below_35']
-                        , $this->prHeader['budget_year'], $this->prHeader['purpose_pr'], $this->prHeader['status'], auth()->user()->id, Carbon::now(), $this->prHeader['prno']]);
+                        , $this->prHeader['budget_year'], $this->prHeader['purpose_pr'], $this->prHeader['capexno'], $this->prHeader['status']
+                        , auth()->user()->id, Carbon::now(), $this->prHeader['prno']]);
                     });
     
                     $strsql = "select msg_text from message_list where msg_no='110' AND class='PURCHASE REQUISITION'";
@@ -1835,7 +1855,9 @@ class PurchaseRequisitionDetails extends Component
             DB::transaction(function() 
             {
                 DB::statement("DELETE FROM pr_item where id=? " , [$this->prItem['id']]);
-                
+                //Histroy Log
+                $this->writePrItemLog($this->prItem['id']);
+                //Histroy Log
                 $strsql = "SELECT msg_text FROM message_list WHERE msg_no='104' AND class='PURCHASE REQUISITION'";
                 $data = DB::select($strsql);
                 if (count($data) > 0) {
@@ -1946,7 +1968,7 @@ class PurchaseRequisitionDetails extends Component
                         $this->prItem['purchase_group'] = "";
                         $this->prItem['account_group'] = "";
 
-                        DB::statement("INSERT INTO pr_item (prno, prno_id, [lineno], partno, description, purchase_unit, unit_price, unit_price_local
+                        $result = DB::statement("INSERT INTO pr_item (prno, prno_id, [lineno], partno, description, purchase_unit, unit_price, unit_price_local
                             , currency, exchange_rate, purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
                             ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, blanket_order_type, status, create_by, create_on)
                         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
@@ -1959,6 +1981,10 @@ class PurchaseRequisitionDetails extends Component
                             , $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr'], $blanket_order_type 
                             , "10" ,auth()->user()->id, Carbon::now()
                             ]);
+
+                        //History log
+                        // $this->writeUpdatePrItemLog($this->prItem['id']);
+                        //End histroy log
         
                         $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
                         $data = DB::select($strsql);
@@ -1993,6 +2019,10 @@ class PurchaseRequisitionDetails extends Component
                         , $this->prItem['remarks'], $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr']
                         , $blanket_order_type, auth()->user()->id, Carbon::now(), $this->prItem['id']
                     ]);
+
+                    //Histroy Log
+                    $this->writeUpdatePrItemLog($this->prItem['id']);
+                    //Histroy Log
 
                     $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
                     $data = DB::select($strsql);
@@ -2209,7 +2239,7 @@ class PurchaseRequisitionDetails extends Component
                 , prh.requested_for_phone AS phone_reqf
                 , prh.company, company.name AS company_name, prh.site, prh.functions, prh.department, prh.division, prh.section
                 , prh.cost_center, cc.description AS costcenter_desc
-                , prh.buyer, prh.delivery_address, prh.delivery_location, prh.delivery_site, prh.budget_year, prh.purpose_pr
+                , prh.buyer, prh.delivery_address, prh.delivery_location, prh.delivery_site, prh.budget_year, prh.purpose_pr, prh.capexno
                 , FORMAT(prh.request_date,'yyy-MM-dd') AS request_date                    
                 , pr_status.description AS statusname, FORMAT(prh.valid_until,'yyy-MM-dd') AS valid_until, prh.days_to_notify, prh.notify_below_10
                 , prh.notify_below_25, prh.notify_below_35, prh.ordertype, prh.requestor, prh.status
@@ -2464,6 +2494,7 @@ class PurchaseRequisitionDetails extends Component
         //budget year
         $this->prHeader['budget_year'] =  "";
         $this->prHeader['purpose_pr'] =  "";
+        $this->prHeader['capexno'] =  "";
 
         //Blanket Request
         $this->prHeader['valid_until'] =  "";
@@ -2610,7 +2641,7 @@ class PurchaseRequisitionDetails extends Component
 
         }else{
             //itemList
-            $strsql = "SELECT pri.id, pri.[lineno], pri.description, pri.partno, pri.[status] + ' : ' + sts.[description] AS [status]
+            $strsql = "SELECT pri.id, pri.[lineno], pri.description, pri.partno, sts.[description] AS status
                 , pri.qty, pri.purchase_unit, pri.unit_price, pri.qty * pri.unit_price AS budgettotal, pri.req_date, pri.final_price, pri.currency
                 , pri.reference_po
                 FROM pr_item pri
@@ -2676,6 +2707,8 @@ class PurchaseRequisitionDetails extends Component
             //Reset Pagination
             $this->resetPage();
 
+            $this->historyLog = $this->showHistroyLog();
+            
             return view('livewire.purchase-requisition-details',[
                 'itemList' => $itemList,
                 'prListDeliveryPlan' => $prListDeliveryPlan,
@@ -2683,7 +2716,121 @@ class PurchaseRequisitionDetails extends Component
                 'validatorList' => $this->validatorList,
                 'attachmentFileList' => $attachmentFileList,
                 'approval_history' => $approval_history,
+                'historylog' => $this->historyLog
             ]);
         }
+    }
+
+    //----------------------------------------- PR HISTROY LOG FUNCTION -----------------------------------------
+    public function writeUpdatePrItemLog($id)
+    {
+
+        $data = DB::table('pr_item_history')->where([
+            ['id_original','=',$id],
+            ['action_type','=',"UPDATE"]
+        ])->orderBy('id','desc')->limit(2)->get();
+        
+        if(count($data) < 2){
+            $data = DB::table('pr_item_history')->where([
+                ['id_original','=',$id],
+            ])->orderBy('id','desc')->limit(2)->get();
+        }
+
+        // dd($data);
+
+        $data_after = $data[0];
+        $data_before = $data[1];
+
+        $array_data_before = (array)$data_before;
+        unset($array_data_before['id']);
+        unset($array_data_before['changed_on']);
+        unset($array_data_before['action_on']);
+        unset($array_data_before['changed_by']);
+
+        $array_data_after = (array)$data_after;
+        $change_on = $array_data_after['changed_on'];
+        $change_by = $array_data_after['changed_by'];
+        unset($array_data_after['id']);
+        unset($array_data_after['changed_on']);
+        unset($array_data_after['changed_by']);
+        unset($array_data_after['action_on']);
+
+     
+        foreach ($array_data_before as $key => $val) {
+         
+            if ($array_data_before[$key] === $array_data_after[$key]) {
+            } else {
+                $now = new DateTime();
+                $data = [
+                    'obj_type' => "PR_ITEM",
+                    'id_original' => $array_data_before['id_original'],
+                    'line_no' => $array_data_before['lineno'],
+                    'prno' => $array_data_after['prno'],
+                    'field' => $key,
+                    'old_value' => $array_data_before[$key],
+                    'new_value' => $array_data_after[$key],
+                    'created_by' => $array_data_after['create_by'],
+                    'changed_by' => $change_by,
+                    'created_at' => $array_data_after['create_on'],
+                    'updated_at' => $change_on,
+                ];
+                
+                PurchaseRequisitionLog::insertLog($data);
+            }
+        }
+
+        
+    }
+
+    public function writePrItemLog($selectId){
+        // dd($selectId);
+        if(!is_array($selectId)){
+            $selectId = [$selectId];
+        }
+
+        foreach($selectId as $id){
+            
+            $item = DB::table('pr_item_history')->where([
+                ['id_original','=',$id],
+                ['action_type','=',"DELETE"]
+            ])->orderBy('id','desc')->first();
+          
+            if($item == null){
+                return false;
+            }else{
+                
+                $data = [
+                    'obj_type' => "PR_ITEM",
+                    'id_original' => $item->id_original,
+                    'line_no' => $item->lineno,
+                    'prno' => $item->prno,
+                    'field' => 'action_type',
+                    'old_value' => $item->action_type,
+                    'new_value' => $item->action_type,
+                    'created_by' => $item->create_by,
+                    'changed_by' => $item->changed_by,
+                    'created_at' => $item->create_on,
+                    'updated_at' => $item->action_on,
+                ];
+
+                $result = PurchaseRequisitionLog::insertLog($data);
+               
+            }
+        }
+    }
+
+    public function showHistroyLog(){
+        $result = [];
+        try{
+            $result = DB::table('pr_history_logs')
+            ->select('pr_history_logs.id','obj_type','line_no','prno','field','old_value','new_value','pr_history_logs.created_by',
+            'pr_history_logs.changed_by','name','lastname','name_th','lastname_th','pr_history_logs.updated_at')
+            ->join('users','pr_history_logs.changed_by','=','users.id')
+            ->where('prno','=',$this->prHeader['prno'])->get();
+        }catch(Exception $e){
+            $result = [];
+        }
+
+        return $result;
     }
 }

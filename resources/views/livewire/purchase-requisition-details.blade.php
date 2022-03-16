@@ -209,6 +209,16 @@
                         @error('budget_year') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-3">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="prno">Capex No</label>
+                        <input class="form-control form-control-sm" type="text" maxlength="50" wire:model.defer="prHeader.capexno"
+                            @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
+                    </div>
+                    <div class="col-6">
                         <label for="prno">Purpose of PR <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.purpose_pr"
                             @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
@@ -858,9 +868,11 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
+                                    @if ($attachment_filetype == 'eDecision')
                                     <label>eDecision No.</label>
-                                    <input class="form-control form-control-sm" type="text" {{ $attachment_filetype == 'eDecision' ? '' : 'readonly' }}
+                                    <input class="form-control form-control-sm" type="text" 
                                         wire:model="attachment_edecisionno">
+                                    @endif                                    
                                 </div>
                             </div>
 
@@ -1152,7 +1164,7 @@
                         </div>
                         <div class="col-md-6">
                             <label>eDecision No.</label>
-                            @if( isset($editAttachment['file_type']))
+                            @if( isset($editAttachment['file_type']) )
                             <input class="form-control form-control-sm" type="text" {{ $editAttachment['file_type'] == 'eDecision' ? '' : 'readonly' }}
                                 wire:model.defer="editAttachment.edecision_no">
                             @endif
