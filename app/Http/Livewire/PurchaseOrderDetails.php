@@ -296,7 +296,7 @@ class PurchaseOrderDetails extends Component
         $this->supplier_dd = DB::select($strsql);
 
         //buyer
-        $strsql = "SELECT a.buyer, b.name + ' ' + b.lastname AS fullname FROM buyer a 
+        $strsql = "SELECT a.username, b.name + ' ' + b.lastname AS fullname FROM buyer a 
             LEFT JOIN users b ON a.username=b.username";
         $this->buyer_dd = DB::select($strsql);
 
