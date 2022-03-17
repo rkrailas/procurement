@@ -64,12 +64,12 @@
                 {{-- Purchase Unit --}}
                 <div class="row">
                     <div class="col-md-4">
-                        <label>Purchase Unit</label>
+                        <label>UOM</label>
                         <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.purchase_unit">
                     </div>
                     <div class="col-md-4">
                         {{-- Change to Not required & Readonly Ref. 18-Jan-2022: update editable and non-editable fields --}}
-                        <label>Budget Price Per Unit</label>
+                        <label>Price Per Unit</label>
                         <input class="form-control form-control-sm" type="number" readonly step="0.01" wire:model.lazy="prItem.unit_price">
                         @error('unit_price') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
@@ -111,7 +111,11 @@
                         @error('qty') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-4">
+                        @if ($orderType == "10" OR $orderType == "10" OR $orderType == "10")
+                        <label>Request Delivery Date <span style="color: red">*</span></label>
+                        @else
                         <label>Earliest Delivery Date <span style="color: red">*</span></label>
+                        @endif      
                         <div class="input-group mb-1">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">

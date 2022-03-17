@@ -42,7 +42,7 @@
                 {{-- Purchase Unit --}}
                 <div class="row">
                     <div class="col-md-4">
-                        <label>Purchase Unit <span style="color: red">*</span></label>
+                        <label>UOM <span style="color: red">*</span></label>
                         <x-select2 id="purchase_unit-select2" wire:model.defer="prItem.purchase_unit">
                             <option value=" ">--- Please Select ---</option>
                             @foreach($purchaseunit_dd as $row)
@@ -54,7 +54,7 @@
                         @error('purchase_unit') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                     <div class="col-md-4">
-                        <label>Budget Price Per Unit <span style="color: red">*</span></label>
+                        <label>Price Per Unit <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="number" step="0.01"
                             wire:model.defer="prItem.unit_price">
                         @error('unit_price') <span class="text-red">{{ $message }}.</span> @enderror
@@ -104,7 +104,11 @@
                         @error('qty') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-4">
+                        @if ($orderType == "10" OR $orderType == "10" OR $orderType == "10")
+                        <label>Request Delivery Date <span style="color: red">*</span></label>
+                        @else
                         <label>Earliest Delivery Date <span style="color: red">*</span></label>
+                        @endif                        
                         <div class="input-group mb-1">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">
