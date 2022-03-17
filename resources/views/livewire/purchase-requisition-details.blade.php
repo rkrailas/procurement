@@ -183,7 +183,7 @@
                         @error('buyer') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
-                        <label>Delivery Address <span style="color: red">*</span></label>
+                        <label>Delivery Location <span style="color: red">*</span></label>
                         <select class="form-control form-control-sm" id="delivery_address" wire:model="prHeader.delivery_address"
                             @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) disabled @endif>
                             <option value="">--- Please Select ---</option>

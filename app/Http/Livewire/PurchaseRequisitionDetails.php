@@ -2766,6 +2766,8 @@ class PurchaseRequisitionDetails extends Component
             $this->editPR();
             //$this->isBlanket, $this->orderType Assign ค่าใน Function editPR
         }
+        //???กำลังแก้
+        $this->attachment_lineno[] = "0";
         $this->maxSize = config('constants.maxAttachmentSize');
     }
 
