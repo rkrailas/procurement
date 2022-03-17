@@ -2241,7 +2241,7 @@ class PurchaseRequisitionDetails extends Component
 
         $this->reset(['prItem']);
 
-        //สร้างฟิลด์ใน Array 
+        //สร้างฟิลด์ใน Array  
         $this->prItem['budget_code'] = "";
         $this->prItem['snn_service'] = false; 
         $this->prItem['snn_production'] = false; 

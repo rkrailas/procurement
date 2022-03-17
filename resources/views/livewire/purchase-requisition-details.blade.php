@@ -844,7 +844,7 @@
                     </div>
                 {{-- Tab Authorization End --}}  
                 
-                {{-- Tab Attachments --}}
+                {{-- Tab Attachments --}} 
                     <div class="tab-pane fade {{ $currentTab == 'attachments' ? 'show active' : '' }}" id="pills-attachments" role="tabpanel" aria-labelledby="pills-attachments-tab" wire:ignore.self>
                         @if ($isRequester_RequestedFor == true)
                             <div class="row">
