@@ -1086,7 +1086,7 @@ class PurchaseRequisitionDetails extends Component
                     $strsql = "SELECT b.buyer_group_code
                         FROM buyer a
                         LEFT JOIN buyer_group b ON a.username=b.buyer_id
-                        WHERE b.ismark_delete=0 AND a.buyer='" . $this->prHeader['buyer'] . "'";
+                        WHERE b.ismark_delete=0 AND a.username='" . $this->prHeader['buyer'] . "'";
                     $data = DB::select($strsql);
                     if ($data) {
                         $xBuyerGrp = $data[0]->buyer_group_code;
