@@ -2743,8 +2743,9 @@ class PurchaseRequisitionDetails extends Component
             $this->validator_dd = [];
             $strsql = "SELECT usr.username, usr.name + ' ' + usr.lastname AS fullname FROM users usr
                         JOIN user_roles uro ON uro.username = usr.username
-                        WHERE uro.role_id='10' ORDER BY usr.username"; //Fixed 3-3-22
-                        //WHERE uro.role_id='10' AND usr.company = '" . $this->prHeader['company'] . "' ORDER BY usr.username";
+                        WHERE uro.role_id='10' 
+                            AND (usr.id <> " . $this->prHeader['requestor'] . " OR usr.id <> " . $this->prHeader['requestor'] . ")
+                        ORDER BY usr.username";
             $this->decider_dd = DB::select($strsql);
             $this->validator_dd = DB::select($strsql);
         //Authorization End

@@ -335,7 +335,13 @@
                                         <th scope="col">Unit Price</th>
                                         <th scope="col">Total Price</th>
                                         <th scope="col">Currency</th>
-                                        <th scope="col">Requested Delivery Date</th>
+                                        <th scope="col">
+                                        @if($prHeader['ordertype'] == '20' OR $prHeader['ordertype'] == '21')
+                                        Earliest Delivery Date
+                                        @else
+                                        Requested Delivery Date
+                                        @endif
+                                        </th>
                                         <th scope="col">Final Price</th>
                                         <th scope="col">PO No.</th>
                                         <th scope="col"></th>
