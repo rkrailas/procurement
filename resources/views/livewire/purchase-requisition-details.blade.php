@@ -47,13 +47,13 @@
                     <div class="col-md-3">
                         <label for="prno">Phone (Requestor)<span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.phone"
-                            @if($prHeader['status'] >= '30' OR $isValidator_Decider == true OR $isValidator_Decider == true) readonly @endif>
+                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true OR $isValidator_Decider == true) readonly @endif>
                         @error('phone') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
                         <label for="prno">Ext. (Requestor)<span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.extention"
-                            @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
+                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) readonly @endif>
                         @error('extention') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-3">
@@ -73,7 +73,7 @@
                 <div class="row">
                     <div class="col-md-3">
                         <label>Requested For <span style="color: red">*</span></label>
-                        @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) 
+                        @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) 
                         <x-select2 id="requestedfor-select2" disabled="true" wire:model.defer="prHeader.requested_for">
                             @foreach($requested_for_dd as $row)
                             <option value="{{ $row->id }}">
@@ -96,19 +96,19 @@
                     <div class="col-md-3">
                         <label>Phone (Requestor For)<span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.phone_reqf"
-                            @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
+                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) readonly @endif>
                         @error('phone_reqf') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
                         <label>Ext. (Requestor For)<span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.extention_reqf"
-                            @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
+                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) readonly @endif>
                         @error('extention_reqf') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
                         <label>Email (Requestor For)</label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.email_reqf"
-                            @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
+                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) readonly @endif>
                     </div>
                 </div>
 
@@ -143,7 +143,7 @@
                     <div class="col-md-3">
                         <label>Cost Center (Department Code) <span style="color: red">*</span></label>
                         <select class="form-control form-control-sm" id="cost_center" wire:model="prHeader.cost_center"
-                            @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) disabled @endif>
+                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) disabled @endif>
                             <option value="">--- Please Select ---</option>
                             @foreach($cost_center_dd as $row)
                             <option value="{{ $row->cost_center }}">
@@ -162,7 +162,7 @@
                 <div class="row">
                     <div class="col-md-3">
                         <label>Buyer <span style="color: red">*</span></label>
-                        @if($prHeader['status'] >= '30' OR $isValidator_Decider == true)
+                        @if($prHeader['status'] >= '20' OR $isValidator_Decider == true)
                         <x-select2 id="buyer-select2" disabled="true" wire:model.defer="prHeader.buyer">
                             <option value=" ">--- Please Select ---</option>
                             @foreach($buyer_dd as $row)
@@ -186,7 +186,7 @@
                     <div class="col-md-3">
                         <label>Delivery Location <span style="color: red">*</span></label>
                         <select class="form-control form-control-sm" id="delivery_address" wire:model="prHeader.delivery_address"
-                            @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) disabled @endif>
+                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) disabled @endif>
                             <option value="">--- Please Select ---</option>
                             @foreach($delivery_address_dd as $row)
                             <option value="{{ $row->address_id }}">
@@ -199,7 +199,7 @@
                     <div class="col-md-3">
                         <label>Budget Year <span style="color: red">*</span></label>
                         <select class="form-control form-control-sm" id="budget_year" wire:model.defer="prHeader.budget_year"
-                            @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) disabled @endif>
+                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) disabled @endif>
                             <option value="">--- Please Select ---</option>
                             @foreach($budgetyear_dd as $row)
                             <option value="{{ $row['year'] }}">
@@ -217,12 +217,12 @@
                     <div class="col-md-3">
                         <label for="prno">Capex No</label>
                         <input class="form-control form-control-sm" type="text" maxlength="50" wire:model.defer="prHeader.capexno"
-                            @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
+                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) readonly @endif>
                     </div>
                     <div class="col-6">
                         <label for="prno">Purpose of PR <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.purpose_pr"
-                            @if($prHeader['status'] >= '30' OR $isValidator_Decider == true) readonly @endif>
+                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) readonly @endif>
                         @error('purpose_pr') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                 </div>
