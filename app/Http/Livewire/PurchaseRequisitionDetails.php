@@ -393,7 +393,7 @@ class PurchaseRequisitionDetails extends Component
             if ($myValidate) {
                 $this->savePR();
 
-                DB::transaction(function () {
+                // DB::transaction(function () { //Fiexed Case Sirina releaseForSourcing ไม่ได้
                     //2022-01-30 Set PR ITEM Status to 'RELEASED FOR SOURCING' (20), disable editting for the PR
                     DB::statement("UPDATE pr_item SET status=?, changed_by=?, changed_on=?
                     WHERE prno=?" 
@@ -510,7 +510,7 @@ class PurchaseRequisitionDetails extends Component
                         }
                     //Send Mail End
 
-                });
+                // });
 
                 $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='101' AND class='PURCHASE REQUISITION'";
                 $data = DB::select($strsql);
@@ -548,7 +548,7 @@ class PurchaseRequisitionDetails extends Component
                 DB::statement("DELETE FROM pr_item WHERE id IN (" . $xID . ")");
 
                  //Histroy Log
-                 $this->writePrItemLog($this->selectedRows);
+                 $this->writeItemHistoryLog($this->selectedRows,"DELETE");
                  //END Histroy Log
 
                 $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='104' AND class='PURCHASE REQUISITION'";
@@ -666,7 +666,6 @@ class PurchaseRequisitionDetails extends Component
                 if ($this->isCreateMode) {
                     $this->prHeader['prno'] = $this->getNewPrNo();
                     $this->prHeader['status'] = '10';
-                    
                     DB::transaction(function () {
                     //pr_header
                         DB::statement(
@@ -691,6 +690,16 @@ class PurchaseRequisitionDetails extends Component
                                 ]
                         );
                     });
+
+                    //HISTROY LOG
+                    $idPrHeaderHistroy = DB::getPdo()->lastInsertId();
+                    $obj = DB::table('pr_header_history')->select('id_original')->where('id','=',$idPrHeaderHistroy)->first();
+                    if($obj != null){
+                        $idPrHeader = $obj->id_original;
+                        $this->writeHeaderHistoryLog($idPrHeader,"INSERT");
+                    }
+                    //HISTROY LOG
+                   
     
                     $strsql = "SELECT msg_text FROM message_list WHERE msg_no='100' AND class='PURCHASE REQUISITION'";
                     $data = DB::select($strsql);
@@ -720,7 +729,9 @@ class PurchaseRequisitionDetails extends Component
                         , $this->prHeader['budget_year'], $this->prHeader['purpose_pr'], $this->prHeader['capexno'], $this->prHeader['status']
                         , auth()->user()->id, Carbon::now(), $this->prHeader['prno']]);
                     });
-    
+      
+                    $this->writeHeaderHistoryLog($this->prHeader['id'],"UPDATE");
+
                     $strsql = "select msg_text from message_list where msg_no='110' AND class='PURCHASE REQUISITION'";
                     $data = DB::select($strsql);
                     if (count($data) > 0) {
@@ -1931,7 +1942,7 @@ class PurchaseRequisitionDetails extends Component
             {
                 DB::statement("DELETE FROM pr_item where id=? " , [$this->prItem['id']]);
                 //Histroy Log
-                $this->writePrItemLog($this->prItem['id']);
+                $this->writeItemHistoryLog($this->prItem['id'],"DELETE");
                 //Histroy Log
                 $strsql = "SELECT msg_text FROM message_list WHERE msg_no='104' AND class='PURCHASE REQUISITION'";
                 $data = DB::select($strsql);
@@ -2043,7 +2054,7 @@ class PurchaseRequisitionDetails extends Component
                         $this->prItem['purchase_group'] = "";
                         $this->prItem['account_group'] = "";
 
-                        $result = DB::statement("INSERT INTO pr_item (prno, prno_id, [lineno], partno, description, purchase_unit, unit_price, unit_price_local
+                        DB::statement("INSERT INTO pr_item (prno, prno_id, [lineno], partno, description, purchase_unit, unit_price, unit_price_local
                             , currency, exchange_rate, purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
                             ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, blanket_order_type, status, nonstock_control
                             , create_by, create_on)
@@ -2059,7 +2070,13 @@ class PurchaseRequisitionDetails extends Component
                             ]);
 
                         //History log
-                        // $this->writeUpdatePrItemLog($this->prItem['id']);
+                        $idPrItemHistroy = DB::getPdo()->lastInsertId();
+                        $obj = DB::table('pr_item_history')->select('id_original')->where('id','=',$idPrItemHistroy)->first();
+                        if($obj != null){
+                            $idPrHeader = $obj->id_original;
+                            $this->writeItemHistoryLog($idPrHeader,"INSERT");
+                        }
+                        
                         //End histroy log
         
                         $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
@@ -2097,7 +2114,7 @@ class PurchaseRequisitionDetails extends Component
                     ]);
 
                     //Histroy Log
-                    $this->writeUpdatePrItemLog($this->prItem['id']);
+                    $this->writeItemHistoryLog($this->prItem['id'],"UPDATE");
                     //Histroy Log
 
                     $strsql = "SELECT msg_text FROM message_list WHERE msg_no='111' AND class='PURCHASE REQUISITION'";
@@ -2270,7 +2287,7 @@ class PurchaseRequisitionDetails extends Component
 
             //16-03-2022 ถ้าเป็น Free Text ให้หา Budget Code จาก gl_mapping_noninv
             $strsql = "SELECT account, description FROM gl_master 
-                    WHERE category IN ('NonInventory', 'Asset Noninventory')
+                    WHERE category IN ('Noninventory', 'Asset Noninventory')
                     AND company = '" . $this->prHeader['company'] . "'
                     AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
             $this->budgetcode_dd = DB::select($strsql);
@@ -2846,8 +2863,8 @@ class PurchaseRequisitionDetails extends Component
             //Reset Pagination
             $this->resetPage();
 
-            $this->historyLog = $this->showHistroyLog();
-            
+            $this->historyLog = PurchaseRequisitionLog::showHistroyLog($this->prHeader['prno']);
+
             return view('livewire.purchase-requisition-details',[
                 'itemList' => $itemList,
                 'prListDeliveryPlan' => $prListDeliveryPlan,
@@ -2861,113 +2878,145 @@ class PurchaseRequisitionDetails extends Component
     }
 
     //----------------------------------------- PR HISTROY LOG FUNCTION -----------------------------------------
-    public function writeUpdatePrItemLog($id)
+    // VERSION 2 
+    public function writeHeaderHistoryLog($prHeaderId, $actionType)
     {
+        $actionType = strtoupper($actionType);
 
-        $data = DB::table('pr_item_history')->where([
-            ['id_original','=',$id],
-            ['action_type','=',"UPDATE"]
-        ])->orderBy('id','desc')->limit(2)->get();
-        
-        if(count($data) < 2){
-            $data = DB::table('pr_item_history')->where([
-                ['id_original','=',$id],
-            ])->orderBy('id','desc')->limit(2)->get();
-        }
+        $obj_type = "PR_HEADER";
 
-        // dd($data);
-
-        $data_after = $data[0];
-        $data_before = $data[1];
-
-        $array_data_before = (array)$data_before;
-        unset($array_data_before['id']);
-        unset($array_data_before['changed_on']);
-        unset($array_data_before['action_on']);
-        unset($array_data_before['changed_by']);
-
-        $array_data_after = (array)$data_after;
-        $change_on = $array_data_after['changed_on'];
-        $change_by = $array_data_after['changed_by'];
-        unset($array_data_after['id']);
-        unset($array_data_after['changed_on']);
-        unset($array_data_after['changed_by']);
-        unset($array_data_after['action_on']);
-
-     
-        foreach ($array_data_before as $key => $val) {
-         
-            if ($array_data_before[$key] === $array_data_after[$key]) {
-            } else {
-                $now = new DateTime();
-                $data = [
-                    'obj_type' => "PR_ITEM",
-                    'id_original' => $array_data_before['id_original'],
-                    'line_no' => $array_data_before['lineno'],
-                    'prno' => $array_data_after['prno'],
-                    'field' => $key,
-                    'old_value' => $array_data_before[$key],
-                    'new_value' => $array_data_after[$key],
-                    'created_by' => $array_data_after['create_by'],
-                    'changed_by' => $change_by,
-                    'created_at' => $array_data_after['create_on'],
-                    'updated_at' => $change_on,
+        try {
+            if ($actionType == "INSERT") {
+                $prHeaderLog = DB::table('pr_header_history')->where('id_original', '=', $prHeaderId)->orderBy('id', 'desc')->first();
+                $prepareData = [
+                    'id_original' => $prHeaderLog->id_original,
+                    'obj_type' => $obj_type,
+                    'line_no' => null,
+                    'refdocno' => $prHeaderLog->prno,
+                    'field' => "action_type",
+                    'old_value' => null,
+                    'new_value' => $actionType,
+                    'created_by' => $prHeaderLog->create_by,
+                    'changed_by' => null,
+                    'created_on' => $prHeaderLog->create_on,
+                    'changed_on' => null,
                 ];
-                
-                PurchaseRequisitionLog::insertLog($data);
+                PurchaseRequisitionLog::insertLog($prepareData);
+            } else if ($actionType == "DELETE" || $actionType == "UPDATE") {
+
+                $prHeaderLogs = DB::table('pr_header_history')->where('id_original', '=', $prHeaderId)->orderBy('id', 'desc')->limit(2)->get();
+                $data_after = $prHeaderLogs[0];
+                $data_before = $prHeaderLogs[1];
+
+                $array_data_before = (array)$data_before;
+                unset($array_data_before['id']);
+                unset($array_data_before['action_on']);
+
+                $array_data_after = (array)$data_after;
+                unset($array_data_after['id']);
+                unset($array_data_after['action_on']);
+
+                foreach ($array_data_before as $key => $val) {
+
+                    if ($array_data_before[$key] === $array_data_after[$key]) {
+                    } else {
+                        $prepareData = [
+                            'obj_type' => $obj_type,
+                            'id_original' => $array_data_before['id_original'],
+                            'line_no' => null,
+                            'refdocno' => $array_data_after['prno'],
+                            'field' => $key,
+                            'old_value' => $array_data_before[$key],
+                            'new_value' => $array_data_after[$key],
+                            'created_by' => $array_data_before['create_by'],
+                            'created_on' => $array_data_before['create_on'],
+
+                            'changed_by' => $array_data_after['changed_by'],
+                            'changed_on' => $array_data_after['changed_on'],
+                        ];
+
+                        PurchaseRequisitionLog::insertLog($prepareData);
+                    }
+                }
             }
+        } catch (Exception $e) {
+            
         }
     }
 
-    public function writePrItemLog($selectId){
-        // dd($selectId);
+    public function writeItemHistoryLog($selectId, $actionType)
+    {
+        
+        $actionType = strtoupper($actionType);
+
+        $obj_type = "PR_ITEM";
+
         if(!is_array($selectId)){
             $selectId = [$selectId];
         }
 
-        foreach($selectId as $id){
-            
-            $item = DB::table('pr_item_history')->where([
-                ['id_original','=',$id],
-                ['action_type','=',"DELETE"]
-            ])->orderBy('id','desc')->first();
-          
-            if($item == null){
-                return false;
-            }else{
-                
-                $data = [
-                    'obj_type' => "PR_ITEM",
-                    'id_original' => $item->id_original,
-                    'line_no' => $item->lineno,
-                    'prno' => $item->prno,
-                    'field' => 'action_type',
-                    'old_value' => $item->action_type,
-                    'new_value' => $item->action_type,
-                    'created_by' => $item->create_by,
-                    'changed_by' => $item->changed_by,
-                    'created_at' => $item->create_on,
-                    'updated_at' => $item->action_on,
-                ];
-
-                $result = PurchaseRequisitionLog::insertLog($data);
-               
+        foreach($selectId as $prItemId){
+            try {
+                if ($actionType == "INSERT") {
+                    $prItemLog = DB::table('pr_item_history')->where('id_original', '=', $prItemId)->orderBy('id', 'desc')->first();
+                   
+                    $prepareData = [
+                        'id_original' => $prItemLog->id_original,
+                        'obj_type' => $obj_type,
+                        'line_no' => $prItemLog->lineno,
+                        'refdocno' => $prItemLog->prno,
+                        'field' => "action_type",
+                        'old_value' => null,
+                        'new_value' => $actionType,
+                        'created_by' => $prItemLog->create_by,
+                        'changed_by' => null,
+                        'created_on' => $prItemLog->create_on,
+                        'changed_on' => null,
+                    ];
+                    PurchaseRequisitionLog::insertLog($prepareData);
+                } else if ($actionType == "DELETE" || $actionType == "UPDATE") {
+    
+                    $prItemLogs = DB::table('pr_item_history')->where('id_original', '=', $prItemId)->orderBy('id', 'desc')->limit(2)->get();
+                    $data_after = $prItemLogs[0];
+                    $data_before = $prItemLogs[1];
+    
+                    $array_data_before = (array)$data_before;
+                    unset($array_data_before['id']);
+                    unset($array_data_before['action_on']);
+    
+                    $array_data_after = (array)$data_after;
+                    unset($array_data_after['id']);
+                    unset($array_data_after['action_on']);
+    
+                    foreach ($array_data_before as $key => $val) {
+    
+                        if ($array_data_before[$key] === $array_data_after[$key]) {
+                        } else {
+                            $prepareData = [
+                                'obj_type' => $obj_type,
+                                'id_original' => $array_data_before['id_original'],
+                                'line_no' => $array_data_after['lineno'],
+                                'refdocno' => $array_data_after['prno'],
+                                'field' => $key,
+                                'old_value' => $array_data_before[$key],
+                                'new_value' => $array_data_after[$key],
+                                'created_by' => $array_data_before['create_by'],
+                                'created_on' => $array_data_before['create_on'],
+    
+                                'changed_by' => $array_data_after['changed_by'],
+                                'changed_on' => $array_data_after['changed_on'],
+                            ];
+    
+                            PurchaseRequisitionLog::insertLog($prepareData);
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+              
             }
         }
-    }
 
-    public function showHistroyLog(){
-        $result = [];
-        try{
-            $result = DB::table('pr_history_logs')
-            ->select('pr_history_logs.id','obj_type','line_no','prno','field','old_value','new_value','pr_history_logs.created_by',
-            'pr_history_logs.changed_by','name','lastname','name_th','lastname_th','pr_history_logs.updated_at')
-            ->join('users','pr_history_logs.changed_by','=','users.id')
-            ->where('prno','=',$this->prHeader['prno'])->get();
-        }catch(Exception $e){
-            $result = [];
-        }
-
-        return $result;
+        
     }
+    
 }

@@ -4,7 +4,8 @@
     <x-loading-indicator target="releaseForSourcing" />
     <x-loading-indicator target="addAttachment" />
     <x-loading-indicator target="attachment_file" />
-    <x-loading-indicator target="cancelPrHeader" />    
+    <x-loading-indicator target="cancelPrHeader" />  
+    <x-loading-indicator target="selectedRows" />      
 
     <div class="content-header">
         <div class="container-fluid">
@@ -996,8 +997,14 @@
                                             <td scope="col">{{ $row->line_no }} </td>
                                             <td scope="col">{{ $row->field }} </td>
                                             <td scope="col">{{ $row->new_value }} </td>
+                                            @if($row->new_value == "INSERT")
+                                            <td></td>
+                                            <td></td>
+                                            @else
                                             <td scope="col">{{ $row->name." ".$row->lastname  }} </td>
-                                            <td scope="col">{{ \Carbon\Carbon::parse($row->updated_at)->format('d-M-Y H:i:s') }} </td>
+                                            <td scope="col">{{ \Carbon\Carbon::parse($row->changed_on)->format('d-M-Y H:i:s') }} </td>
+                                            @endif
+                                            
 
                                         </tr>
                                         @endforeach
