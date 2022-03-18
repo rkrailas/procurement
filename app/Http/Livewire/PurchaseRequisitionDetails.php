@@ -337,7 +337,7 @@ class PurchaseRequisitionDetails extends Component
                     //เนื้อหาใน Mail
                     $detailMail = [
                         'template' => 'MAIL_PR02',
-                        'subject' => 'Your Pruchase Requisition No ' . $this->prHeader['prno'] . ' has been cancelled.',
+                        'subject' => 'Your Purchase Requisition No ' . $this->prHeader['prno'] . ' has been cancelled.',
                         'dear' => $approver,
                         'docno' => $this->prHeader['prno'],
                         'cancel_by' => $cancel_by,
@@ -541,7 +541,8 @@ class PurchaseRequisitionDetails extends Component
             if ($this->selectedRows) {
 
                 $xID = myWhereInID($this->selectedRows);
-                DB::statement("DELETE FROM pr_item WHERE id IN (" . $xID . ")");
+                //DB::statement("DELETE FROM pr_item WHERE id IN (" . $xID . ")");
+                DB::statement("UPDATE pr_item SET deletion_flag = 1 WHERE id IN (" . $xID . ")"); //19-03-2022
 
                  //Histroy Log
                  $this->writeItemHistoryLog($this->selectedRows,"DELETE");
@@ -1930,7 +1931,9 @@ class PurchaseRequisitionDetails extends Component
 
             DB::transaction(function() 
             {
-                DB::statement("DELETE FROM pr_item where id=? " , [$this->prItem['id']]);
+                //DB::statement("DELETE FROM pr_item where id=? " , [$this->prItem['id']]);
+                DB::statement("UPDATE pr_item SET deletion_flag = 1 WHERE id = " . $this->prItem['id'] ); //19-03-2022
+
                 //Histroy Log
                 $this->writeItemHistoryLog($this->prItem['id'],"DELETE");
                 //Histroy Log
@@ -2815,6 +2818,7 @@ class PurchaseRequisitionDetails extends Component
                 FROM pr_item pri
                 LEFT JOIN pr_status sts ON sts.status=pri.[status]
                 WHERE pri.prno='" . $this->prHeader['prno'] . "'
+                    AND isnull(pri.deletion_flag, 0) = 0
                 ORDER BY pri.id";
             $itemList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
@@ -2853,7 +2857,7 @@ class PurchaseRequisitionDetails extends Component
 
             //attachmentFileList
             $strsql = "SELECT a.id, a.file_name, a.file_path, a.file_type, a.edecision_no, a.ref_docno, a.ref_lineno
-            , FORMAT(a.create_on, 'dd-MMM-yy hh:mm:ss') AS create_on
+            , FORMAT(a.create_on, 'dd-MMM-yy HH:mm:ss') AS create_on
             , b.description AS ref_doctype, c.name + ' ' + c.lastname AS create_by
                 FROM attactments a
                 LEFT JOIN document_file_type b ON a.ref_doctype = b.doc_type_no
@@ -2864,8 +2868,8 @@ class PurchaseRequisitionDetails extends Component
 
             //approval_history ที่อยู่ตรงนี้เพราะ pagination ไม่สามารถส่งค่าผ่ายตัวแปร $this->historylog ได้
             $strsql = "SELECT a.approver, b.name + ' ' + b.lastname as fullname, a.approval_type, b.company, b.department, b.position
-                , c.description as status, a.reject_reason, FORMAT(a.submitted_date, 'dd-MMM-yy hh:mm:ss') as submitted_date
-                , FORMAT(a.completed_date, 'dd-MMM-yy hh:mm:ss') as completed_date
+                , c.description as status, a.reject_reason, FORMAT(a.submitted_date, 'dd-MMM-yy HH:mm:ss') as submitted_date
+                , FORMAT(a.completed_date, 'dd-MMM-yy HH:mm:ss') as completed_date
                 FROM dec_val_workflow_log a
                 LEFT JOIN users b ON a.approver = b.username
                 LEFT JOIN dec_val_status c ON a.status = c.status_no
