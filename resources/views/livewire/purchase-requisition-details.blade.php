@@ -1083,11 +1083,17 @@
                                 <i class="fas fa-shopping-cart mr-2"></i>Converet to PO</button>
                             @endif
 
-                            {{-- 20-ReleasedforSourcing, 21-PartiallyAuthorized --}}
-                            @if (($prHeader['status'] == '20' OR $prHeader['status'] == '21') AND $isValidator_Decider != true)
+                            {{-- 20-ReleasedforSourcing AND isRequester_RequestedFor --}}
+                            @if ($prHeader['status'] == '20' AND $isRequester_RequestedFor == true)
                             <button wire:click.prevent="revokePrHeader" class="btn btn-sm btn-danger">
                                 <i class="fas fa-undo mr-1"></i>Revoke</button>
+                            
+                            {{-- 21-PartiallyAuthorized AND (isRequester_RequestedFor OR isValidator_Decider) --}}
+                            @elseif($prHeader['status'] == '21' AND ($isRequester_RequestedFor == true OR $isValidator_Decider == true))                                
+                                <button wire:click.prevent="revokePrHeader" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-undo mr-1"></i>Revoke</button>
                             @endif
+
                         @endif
                     </div>
                     <div>
