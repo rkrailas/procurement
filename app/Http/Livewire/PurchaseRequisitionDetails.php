@@ -321,8 +321,7 @@ class PurchaseRequisitionDetails extends Component
 
                     //requested_for
                     $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                        WHERE company = '" . auth()->user()->company . "' 
-                        AND id=" . $this->prHeader['requested_for'];
+                        WHERE id=" . $this->prHeader['requested_for'];
                     $data = DB::select($strsql);
                     if ($data) {
                         $requested_for_fullname = $data[0]->fullname;
@@ -456,8 +455,7 @@ class PurchaseRequisitionDetails extends Component
 
                             //requester
                             $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                                WHERE company = '" . auth()->user()->company . "' 
-                                AND id=" . $this->prHeader['requestor'];
+                                WHERE id=" . $this->prHeader['requestor'];
                             $data = DB::select($strsql);
                             if ($data) {
                                 $requester_fullname = $data[0]->fullname;
@@ -466,8 +464,7 @@ class PurchaseRequisitionDetails extends Component
 
                             //requested_for
                             $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                                WHERE company = '" . auth()->user()->company . "' 
-                                AND id=" . $this->prHeader['requested_for'];
+                                WHERE id=" . $this->prHeader['requested_for'];
                             $data = DB::select($strsql);
                             if ($data) {
                                 $requested_for_fullname = $data[0]->fullname;
@@ -476,8 +473,7 @@ class PurchaseRequisitionDetails extends Component
 
                             //approver
                             $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                            WHERE company = '" . auth()->user()->company . "' 
-                            AND username='" . $xApprover[0]->approver . "'";
+                            WHERE username='" . $xApprover[0]->approver . "'";
                             $data = DB::select($strsql);
                             if ($data) {
                                 $approver_fullname = $data[0]->fullname;
@@ -1034,8 +1030,7 @@ class PurchaseRequisitionDetails extends Component
 
                         //requester
                         $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                            WHERE company = '" . auth()->user()->company . "' 
-                            AND id=" . $this->prHeader['requestor'];
+                            WHERE id=" . $this->prHeader['requestor'];
                         $data = DB::select($strsql);
                         if ($data) {
                             $requester_fullname = $data[0]->fullname;
@@ -1044,8 +1039,7 @@ class PurchaseRequisitionDetails extends Component
 
                         //requested_for
                         $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                            WHERE company = '" . auth()->user()->company . "' 
-                            AND id=" . $this->prHeader['requested_for'];
+                            WHERE id=" . $this->prHeader['requested_for'];
                         $data = DB::select($strsql);
                         if ($data) {
                             $requested_for_fullname = $data[0]->fullname;
@@ -1054,8 +1048,7 @@ class PurchaseRequisitionDetails extends Component
 
                         //approver
                         $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                        WHERE company = '" . auth()->user()->company . "' 
-                        AND username='" . $xApprover[0]->approver . "'";
+                        WHERE username='" . $xApprover[0]->approver . "'";
                         $data = DB::select($strsql);
                         if ($data) {
                             $approver_fullname = $data[0]->fullname;
@@ -1272,9 +1265,11 @@ class PurchaseRequisitionDetails extends Component
                 if (config('app.sendmail') == "Yes") {
                     
                     //requester
+                    // $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                    //     WHERE company = '" . $this->prHeader['company'] . "' 
+                    //     AND id=" . $this->prHeader['requestor'];
                     $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                        WHERE company = '" . auth()->user()->company . "' 
-                        AND id=" . $this->prHeader['requestor'];
+                    WHERE id=" . $this->prHeader['requestor'];
                     $data = DB::select($strsql);
                     if ($data) {
                         $requester_fullname = $data[0]->fullname;
@@ -1283,8 +1278,7 @@ class PurchaseRequisitionDetails extends Component
 
                     //requested_for
                     $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                        WHERE company = '" . auth()->user()->company . "' 
-                        AND id=" . $this->prHeader['requested_for'];
+                        WHERE id=" . $this->prHeader['requested_for'];
                     $data = DB::select($strsql);
                     if ($data) {
                         $requested_for_fullname = $data[0]->fullname;
@@ -1293,8 +1287,7 @@ class PurchaseRequisitionDetails extends Component
 
                     //approver
                     $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                        WHERE company = '" . auth()->user()->company . "' 
-                        AND id=" . auth()->user()->id;
+                        WHERE id=" . auth()->user()->id;
                     $data = DB::select($strsql);
                     if ($data) {
                         $approver_fullname = $data[0]->fullname;
@@ -1381,8 +1374,7 @@ class PurchaseRequisitionDetails extends Component
 
                         //requester
                         $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                            WHERE company = '" . auth()->user()->company . "' 
-                            AND id=" . $this->prHeader['requestor'];
+                            WHERE id=" . $this->prHeader['requestor'];
                         $data = DB::select($strsql);
                         if ($data) {
                             $requester_fullname = $data[0]->fullname;
@@ -1391,8 +1383,7 @@ class PurchaseRequisitionDetails extends Component
 
                         //requested_for
                         $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                            WHERE company = '" . auth()->user()->company . "' 
-                            AND id=" . $this->prHeader['requested_for'];
+                            WHERE id=" . $this->prHeader['requested_for'];
                         $data = DB::select($strsql);
                         if ($data) {
                             $requested_for_fullname = $data[0]->fullname;
@@ -1401,8 +1392,7 @@ class PurchaseRequisitionDetails extends Component
 
                         //approver
                         $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                            WHERE company = '" . auth()->user()->company . "' 
-                            AND id=" . auth()->user()->id;
+                            WHERE id=" . auth()->user()->id;
                         $data = DB::select($strsql);
                         if ($data) {
                             $approver_fullname = $data[0]->fullname;
