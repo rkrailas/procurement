@@ -2469,7 +2469,28 @@ class PurchaseRequisitionDetails extends Component
 
             //9-2-2022 Update partno for CR No.10
             $this->loadDD_partno_dd(true);
-            $this->loadDD_buyer_dd(true);            
+            $this->loadDD_buyer_dd(true);    
+            
+            //18-3-2022
+            $this->decider_dd = [];
+            $this->validator_dd = [];
+            $strsql = "SELECT usr.username, usr.name + ' ' + usr.lastname AS fullname FROM users usr
+                        JOIN user_roles uro ON uro.username = usr.username
+                        WHERE uro.role_id='10' 
+                            AND (usr.id <> " . $this->prHeader['requestor'] . " AND usr.id <> " . $this->prHeader['requested_for'] . ")
+                        ORDER BY usr.username";
+            $this->decider_dd = DB::select($strsql);
+
+            if ($this->decider_dd){
+                $newOption = "<option value=' '>--- Please Select ---</option>";
+                $xdecider_dd = json_decode(json_encode($this->decider_dd), true);
+                foreach ($xdecider_dd as $row) {
+                    $newOption = $newOption . "<option value='" . $row['username'] . "'>" . $row['fullname'] . "</option>";
+                }
+
+                $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#decider-select2']);
+                $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#validator-select2']);
+            }
 
         } else {
             $this->prHeader['company'] = "";
@@ -2744,7 +2765,7 @@ class PurchaseRequisitionDetails extends Component
             $strsql = "SELECT usr.username, usr.name + ' ' + usr.lastname AS fullname FROM users usr
                         JOIN user_roles uro ON uro.username = usr.username
                         WHERE uro.role_id='10' 
-                            AND (usr.id <> " . $this->prHeader['requestor'] . " OR usr.id <> " . $this->prHeader['requestor'] . ")
+                            AND (usr.id <> " . $this->prHeader['requestor'] . " AND usr.id <> " . $this->prHeader['requested_for'] . ")
                         ORDER BY usr.username";
             $this->decider_dd = DB::select($strsql);
             $this->validator_dd = DB::select($strsql);
