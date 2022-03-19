@@ -187,7 +187,9 @@ class PurchaseRequisitionList extends Component
                 FROM pr_header prh
                 LEFT JOIN (SELECT prno, SUM(qty * unit_price_local) as total_budget
                             , SUM(final_price_local) as total_final_price 
-                            FROM pr_item GROUP BY prno) pri ON pri.prno=prh.prno
+                            FROM pr_item 
+                            WHERE ISNULL(deletion_flag, 0) = 0
+                            GROUP BY prno) pri ON pri.prno=prh.prno
                 LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
                 LEFT JOIN users req_f ON req_f.id=prh.requested_for
                 LEFT JOIN users req ON req.id=prh.requestor
