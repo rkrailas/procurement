@@ -69,7 +69,7 @@
                     </div>
                     <div class="col-md-4">
                         {{-- Change to Not required & Readonly Ref. 18-Jan-2022: update editable and non-editable fields --}}
-                        <label>Price Per Unit</label>
+                        <label>Unit price</label>
                         <input class="form-control form-control-sm" type="number" readonly step="0.01" wire:model.lazy="prItem.unit_price">
                         @error('unit_price') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
@@ -132,7 +132,7 @@
                             <option value=" ">--- Please Select ---</option>
                             @foreach($internal_order_dd as $row)
                             <option value='{{ $row->internal_order }}'>
-                                {{ $row->internal_order }}
+                                {{ $row->internal_order }} : {{ $row->description }}
                             </option>
                             @endforeach
                         </x-select2>

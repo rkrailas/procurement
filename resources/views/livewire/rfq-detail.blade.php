@@ -78,12 +78,42 @@
                     </div>
                 </div>
 
+                {{-- Show only one currency --}}
+                @if ($isSameCurrency)
                 <div class="row">
                     <div class="col-md-1">
+                        <label>Currency</label>
+                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.sameCurrency">
+                    </div>
+                    <div class="col-md-2">
+                        <label>Exchange Rate</label>
+                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.sameExchangeRate">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Total Base Price</label>
+                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.sameTotalBasePrice">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Total Final Price</label>
+                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model="rfqHeader.sameTotalFinalPrice">
+                    </div>
+                    <div class="col-md-2">
+                        <label>C/R Amount</label>
+                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.sameCrAmount">
+                    </div>
+                    <div class="col-md-1">
+                        <label>CR%</label>
+                        <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.sameCrPercent">
+                    </div>
+                </div>
+                @endif
+
+                <div class="row">
+                    <div class="col-md-3">
                         <label>L. Currency</label>
                         <input class="form-control form-control-sm text-right" type="text" readonly value="THB">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label>Total Base Price</label>
                         <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.total_base_price_local">
                     </div>
@@ -91,11 +121,11 @@
                         <label>Total Final Price</label>
                         <input class="form-control form-control-sm text-right" type="text" readonly wire:model="rfqHeader.total_final_price_local">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label>C/R Amount</label>
                         <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.cramount_local">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-1">
                         <label>CR%</label>
                         <input class="form-control form-control-sm text-right" type="text" readonly wire:model.defer="rfqHeader.crpercent_local">
                     </div>
@@ -283,7 +313,7 @@
                         @error('selectSupplierContact') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-4 mt-auto">
-                        <button wire:click.prevent="addSupplier" class="btn btn-sm btn-danger"><i class="fas fa-plus-square mr-1"></i>ADD</button>
+                        <button wire:click.prevent="addSupplier" class="btn btn-sm btn-danger"><i class="fas fa-plus-square mr-1"></i>Add</button>
                     </div>
                 </div>
                 <div class="row m-0 p-0">

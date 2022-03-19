@@ -54,7 +54,7 @@
                         @error('purchase_unit') <span class="text-red">{{ $message }}.</span> @enderror
                     </div>
                     <div class="col-md-4">
-                        <label>Price Per Unit <span style="color: red">*</span></label>
+                        <label>Unit price <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="number" step="0.01"
                             wire:model.defer="prItem.unit_price">
                         @error('unit_price') <span class="text-red">{{ $message }}.</span> @enderror
@@ -125,7 +125,7 @@
                             <option value=" ">--- Please Select ---</option>
                             @foreach($internal_order_dd as $row)
                             <option value='{{ $row->internal_order }}'>
-                                {{ $row->internal_order }}
+                                {{ $row->internal_order }} : {{ $row->description }}
                             </option>
                             @endforeach
                         </x-select2>

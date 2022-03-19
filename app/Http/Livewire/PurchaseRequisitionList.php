@@ -96,7 +96,7 @@ class PurchaseRequisitionList extends Component
                     WHERE pr = 1 ORDER BY ordertype";
         $this->ordertype_dd = DB::select($strsql);
 
-        $strsql = "SELECT site, delivery_location FROM site 
+        $strsql = "SELECT site, site_description FROM site 
                     WHERE company='" . auth()->user()->company . "' AND SUBSTRING(address_id, 7, 2)='EN'";
         $this->site_dd = DB::select($strsql);
 

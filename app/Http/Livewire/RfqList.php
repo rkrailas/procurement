@@ -16,7 +16,7 @@ class RfqList extends Component
     //for Grid
     public $sortDirection = "desc";
     public $sortBy = "a.create_on";
-    public $numberOfPage = 10;
+    public $numberOfPage = 30;
     public $searchTerm = null;
 
     public $myBuyerGroup;
@@ -54,9 +54,7 @@ class RfqList extends Component
     public function loadDropdownList()
     {
         $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username 
-            FROM users 
-            WHERE company='" . auth()->user()->company
-            . "' ORDER BY users.name";
+            FROM users ORDER BY users.name";
         $this->requestor_dd = DB::select($strsql);
         $this->requestedfor_dd = DB::select($strsql);
 
@@ -68,9 +66,7 @@ class RfqList extends Component
         $strsql = "SELECT buyer_group_code FROM buyer_group ORDER BY buyer_group_code";
         $this->buyergroup_dd = DB::select($strsql);
 
-        $strsql = "SELECT site FROM site 
-                    WHERE company='" . auth()->user()->company
-                . "' GROUP BY site ORDER BY site";
+        $strsql = "SELECT site FROM site GROUP BY site ORDER BY site";
         $this->site_dd = DB::select($strsql);
 
         $strsql = "SELECT status, description FROM rfq_status 
@@ -112,7 +108,7 @@ class RfqList extends Component
             $this->skipRender();
         }
 
-        //Search
+        //แสดงเฉพาะ User ที่เป็น Buyer และอยู่ใน Buyer Group ใน rfq_header เท่านั้น
         $xWhere = " WHERE a.buyer_group='" . $this->myBuyerGroup . "' AND a.prno LIKE '%" . $this->prno . "%' ";
         $xWhere = $xWhere . " AND a.rfqno LIKE '%" . $this->rfqno . "%' ";
         $xWhere = $xWhere . " AND a.create_on BETWEEN '" . $this->createon_from . "' AND '" . $this->createon_to . "'";
@@ -146,6 +142,7 @@ class RfqList extends Component
             LEFT JOIN users g ON c.requestor=g.id
             LEFT JOIN users i ON c.buyer=i.username";
         $strsql = $strsql . $xWhere;
+        $strsql = $strsql . " ORDER BY " . $this->sortBy . " " . $this->sortDirection;
 
         $rfq_list = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 

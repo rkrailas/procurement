@@ -142,8 +142,8 @@
                     </div>
                     <div class="col-md-3">
                         <label>Cost Center (Department Code) <span style="color: red">*</span></label>
-                        <select class="form-control form-control-sm" id="cost_center" wire:model="prHeader.cost_center"
-                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) disabled @endif>
+                        <select class="form-control form-control-sm" id="cost_center" wire:model="prHeader.cost_center" disabled>
+                            {{-- @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) disabled @endif> --}}
                             <option value="">--- Please Select ---</option>
                             @foreach($cost_center_dd as $row)
                             <option value="{{ $row->cost_center }}">
@@ -1065,8 +1065,9 @@
                             </a>
                             @endif
 
-                            {{-- Between 10=Planned and 40-Confirmed Final Price --}}
-                            @if (($prHeader['status'] >= '10' AND $prHeader['status'] <= '40') AND $isValidator_Decider != true)
+                            {{-- Between 10=Planned and 40-Confirmed Final Price AND isRequester_RequestedFor --}}
+                            {{-- @if (($prHeader['status'] >= '10' AND $prHeader['status'] <= '40') AND $isValidator_Decider != true) --}}
+                            @if (($prHeader['status'] >= '10' AND $prHeader['status'] <= '40') AND $isRequester_RequestedFor == true)
                             <button wire:click.prevent="confirmCancelPrHeader" class="btn btn-sm btn-light">
                                 <i class="fas fa-times mr-2"></i>Cancel</button>
                             @endif
@@ -1077,8 +1078,9 @@
                                 <i class="fas fa-trash-alt mr-2"></i>Delete</button>
                             @endif
 
-                            {{--70-Cancelled --}}
-                            @if ($prHeader['status'] == '70' AND $isValidator_Decider != true)
+                            {{--70-Cancelled AND isRequester_RequestedFor --}}
+                            {{-- @if ($prHeader['status'] == '70' AND $isValidator_Decider != true) --}}
+                            @if ($prHeader['status'] == '70' AND $isRequester_RequestedFor == true)
                             <button wire:click.prevent="reopen" class="btn btn-sm btn-danger">
                                 <i class="fas fa-external-link-alt mr-2"></i>Re-Open</button>
                             @endif

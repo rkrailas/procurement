@@ -16,7 +16,7 @@ class RfqDetail extends Component
     public $selectedRows = [];
 
     // Header
-    public $buyer_dd, $buyergroup_dd, $currency_dd;
+    public $buyer_dd, $buyergroup_dd, $currency_dd, $isSameCurrency;
 
     // Tab Item ไม่ได้ใช้งาน $supplierForAssign_dd, $selectedRows, $tabLineItem
     public $editItem;
@@ -49,6 +49,19 @@ class RfqDetail extends Component
     //         ]);
     //     }
     // }
+
+    // Header
+        // public function updatedRfqHeaderCalCurrency()
+        // {
+        //     $strsql = "SELECT exchange_rate FROM currency_exchange_rate 
+        //         WHERE rate_type='Y' AND valid_from < GETDATE() AND from_currency='" . $this->rfqHeader['calCurrency'] . "'";
+        //     $data = DB::select($strsql);
+        //     if ($data) {
+        //         $this->rfqHeader['calExchangeRate'] = $data[0]->exchange_rate;
+        //     }
+        // }
+
+    // Header End
 
     // Tab Quotation Details Start
     public function saveQuotation()
@@ -329,6 +342,22 @@ class RfqDetail extends Component
             $this->rfqHeader['total_final_price_local'] = number_format($this->rfqHeader['total_final_price_local'], 2);
             $this->rfqHeader['cramount_local'] = number_format($this->rfqHeader['cramount_local'], 2);
             $this->rfqHeader['crpercent_local'] = number_format($this->rfqHeader['crpercent_local'], 2);
+
+            //ถ้าใน rfq_item currency เดียวกันทั้งหมด
+            $this->isSameCurrency = false;
+            $strsql ="SELECT currency, exchange_rate, SUM(total_base_price) AS sameTotalBasePrice , SUM(total_final_price) AS sameTotalFinalPrice
+                    FROM rfq_item WHERE rfqno ='" . $this->rfqHeader['rfqno'] . "' GROUP BY rfqno, currency, exchange_rate";
+            $data = DB::select($strsql);
+            if (count($data) == 1) {
+                $this->isSameCurrency = true;
+                $this->rfqHeader['sameCurrency'] = $data[0]->currency;
+                $this->rfqHeader['sameExchangeRate'] = $data[0]->exchange_rate;
+                $this->rfqHeader['sameTotalBasePrice'] = number_format($data[0]->sameTotalBasePrice, 2);
+                $this->rfqHeader['sameTotalFinalPrice'] = number_format($data[0]->sameTotalFinalPrice, 2);
+                $this->rfqHeader['sameCrAmount'] = number_format($data[0]->sameTotalFinalPrice - $data[0]->sameTotalBasePrice, 2);
+                $this->rfqHeader['sameCrPercent'] = number_format(($data[0]->sameTotalFinalPrice - $data[0]->sameTotalBasePrice) / $data[0]->sameTotalBasePrice, 2);
+            }
+
         }
     }
 

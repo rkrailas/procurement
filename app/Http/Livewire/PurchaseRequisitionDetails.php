@@ -541,8 +541,8 @@ class PurchaseRequisitionDetails extends Component
             if ($this->selectedRows) {
 
                 $xID = myWhereInID($this->selectedRows);
-                //DB::statement("DELETE FROM pr_item WHERE id IN (" . $xID . ")");
                 DB::statement("UPDATE pr_item SET deletion_flag = 1 WHERE id IN (" . $xID . ")"); //19-03-2022
+                DB::statement("UPDATE pr_delivery_plan SET deletion_flag = 1 WHERE ref_prline_id IN (" . $xID . ")"); //19-03-2022
 
                  //Histroy Log
                  $this->writeItemHistoryLog($this->selectedRows,"DELETE");
@@ -952,7 +952,10 @@ class PurchaseRequisitionDetails extends Component
 
         public function updatedDeciderUsername()
         {
-            $strsql = "SELECT username, company, department, position FROM users WHERE username='" . $this->decider['username'] . "'";
+            $strsql = "SELECT a.username, b.name AS company, a.department, a.position 
+                FROM users a
+                LEFT JOIN company b ON a.company = b.company
+                WHERE username='" . $this->decider['username'] . "'";
             $data = DB::select($strsql);
             if ($data) {
                 $this->decider = json_decode(json_encode($data[0]), true);
@@ -1926,13 +1929,13 @@ class PurchaseRequisitionDetails extends Component
 
         public function deleteLineItem()
         {
-            //???ก่อน Delete ต้องตรวจสอบอะไรบ้าง ?
             //???ต้องลบ Delivery Plan ออกด้วย
 
             DB::transaction(function() 
             {
-                //DB::statement("DELETE FROM pr_item where id=? " , [$this->prItem['id']]);
                 DB::statement("UPDATE pr_item SET deletion_flag = 1 WHERE id = " . $this->prItem['id'] ); //19-03-2022
+                DB::statement("UPDATE pr_delivery_plan SET deletion_flag = 1 WHERE ref_prline_id=" . $this->prItem['id'] ); //19-03-2022
+                
 
                 //Histroy Log
                 $this->writeItemHistoryLog($this->prItem['id'],"DELETE");
@@ -2736,7 +2739,8 @@ class PurchaseRequisitionDetails extends Component
 
             //internal_order
             $this->internal_order_dd = [];
-            $strsql = "SELECT internal_order FROM internal_order WHERE company = '" . $this->prHeader['company'] . "' ORDER BY internal_order";
+            $strsql = "SELECT internal_order, description FROM internal_order 
+                    WHERE company = '" . $this->prHeader['company'] . "' ORDER BY internal_order";
             $this->internal_order_dd = DB::select($strsql);
 
             //purchase_unit
@@ -2757,7 +2761,9 @@ class PurchaseRequisitionDetails extends Component
             //Delivery Plan
             $this->prLineNo_dd = [];
             if ($this->prHeader['ordertype'] == "20" or $this->prHeader['ordertype'] == "21"){
-                $strsql = "SELECT id, [lineno], description FROM pr_item WHERE prno = '" . $this->prHeader['prno'] . "' ORDER BY [lineno]";
+                $strsql = "SELECT id, [lineno], description FROM pr_item 
+                    WHERE prno = '" . $this->prHeader['prno'] . "' AND ISNULL(deletion_flag,0) = 0
+                    ORDER BY [lineno]";
                 $this->prLineNo_dd = DB::select($strsql);
             }
         //Line Items End
@@ -2776,7 +2782,9 @@ class PurchaseRequisitionDetails extends Component
 
         //Attachment
             $this->prLineNoAtt_dd = [];
-            $strsql = "SELECT id, [lineno], description FROM pr_item WHERE prno = '" . $this->prHeader['prno'] . "' ORDER BY [lineno]";
+            $strsql = "SELECT id, [lineno], description FROM pr_item 
+                    WHERE prno = '" . $this->prHeader['prno'] . "' AND ISNULL(deletion_flag,0) = 0
+                    ORDER BY [lineno]";
             $this->prLineNoAtt_dd = DB::select($strsql);
         //Attachment End
     }
@@ -2827,8 +2835,8 @@ class PurchaseRequisitionDetails extends Component
                 $strsql = "SELECT del.id, pri.[lineno], pri.description, pri.partno, del.qty, pri.purchase_unit, del.delivery_date
                         FROM pr_delivery_plan del
                         JOIN pr_item pri ON pri.id = del.ref_prline_id
-                        WHERE del.ref_pr_id=" . $this->prHeader['id']
-                        . " ORDER BY del.id";
+                        WHERE del.ref_pr_id=" . $this->prHeader['id'] . " AND ISNULL(del.deletion_flag,0) = 0
+                        ORDER BY del.id";
                 $prListDeliveryPlan = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
             } else {
                 $prListDeliveryPlan = (new Collection([]))->paginate($this->numberOfPage);
