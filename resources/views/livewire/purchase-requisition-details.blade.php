@@ -119,7 +119,7 @@
                     </div>
                     <div class="col-md-3">
                         <label>Site</label>
-                        <input class="form-control form-control-sm" type="text" readonly wire:model="prHeader.site">
+                        <input class="form-control form-control-sm" type="text" readonly wire:model="prHeader.site_description">
                     </div>
                     <div class="col-md-3">
                         <label>Function</label>

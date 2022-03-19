@@ -979,10 +979,10 @@ class PurchaseRequisitionDetails extends Component
             //Add Log dec_val_workflow_log
             if ($data) {
                 DB::statement("INSERT INTO dec_val_workflow_log (seqno, approval_type, approver, status, refdoc_type, refdoc_no, refdoc_id
-                    , reject_reason, submitted_date, completed_date, submitted_by, create_by, create_on)
-                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                    , submitted_date, completed_date, submitted_by, create_by, create_on)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
                 ,[$data[0]->seqno, $data[0]->approval_type, $data[0]->approver, $data[0]->status, $data[0]->ref_doc_type, $data[0]->ref_doc_no
-                    , $data[0]->ref_doc_id, $data[0]->reject_reason, $data[0]->submitted_date, $data[0]->completed_date, $data[0]->submitted_by
+                    , $data[0]->ref_doc_id, $data[0]->submitted_date, $data[0]->completed_date, $data[0]->submitted_by
                     , auth()->user()->id, Carbon::now()]);
             }
 
@@ -2362,7 +2362,7 @@ class PurchaseRequisitionDetails extends Component
                 , isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requestor_name, prh.requestor_ext AS extention, prh.requestor_phone AS phone
                 , prh.requested_for, prh.requested_for_email AS email_reqf, prh.requested_for_ext AS extention_reqf
                 , prh.requested_for_phone AS phone_reqf
-                , prh.company, company.name AS company_name, prh.site, prh.functions, prh.department, prh.division, prh.section
+                , prh.company, company.name AS company_name, prh.site, prh.site + ' : ' + site.site_description AS site_description, prh.functions, prh.department, prh.division, prh.section
                 , prh.cost_center, cc.description AS costcenter_desc
                 , prh.buyer, prh.delivery_address, prh.delivery_location, prh.delivery_site, prh.budget_year, prh.purpose_pr, prh.capexno
                 , FORMAT(prh.request_date,'yyy-MM-dd') AS request_date                    
@@ -2375,6 +2375,7 @@ class PurchaseRequisitionDetails extends Component
                 LEFT JOIN pr_status ON pr_status.status=prh.status
                 LEFT JOIN company ON company.company=prh.company
                 LEFT JOIN cost_center cc ON cc.cost_center=prh.cost_center 
+                LEFT JOIN site ON site.site=prh.site
                 WHERE prh.prno ='" . $this->editPRNo . "'";
         $data = DB::select($strsql);
 
@@ -2611,7 +2612,14 @@ class PurchaseRequisitionDetails extends Component
         if (count($data)) {
             $this->prHeader['company_name'] = $data[0]->name;
         }
+
         $this->prHeader['site'] = auth()->user()->site;
+        $strsql = "SELECT site + ' : ' + site_description AS site_description FROM site WHERE site='" . auth()->user()->site . "'";
+        $data = DB::select($strsql);
+        if (count($data)) {
+            $this->prHeader['site_description'] = $data[0]->site_description;
+        }
+
         $this->prHeader['functions'] =  auth()->user()->functions;
         $this->prHeader['department'] =  auth()->user()->department;
 
