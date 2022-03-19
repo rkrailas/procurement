@@ -1982,41 +1982,40 @@ class PurchaseRequisitionDetails extends Component
 
 
             //2022-01-30 > Add Validate
-                $xValidate = true;
-                //IF PR ORDER TYPE = STANDARD PARTS or BLANKET PARTS AND (PR ITEM.Req Date - Current Date) < PART.Lead Time
-                //(Ref. P2P-PUR-001-FS-Purchase Requisition_(2022-01-28))
+            $xValidate = true;
+            //IF PR ORDER TYPE = STANDARD PARTS or BLANKET PARTS AND (PR ITEM.Req Date - Current Date) < PART.Lead Time
+            //(Ref. P2P-PUR-001-FS-Purchase Requisition_(2022-01-28))
 
-                $interval = Carbon::now()->diff($this->prItem['req_date']);
-                $days = $interval->format('%a');
-                if (($this->prHeader['ordertype'] == '10' OR $this->prHeader['ordertype'] == '20' OR $this->prHeader['ordertype'] == '30') 
-                    AND $days < $this->prItem['supplier_lead_time'] )
-                {
-                    $strsql = "SELECT msg_text FROM message_list WHERE msg_no='115' AND class='PURCHASE REQUISITION'";
-                    $data = DB::select($strsql);
-                    if (count($data) > 0) {
-                        $this->dispatchBrowserEvent('popup-alert', [
-                            'title' => $data[0]->msg_text,
-                        ]);
-                    }
-                    $xValidate = false;
+            $interval = Carbon::now()->diff($this->prItem['req_date']);
+            $days = $interval->format('%a');
+            if (($this->prHeader['ordertype'] == '10' OR $this->prHeader['ordertype'] == '20' OR $this->prHeader['ordertype'] == '30') 
+                AND $days < $this->prItem['supplier_lead_time'] )
+            {
+                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='115' AND class='PURCHASE REQUISITION'";
+                $data = DB::select($strsql);
+                if (count($data) > 0) {
+                    $this->dispatchBrowserEvent('popup-alert', [
+                        'title' => $data[0]->msg_text,
+                    ]);
                 }
+                $xValidate = false;
+            }
 
-                //2022-01-30 IF PR ORDER TYPE = STANDARD PARTS or BLANKET PARTS AND QTY < minimum order quantity 
-                //(Ref. P2P-PUR-001-FS-Purchase Requisition_(2022-01-28))
-                
-                if (($this->prHeader['ordertype'] == '10' OR $this->prHeader['ordertype'] == '20' OR $this->prHeader['ordertype'] == '30') 
-                    AND $this->prItem['qty'] < $this->prItem['min_order_qty'] )
-                {
-                    $strsql = "SELECT msg_text FROM message_list WHERE msg_no='114' AND class='PURCHASE REQUISITION'";
-                    $data = DB::select($strsql);
-                    if (count($data) > 0) {
-                        $this->dispatchBrowserEvent('popup-alert', [
-                            'title' => str_replace("<PART.MOQ>", $this->prItem['min_order_qty'], $data[0]->msg_text),
-                        ]);
-                    }
-                    $xValidate = false;
+            //2022-01-30 IF PR ORDER TYPE = STANDARD PARTS or BLANKET PARTS AND QTY < minimum order quantity 
+            //(Ref. P2P-PUR-001-FS-Purchase Requisition_(2022-01-28))
+            
+            if (($this->prHeader['ordertype'] == '10' OR $this->prHeader['ordertype'] == '20' OR $this->prHeader['ordertype'] == '30') 
+                AND $this->prItem['qty'] < $this->prItem['min_order_qty'] )
+            {
+                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='114' AND class='PURCHASE REQUISITION'";
+                $data = DB::select($strsql);
+                if (count($data) > 0) {
+                    $this->dispatchBrowserEvent('popup-alert', [
+                        'title' => str_replace("<PART.MOQ>", $this->prItem['min_order_qty'], $data[0]->msg_text),
+                    ]);
                 }
-            //2022-01-30 > Add Validate End
+                $xValidate = false;
+            }
 
             if ($xValidate){
                 //08-03-22
@@ -2178,19 +2177,19 @@ class PurchaseRequisitionDetails extends Component
 
                         //16-03-22 non stock control
                         $strsql = "SELECT id FROM gl_mapping_nonstockcontrol
-                                WHERE company ='" . $this->prHeader['company'] . "'
-                                AND notin_costcenter <> '" . $this->prHeader['cost_center'] . "'
+                                WHERE company = '" . $this->prHeader['company'] . "'
+                                AND notin_costcenter = '" . $this->prHeader['cost_center'] . "'
                                 AND gl_account = '" . $data[0]->gl_account ."'
                                 AND isactive=1";
-                        $this->prItem['nonstock_control'] = true;
+                        //$this->prItem['nonstock_control'] = true;
                         $data2 = DB::select($strsql);
                         if ($data2) {
-                            $this->prItem['nonstock_control'] = true;
+                            $this->prItem['nonstock_control'] = false;
                             $newOption = "<input class='form-check-input' type='checkbox' checked wire:model.defer='prItem.nonstock_control' disabled>";
                             $this->dispatchBrowserEvent('bindToCheckbox', ['newOption' => $newOption, 'selectName' => '#nonstock_control']);
 
                         } else {
-                            $this->prItem['nonstock_control'] = false;
+                            $this->prItem['nonstock_control'] = true;
                             $newOption = "<input class='form-check-input' type='checkbox' wire:model.defer='prItem.nonstock_control' disabled>";
                             $this->dispatchBrowserEvent('bindToCheckbox', ['newOption' => $newOption, 'selectName' => '#nonstock_control']);
                         }
@@ -2375,7 +2374,7 @@ class PurchaseRequisitionDetails extends Component
                 LEFT JOIN pr_status ON pr_status.status=prh.status
                 LEFT JOIN company ON company.company=prh.company
                 LEFT JOIN cost_center cc ON cc.cost_center=prh.cost_center 
-                LEFT JOIN site ON site.site=prh.site
+                LEFT JOIN (SELECT site, site_description FROM site WHERE SUBSTRING(address_id, 7, 2)='EN') site ON site.site=prh.site
                 WHERE prh.prno ='" . $this->editPRNo . "'";
         $data = DB::select($strsql);
 

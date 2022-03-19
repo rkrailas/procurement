@@ -142,15 +142,16 @@
                     </div>
                     <div class="col-md-3">
                         <label>Cost Center (Department Code) <span style="color: red">*</span></label>
-                        <select class="form-control form-control-sm" id="cost_center" wire:model="prHeader.cost_center" disabled>
-                            {{-- @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) disabled @endif> --}}
+                        <input class="form-control form-control-sm" type="text" readonly wire:model="prHeader.cost_center">
+                        {{-- <select class="form-control form-control-sm" id="cost_center" wire:model="prHeader.cost_center"
+                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) disabled @endif>
                             <option value="">--- Please Select ---</option>
                             @foreach($cost_center_dd as $row)
                             <option value="{{ $row->cost_center }}">
                                 {{ $row->cost_center }}
                             </option>
                             @endforeach
-                        </select>
+                        </select> --}}
                         @error('cost_center') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
@@ -185,8 +186,10 @@
                     </div>
                     <div class="col-md-3">
                         <label>Delivery Location <span style="color: red">*</span></label>
-                        <select class="form-control form-control-sm" id="delivery_address" wire:model="prHeader.delivery_address"
-                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) disabled @endif>
+                        @if ($prHeader['status'] >= '20' OR $isValidator_Decider == true)
+                        <input class="form-control form-control-sm" type="text" readonly wire:model="prHeader.delivery_address">
+                        @else 
+                        <select class="form-control form-control-sm" id="delivery_address" wire:model="prHeader.delivery_address">
                             <option value="">--- Please Select ---</option>
                             @foreach($delivery_address_dd as $row)
                             <option value="{{ $row->address_id }}">
@@ -195,6 +198,8 @@
                             @endforeach
                         </select>
                         @error('delivery_address') <span class="text-red">{{ $message }}</span> @enderror
+                        @endif
+
                     </div>
                     <div class="col-md-3">
                         <label>Budget Year <span style="color: red">*</span></label>
