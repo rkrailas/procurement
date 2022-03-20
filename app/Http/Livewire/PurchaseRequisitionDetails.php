@@ -375,9 +375,11 @@ class PurchaseRequisitionDetails extends Component
             if (!$data){
                 $myValidate = false;
                 $this->dispatchBrowserEvent('popup-alert', ['title' => 'There must be at least one product.']);
+
+                return;
             }
 
-            //03-01-22 IF there is no Decider selected (Ref. P2P-PUR-001-FS-Purchase Requisition_(2022-01-28))
+            //03-01-22 ตรวจสอบว่ามี Decider หรือไม่
             $strsql = "SELECT approver FROM dec_val_workflow WHERE ref_doc_no='" . $this->prHeader['prno'] . "' AND approval_type='DECIDER'";
             if (count(DB::select($strsql)) == 0) { //ถ้ายังไม่เลือก Decider
                 $myValidate = false;
@@ -387,8 +389,11 @@ class PurchaseRequisitionDetails extends Component
                 if (count($data) > 0) {
                     $this->dispatchBrowserEvent('popup-alert', ['title' => $data[0]->msg_text]);
                 }
+
+                return;
             }
 
+            //20-03-22 ตรวจสอบ valid_until กรณีมี UOM=Project
             if ($this->prHeader['ordertype'] == '20' OR $this->prHeader['ordertype'] == '21') {
                 $strsql = "SELECT id FROM pr_item WHERE prno='" . $this->prHeader['prno'] . "' AND purchase_unit='Project' AND ISNULL(deletion_flag,0)=0";
                 $data = DB::select($strsql);
@@ -407,6 +412,8 @@ class PurchaseRequisitionDetails extends Component
                                 'title' => $data[0]->msg_text,
                             ]);
                         }
+
+                        return;
                     }
                 }
             }
@@ -622,6 +629,7 @@ class PurchaseRequisitionDetails extends Component
                 'cost_center' => 'required',
                 'purpose_pr' => 'required',
                 'budget_year' => 'required',
+                'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday'
             ])->validate();
 
             // 20-03-22 เปลี่ยนไปใช้ Code ด้านล่าง (รอลบ)
@@ -683,91 +691,87 @@ class PurchaseRequisitionDetails extends Component
 
             //20-03-22 ถ้าเป็น Blanket ตรวจสอบ valid_until ต้องไม่เกิน FiscalYear ยกเว้น มี UOM เป็น Project
 
-            $xValidate = true;
-            if ($xValidate) {
-                //Create PR
-                if ($this->isCreateMode) {
-                    $this->prHeader['prno'] = $this->getNewPrNo();
-                    $this->prHeader['status'] = '10';
-                    DB::transaction(function () {
-                    //pr_header
-                        DB::statement(
-                            "INSERT INTO pr_header(prno, ordertype, status, requestor, requested_for, buyer
-                            , delivery_address, delivery_location, delivery_site
-                            , requestor_phone, requestor_ext, requested_for_phone, requested_for_ext, requested_for_email
-                            , request_date, company, site, functions, department, division, section, cost_center, valid_until
-                            , days_to_notify, notify_below_10, notify_below_25, notify_below_35, budget_year, purpose_pr, capexno, create_by, create_on, changed_by, changed_on)
-                            
-                            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                                [
-                                    $this->prHeader['prno'], $this->prHeader['ordertype'], $this->prHeader['status'], $this->prHeader['requestor']
-                                    , $this->prHeader['requested_for'], $this->prHeader['buyer'], $this->prHeader['delivery_address']
-                                    , $this->prHeader['delivery_location'], $this->prHeader['delivery_site']
-                                    , $this->prHeader['phone'], $this->prHeader['extention'], $this->prHeader['phone_reqf'], $this->prHeader['extention_reqf']
-                                    , $this->prHeader['email_reqf'], $this->prHeader['request_date']
-                                    , $this->prHeader['company'], $this->prHeader['site'], $this->prHeader['functions'], $this->prHeader['department']
-                                    , $this->prHeader['division'], $this->prHeader['section'], $this->prHeader['cost_center']
-                                    , $this->prHeader['valid_until'], $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10']
-                                    , $this->prHeader['notify_below_25'], $this->prHeader['notify_below_35'], $this->prHeader['budget_year']
-                                    , $this->prHeader['purpose_pr'], $this->prHeader['capexno'], auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()
-                                ]
-                        );
-                    });
+            //Create PR
+            if ($this->isCreateMode) {
+                $this->prHeader['prno'] = $this->getNewPrNo();
+                $this->prHeader['status'] = '10';
+                DB::transaction(function () {
+                //pr_header
+                    DB::statement(
+                        "INSERT INTO pr_header(prno, ordertype, status, requestor, requested_for, buyer
+                        , delivery_address, delivery_location, delivery_site
+                        , requestor_phone, requestor_ext, requested_for_phone, requested_for_ext, requested_for_email
+                        , request_date, company, site, functions, department, division, section, cost_center, valid_until
+                        , days_to_notify, notify_below_10, notify_below_25, notify_below_35, budget_year, purpose_pr, capexno, create_by, create_on, changed_by, changed_on)
+                        
+                        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                            [
+                                $this->prHeader['prno'], $this->prHeader['ordertype'], $this->prHeader['status'], $this->prHeader['requestor']
+                                , $this->prHeader['requested_for'], $this->prHeader['buyer'], $this->prHeader['delivery_address']
+                                , $this->prHeader['delivery_location'], $this->prHeader['delivery_site']
+                                , $this->prHeader['phone'], $this->prHeader['extention'], $this->prHeader['phone_reqf'], $this->prHeader['extention_reqf']
+                                , $this->prHeader['email_reqf'], $this->prHeader['request_date']
+                                , $this->prHeader['company'], $this->prHeader['site'], $this->prHeader['functions'], $this->prHeader['department']
+                                , $this->prHeader['division'], $this->prHeader['section'], $this->prHeader['cost_center']
+                                , $this->prHeader['valid_until'], $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10']
+                                , $this->prHeader['notify_below_25'], $this->prHeader['notify_below_35'], $this->prHeader['budget_year']
+                                , $this->prHeader['purpose_pr'], $this->prHeader['capexno'], auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()
+                            ]
+                    );
+                });
 
-                    //HISTROY LOG
-                    $idPrHeaderHistroy = DB::getPdo()->lastInsertId();
-                    
-                    $obj = DB::table('pr_header_history')->select('id_original')->where('id','=',$idPrHeaderHistroy)->first();
-                    if($obj != null){
-                        $idPrHeader = $obj->id_original;
-                        $this->writeHeaderHistoryLog($idPrHeader,"INSERT");
-                    }
-                    //HISTROY LOG
-                   
-    
-                    $strsql = "SELECT msg_text FROM message_list WHERE msg_no='100' AND class='PURCHASE REQUISITION'";
-                    $data = DB::select($strsql);
-                    if (count($data) > 0) {
-                        $this->dispatchBrowserEvent('popup-success', [
-                            'title' => str_replace("<PR No.>", $this->prHeader['prno'], $data[0]->msg_text),
-                        ]);
-                    }
-    
-                    return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
-    
-                } else {
-                    //Edit PR
-                    DB::transaction(function () {
-                        DB::statement("UPDATE pr_header SET requested_for=?, delivery_address=?, delivery_location=?, delivery_site=?
-                        , request_date=?, site=?, functions=?, department=?
-                        , requestor_phone=?, requestor_ext=?, requested_for_phone=?, requested_for_ext=?, requested_for_email=?
-                        , division=?, section=?, buyer=?, cost_center=?, valid_until=?, days_to_notify=?, notify_below_10=?, notify_below_25=?
-                        , notify_below_35=?,budget_year=?, purpose_pr=?, capexno=?, status=?, changed_by=?, changed_on=?
-                        where prno=?" 
-                        , [$this->prHeader['requested_for'], $this->prHeader['delivery_address'], $this->prHeader['delivery_location'], $this->prHeader['delivery_site']
-                        , $this->prHeader['request_date'], $this->prHeader['site'], $this->prHeader['functions'], $this->prHeader['department']
-                        , $this->prHeader['phone'], $this->prHeader['extention'], $this->prHeader['phone_reqf'], $this->prHeader['extention_reqf']
-                        , $this->prHeader['email_reqf'], $this->prHeader['division'], $this->prHeader['section']
-                        , $this->prHeader['buyer'], $this->prHeader['cost_center'], $this->prHeader['valid_until']
-                        , $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10'], $this->prHeader['notify_below_25'], $this->prHeader['notify_below_35']
-                        , $this->prHeader['budget_year'], $this->prHeader['purpose_pr'], $this->prHeader['capexno'], $this->prHeader['status']
-                        , auth()->user()->id, Carbon::now(), $this->prHeader['prno']]);
-                    });
-      
-                    $this->writeHeaderHistoryLog($this->prHeader['id'],"UPDATE");
-
-                    $strsql = "select msg_text from message_list where msg_no='110' AND class='PURCHASE REQUISITION'";
-                    $data = DB::select($strsql);
-                    if (count($data) > 0) {
-                        $this->dispatchBrowserEvent('popup-success', [
-                            'title' => str_replace("<PR No.>", $this->prHeader['prno'], $data[0]->msg_text),
-                        ]);
-                    }
-    
-                    return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+                //HISTROY LOG
+                $idPrHeaderHistroy = DB::getPdo()->lastInsertId();
+                
+                $obj = DB::table('pr_header_history')->select('id_original')->where('id','=',$idPrHeaderHistroy)->first();
+                if($obj != null){
+                    $idPrHeader = $obj->id_original;
+                    $this->writeHeaderHistoryLog($idPrHeader,"INSERT");
                 }
-            }
+                //HISTROY LOG
+                
 
+                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='100' AND class='PURCHASE REQUISITION'";
+                $data = DB::select($strsql);
+                if (count($data) > 0) {
+                    $this->dispatchBrowserEvent('popup-success', [
+                        'title' => str_replace("<PR No.>", $this->prHeader['prno'], $data[0]->msg_text),
+                    ]);
+                }
+
+                return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+
+            } else {
+                //Edit PR
+                DB::transaction(function () {
+                    DB::statement("UPDATE pr_header SET requested_for=?, delivery_address=?, delivery_location=?, delivery_site=?
+                    , request_date=?, site=?, functions=?, department=?
+                    , requestor_phone=?, requestor_ext=?, requested_for_phone=?, requested_for_ext=?, requested_for_email=?
+                    , division=?, section=?, buyer=?, cost_center=?, valid_until=?, days_to_notify=?, notify_below_10=?, notify_below_25=?
+                    , notify_below_35=?,budget_year=?, purpose_pr=?, capexno=?, status=?, changed_by=?, changed_on=?
+                    where prno=?" 
+                    , [$this->prHeader['requested_for'], $this->prHeader['delivery_address'], $this->prHeader['delivery_location'], $this->prHeader['delivery_site']
+                    , $this->prHeader['request_date'], $this->prHeader['site'], $this->prHeader['functions'], $this->prHeader['department']
+                    , $this->prHeader['phone'], $this->prHeader['extention'], $this->prHeader['phone_reqf'], $this->prHeader['extention_reqf']
+                    , $this->prHeader['email_reqf'], $this->prHeader['division'], $this->prHeader['section']
+                    , $this->prHeader['buyer'], $this->prHeader['cost_center'], $this->prHeader['valid_until']
+                    , $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10'], $this->prHeader['notify_below_25'], $this->prHeader['notify_below_35']
+                    , $this->prHeader['budget_year'], $this->prHeader['purpose_pr'], $this->prHeader['capexno'], $this->prHeader['status']
+                    , auth()->user()->id, Carbon::now(), $this->prHeader['prno']]);
+                });
+    
+                $this->writeHeaderHistoryLog($this->prHeader['id'],"UPDATE");
+
+                $strsql = "select msg_text from message_list where msg_no='110' AND class='PURCHASE REQUISITION'";
+                $data = DB::select($strsql);
+                if (count($data) > 0) {
+                    $this->dispatchBrowserEvent('popup-success', [
+                        'title' => str_replace("<PR No.>", $this->prHeader['prno'], $data[0]->msg_text),
+                    ]);
+                }
+
+                return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+            }
         }
 
     //Action Button End

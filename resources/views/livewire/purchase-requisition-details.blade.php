@@ -236,7 +236,7 @@
         {{-- Header End--}}
 
         @if ($isBlanket)
-        {{-- Blanket Request --}}
+        {{-- Blanket Request  --}}
         <div class="card shadow-none border rounded">
             <div class="card-header my-card-header">
                 Blanket Request
