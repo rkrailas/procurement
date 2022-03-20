@@ -988,49 +988,46 @@
                 {{-- Tab Attachments End --}}
                 
                 {{-- Tab History --}}           
-                    <div class="tab-pane fade {{ $currentTab == 'history' ? 'show active' : '' }}" id="pills-history" role="tabpanel" aria-labelledby="pills-history-tab" wire:ignore.self>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <table class="table table-sm nissanTB">
-                                    <thead>
+                <div class="tab-pane fade {{ $currentTab == 'history' ? 'show active' : '' }}" id="pills-history" role="tabpanel" aria-labelledby="pills-history-tab" wire:ignore.self>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table table-sm nissanTB">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Line No.</th>
+                                    <th scope="col">Field</th>
+                                    <th scope="col">Value</th>
+                                    <th scope="col">Changed By</th>
+                                    <th scope="col">Changed On</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    @if(!empty($historylog))
+                                    @foreach ($historylog as $row)
                                     <tr>
-                                        <th scope="col">Line No.</th>
-                                        <th scope="col">Field</th>
-                                        <th scope="col">Value</th>
-                                        <th scope="col">Changed By</th>
-                                        <th scope="col">Changed On</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                        @if(!empty($historylog))
-                                        @foreach ($historylog as $row)
-                                        <tr>
-                                            <td scope="col">{{ $row->line_no }} </td>
-                                            <td scope="col">{{ $row->field }} </td>
-                                            <td scope="col">{{ $row->new_value }} </td>
-                                            @if($row->new_value == "INSERT")
-                                            <td></td>
-                                            <td></td>
-                                            @else
-                                            <td scope="col">{{ $row->name." ".$row->lastname  }} </td>
-                                            <td scope="col">{{ \Carbon\Carbon::parse($row->changed_on)->format('d-M-Y H:i:s') }} </td>
-                                            @endif
-                                            
+                                        <td scope="col">{{ $row->line_no }} </td>
+                                        <td scope="col">{{ $row->field }} </td>
+                                        <td scope="col">{{ $row->new_value }} </td>
+                                       
+                                        <td scope="col">{{ $row->name." ".$row->lastname  }} </td>
+                                        <td scope="col">{{ \Carbon\Carbon::parse($row->changed_on)->format('d-M-Y H:i:s') }} </td>
 
-                                        </tr>
-                                        @endforeach
-                                        @endif
-                                    </tbody>
-                                </table>
-                            </div>
+                                        
+
+                                    </tr>
+                                    @endforeach
+                                    @endif
+                                </tbody>
+                            </table>
                         </div>
-                        {{-- <div class="row">
-                            <div class="col-md-12 mb-1">
-                                {{ $historylog->links() }}
-                            </div>
-                        </div> --}}
                     </div>
-                {{-- Tab History End --}} 
+                    {{-- <div class="row">
+                        <div class="col-md-12 mb-1">
+                            {{ $historylog->links() }}
+                        </div>
+                    </div> --}}
+                </div>
+            {{-- Tab History End --}} 
 
             </div>
         {{-- Tab Content End --}}

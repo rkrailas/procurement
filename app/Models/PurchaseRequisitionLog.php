@@ -44,7 +44,10 @@ class PurchaseRequisitionLog extends Model
                     'history_logs.changed_on'
                 )
                 ->join('users', 'history_logs.changed_by', '=', 'users.id')
-                ->where('refdocno', '=', $refdocno)->get();
+                ->where([
+                    ['refdocno', '=', $refdocno],
+                    ['new_value','=',"UPDATE"]
+                ])->get();
 
             $insert = DB::table('history_logs')
                 ->select(
@@ -81,6 +84,7 @@ class PurchaseRequisitionLog extends Model
 
            
             $returnData = $result->sortBy('id');
+         
         } catch (Exception $e) {
             $returnData = [];
         }

@@ -716,6 +716,7 @@ class PurchaseRequisitionDetails extends Component
 
                     //HISTROY LOG
                     $idPrHeaderHistroy = DB::getPdo()->lastInsertId();
+                    
                     $obj = DB::table('pr_header_history')->select('id_original')->where('id','=',$idPrHeaderHistroy)->first();
                     if($obj != null){
                         $idPrHeader = $obj->id_original;
@@ -2953,11 +2954,13 @@ class PurchaseRequisitionDetails extends Component
                     'old_value' => null,
                     'new_value' => $actionType,
                     'created_by' => $prHeaderLog->create_by,
-                    'changed_by' => null,
+                    'changed_by' => $prHeaderLog->create_by,
                     'created_on' => $prHeaderLog->create_on,
-                    'changed_on' => null,
+                    'changed_on' => $prHeaderLog->create_on,
                 ];
+                // dd($prepareData);
                 PurchaseRequisitionLog::insertLog($prepareData);
+                // dd("fin");
             } else if ($actionType == "DELETE" || $actionType == "UPDATE") {
 
                 $prHeaderLogs = DB::table('pr_header_history')->where('id_original', '=', $prHeaderId)->orderBy('id', 'desc')->limit(2)->get();
@@ -3025,9 +3028,9 @@ class PurchaseRequisitionDetails extends Component
                         'old_value' => null,
                         'new_value' => $actionType,
                         'created_by' => $prItemLog->create_by,
-                        'changed_by' => null,
+                        'changed_by' => $prItemLog->create_by,
                         'created_on' => $prItemLog->create_on,
-                        'changed_on' => null,
+                        'changed_on' => $prItemLog->create_on,
                     ];
                     PurchaseRequisitionLog::insertLog($prepareData);
                 } else if ($actionType == "DELETE" || $actionType == "UPDATE") {
@@ -3072,13 +3075,13 @@ class PurchaseRequisitionDetails extends Component
                                 'changed_by' => $change_by,
                                 'changed_on' => $change_on,
                             ];
-    
+                            
                             PurchaseRequisitionLog::insertLog($prepareData);
                         }
                     }
                 }
             } catch (Exception $e) {
-              
+            
             }
         }
 
