@@ -68,7 +68,7 @@
 
     function radioToBit($xRadio)
     {
-        if ($xRadio){
+        if ($xRadio == "on"){
             return 1;
         } else {
             return 0;
@@ -77,7 +77,7 @@
 
     function bitToRedio($xBit)
     {
-        if ($xBit){
+        if ($xBit == 1){
             return "on";
         } else {
             return "false";

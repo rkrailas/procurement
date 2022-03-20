@@ -179,12 +179,12 @@ class PurchaseRequisitionDetails extends Component
                     $strsql = "INSERT INTO pr_header(prno, ordertype, status, requestor, requested_for, buyer, delivery_address, request_date, company
                         , site, functions, department, division, section, cost_center, valid_until, days_to_notify, notify_below_10
                         , notify_below_25, notify_below_35, rejection_reason, budget_year, purpose_pr, capexno
-                        , create_by, create_on)
+                        , create_by, create_on, changed_by, changed_on)
                         SELECT '" . $newPrNo . "', ordertype, '10', requestor, requested_for, buyer, delivery_address, '" 
                         . date_format(Carbon::now(), 'Y-m-d') . "', company
                         , site, functions, department, division, section, cost_center, valid_until, days_to_notify, notify_below_10
                         , notify_below_25, notify_below_35, rejection_reason, budget_year, purpose_pr, capexno
-                        , '" . auth()->user()->id . "', '" . Carbon::now() . "'
+                        , '" . auth()->user()->id . "', '" . Carbon::now() . "', '" . auth()->user()->id . "', '" . Carbon::now() . "'
                         FROM pr_header 
                         WHERE id=" . $this->prHeader['id'];
                     DB::statement($strsql);
@@ -202,12 +202,12 @@ class PurchaseRequisitionDetails extends Component
                         , exchange_rate, purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life
                         , snn_service, snn_production, final_price, final_price_local, quotation_expiry_date, quotation_date, nominated_supplier
                         , remarks, skip_rfq, skip_doa, reference_pr, reference_po, reference_po_item, status, close_reason
-                        , create_by, create_on)
+                        , create_by, create_on, changed_by, changed_on)
                         select '" . $newPrNo . "', " . $xPrID . ", [lineno], partno, description, purchase_unit, unit_price, unit_price_local, currency
                         , exchange_rate, purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life
                         , snn_service, snn_production, final_price, final_price_local, quotation_expiry_date, quotation_date, nominated_supplier
                         , remarks, skip_rfq, skip_doa, '" . $this->prHeader['prno'] . "', reference_po, reference_po_item, '10', close_reason
-                        , '" . auth()->user()->id . "', '" . Carbon::now() . "'
+                        , '" . auth()->user()->id . "', '" . Carbon::now() . "', '" . auth()->user()->id . "', '" . Carbon::now() . "'
                         from pr_item
                         where id in (" . myWhereInID($this->selectedRows) . ") AND status='70'";
                     DB::statement($strsql);
@@ -388,7 +388,29 @@ class PurchaseRequisitionDetails extends Component
                     $this->dispatchBrowserEvent('popup-alert', ['title' => $data[0]->msg_text]);
                 }
             }
-            
+
+            if ($this->prHeader['ordertype'] == '20' OR $this->prHeader['ordertype'] == '21') {
+                $strsql = "SELECT id FROM pr_item WHERE prno='" . $this->prHeader['prno'] . "' AND purchase_unit='Project' AND ISNULL(deletion_flag,0)=0";
+                $data = DB::select($strsql);
+                if (count($data) > 0) {
+                    $myValidate = true;
+                } else {
+                    $xYear = $this->prHeader['budget_year'] + 1;
+                    $xEndFiscalYear = $xYear . '-03-31';
+                    if ($this->prHeader['valid_until'] > $xEndFiscalYear) {
+                        $myValidate = false;
+        
+                        $strsql = "SELECT msg_text FROM message_list WHERE msg_no='116' AND class='PURCHASE REQUISITION'";
+                        $data = DB::select($strsql);
+                        if (count($data) > 0) {
+                            $this->dispatchBrowserEvent('popup-alert', [
+                                'title' => $data[0]->msg_text,
+                            ]);
+                        }
+                    }
+                }
+            }
+
             if ($myValidate) {
                 $this->savePR();
 
@@ -602,62 +624,66 @@ class PurchaseRequisitionDetails extends Component
                 'budget_year' => 'required',
             ])->validate();
 
+            // 20-03-22 เปลี่ยนไปใช้ Code ด้านล่าง (รอลบ)
             //13-03-2022 Fixed ตรวจสอบว่าต้องไม่ใช่การสร้างครั้งแรก
-            if (!empty($this->prHeader['id'])) {
-                //11-03-2022 ตรวจสอบว่ามี Item ที่มี Unit เป็น Project หรือไม่
-                $xHaveUOMProject = "N";
-                $xYear = "";
-                $xEndFiscalYear = "";
-                $strsql = "SELECT purchase_unit FROM pr_item WHERE prno_id=" . $this->prHeader['id'] . " AND purchase_unit='Project'";
-                $data = DB::select($strsql);
-                if ($data) {
-                    $xHaveUOMProject = "Y";
-                    $xYear = date_format(Carbon::now(), 'Y');
-                    $xEndFiscalYear = $xYear . '-03-31';
-                    $this->prHeader['endfiscalyear'] = $xEndFiscalYear;
-                }
-            }
+            // if (!empty($this->prHeader['id'])) {
+            //     //11-03-2022 ตรวจสอบว่ามี Item ที่มี Unit เป็น Project หรือไม่
+            //     $xHaveUOMProject = "N";
+            //     $xYear = "";
+            //     $xEndFiscalYear = "";
+            //     $strsql = "SELECT purchase_unit FROM pr_item WHERE prno_id=" . $this->prHeader['id'] . " AND purchase_unit='Project'";
+            //     $data = DB::select($strsql);
+            //     if ($data) {
+            //         $xHaveUOMProject = "Y";
+            //         $xYear = date_format(Carbon::now(), 'Y');
+            //         $xEndFiscalYear = $xYear . '-03-31';
+            //         $this->prHeader['endfiscalyear'] = $xEndFiscalYear;
+            //     }
+            // }
 
-            if ($this->prHeader['ordertype'] == '21' AND $xHaveUOMProject = "N") {
-                Validator::make($this->prHeader, [
-                    'budget_year' => 'required',
-                    'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday|before_or_equal:endfiscalyear',
-                ])->validate();
-            } else if ($this->prHeader['ordertype'] == '20' AND $xHaveUOMProject = "N") {
-                Validator::make($this->prHeader, [
-                    'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday|before_or_equal:endfiscalyear',
-                ])->validate();
-            }
+            // if ($this->prHeader['ordertype'] == '21' AND $xHaveUOMProject = "N") {
+            //     Validator::make($this->prHeader, [
+            //         'budget_year' => 'required',
+            //         'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday|before_or_equal:endfiscalyear',
+            //     ])->validate();
+            // } else if ($this->prHeader['ordertype'] == '20' AND $xHaveUOMProject = "N") {
+            //     Validator::make($this->prHeader, [
+            //         'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday|before_or_equal:endfiscalyear',
+            //     ])->validate();
+            // }
 
-            if ($this->prHeader['ordertype'] == '21' AND $xHaveUOMProject = "Y") {
-                Validator::make($this->prHeader, [
-                    'budget_year' => 'required',
-                    'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday',
-                ])->validate();
-            } else if ($this->prHeader['ordertype'] == '20' AND $xHaveUOMProject = "Y") {
-                Validator::make($this->prHeader, [
-                    'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday',
-                ])->validate();
-            }
+            // if ($this->prHeader['ordertype'] == '21' AND $xHaveUOMProject = "Y") {
+            //     Validator::make($this->prHeader, [
+            //         'budget_year' => 'required',
+            //         'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday',
+            //     ])->validate();
+            // } else if ($this->prHeader['ordertype'] == '20' AND $xHaveUOMProject = "Y") {
+            //     Validator::make($this->prHeader, [
+            //         'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday',
+            //     ])->validate();
+            // }
+
+            
+            //31-01-2022 Validate IF Order Type = Blanket Free Text & IF UoM <> PJ (Project) and PR Header.Valid Until > End of Fiscal Year
+            // if ($this->prHeader['ordertype'] == '21') {
+            //     $xYear = $this->prHeader['budget_year'] + 1;
+            //     $xEndFiscalYear = $xYear . '-03-31';
+            //     if ($this->prHeader['ordertype'] == '21' AND  $this->prHeader['valid_until'] > $xEndFiscalYear) {
+            //         $xValidate = false;
+    
+            //         $strsql = "SELECT msg_text FROM message_list WHERE msg_no='116' AND class='PURCHASE REQUISITION'";
+            //         $data = DB::select($strsql);
+            //         if (count($data) > 0) {
+            //             $this->dispatchBrowserEvent('popup-alert', [
+            //                 'title' => $data[0]->msg_text,
+            //             ]);
+            //         }
+            //     }
+            // }
+
+            //20-03-22 ถ้าเป็น Blanket ตรวจสอบ valid_until ต้องไม่เกิน FiscalYear ยกเว้น มี UOM เป็น Project
 
             $xValidate = true;
-            //31-01-2022 Validate IF Order Type = Blanket Free Text & IF UoM <> PJ (Project) and PR Header.Valid Until > End of Fiscal Year
-            if ($this->prHeader['ordertype'] == '21') {
-                $xYear = $this->prHeader['budget_year'] + 1;
-                $xEndFiscalYear = $xYear . '-03-31';
-                if ($this->prHeader['ordertype'] == '21' AND  $this->prHeader['valid_until'] > $xEndFiscalYear) {
-                    $xValidate = false;
-    
-                    $strsql = "SELECT msg_text FROM message_list WHERE msg_no='116' AND class='PURCHASE REQUISITION'";
-                    $data = DB::select($strsql);
-                    if (count($data) > 0) {
-                        $this->dispatchBrowserEvent('popup-alert', [
-                            'title' => $data[0]->msg_text,
-                        ]);
-                    }
-                }
-            }
-
             if ($xValidate) {
                 //Create PR
                 if ($this->isCreateMode) {
@@ -670,9 +696,9 @@ class PurchaseRequisitionDetails extends Component
                             , delivery_address, delivery_location, delivery_site
                             , requestor_phone, requestor_ext, requested_for_phone, requested_for_ext, requested_for_email
                             , request_date, company, site, functions, department, division, section, cost_center, valid_until
-                            , days_to_notify, notify_below_10, notify_below_25, notify_below_35, budget_year, purpose_pr, capexno, create_by, create_on)
+                            , days_to_notify, notify_below_10, notify_below_25, notify_below_35, budget_year, purpose_pr, capexno, create_by, create_on, changed_by, changed_on)
                             
-                            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                                 [
                                     $this->prHeader['prno'], $this->prHeader['ordertype'], $this->prHeader['status'], $this->prHeader['requestor']
                                     , $this->prHeader['requested_for'], $this->prHeader['buyer'], $this->prHeader['delivery_address']
@@ -683,7 +709,7 @@ class PurchaseRequisitionDetails extends Component
                                     , $this->prHeader['division'], $this->prHeader['section'], $this->prHeader['cost_center']
                                     , $this->prHeader['valid_until'], $this->prHeader['days_to_notify'], $this->prHeader['notify_below_10']
                                     , $this->prHeader['notify_below_25'], $this->prHeader['notify_below_35'], $this->prHeader['budget_year']
-                                    , $this->prHeader['purpose_pr'], $this->prHeader['capexno'], auth()->user()->id, Carbon::now()
+                                    , $this->prHeader['purpose_pr'], $this->prHeader['capexno'], auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()
                                 ]
                         );
                     });
@@ -911,11 +937,11 @@ class PurchaseRequisitionDetails extends Component
                         }
 
                         DB::statement("INSERT INTO attactments ([file_name], file_type, file_path, ref_doctype, ref_docid, ref_docno
-                            , edecision_no, isheader_level, ref_lineno, create_by, create_on)
-                        VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+                            , edecision_no, isheader_level, ref_lineno, create_by, create_on, changed_by, changed_on)
+                        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
                         ,[$file->getClientOriginalName(), $this->attachment_filetype, $newFileName, '10'
                         , $this->prHeader['id'], $this->prHeader['prno'], $this->attachment_edecisionno, $isHeader
-                        , json_encode($this->attachment_lineno), auth()->user()->id, Carbon::now()]);
+                        , json_encode($this->attachment_lineno), auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
 
                         //Add History Log
                         //Get last id in table attactments
@@ -979,11 +1005,11 @@ class PurchaseRequisitionDetails extends Component
             //Add Log dec_val_workflow_log
             if ($data) {
                 DB::statement("INSERT INTO dec_val_workflow_log (seqno, approval_type, approver, status, refdoc_type, refdoc_no, refdoc_id
-                    , submitted_date, completed_date, submitted_by, create_by, create_on)
-                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+                    , submitted_date, completed_date, submitted_by, create_by, create_on, changed_by, changed_on)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                 ,[$data[0]->seqno, $data[0]->approval_type, $data[0]->approver, $data[0]->status, $data[0]->ref_doc_type, $data[0]->ref_doc_no
                     , $data[0]->ref_doc_id, $data[0]->submitted_date, $data[0]->completed_date, $data[0]->submitted_by
-                    , auth()->user()->id, Carbon::now()]);
+                    , auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
             }
 
             //ตรวจสอบว่า Approver เป็น Validator หรือ Decider 
@@ -1102,14 +1128,13 @@ class PurchaseRequisitionDetails extends Component
 
                     //Create RFQ HEADER
                     DB::statement("INSERT INTO rfq_header(rfqno, prno, prno_id, status, company, site, buyer, buyer_group, workflow_step
-                    , total_base_price_local, total_final_price_local, cr_amount_local, cr_percent_local, create_by, create_on)
-                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                    , total_base_price_local, total_final_price_local, cr_amount_local, cr_percent_local, create_by, create_on, changed_by, changed_on)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                     ,[$xNewRFQNo, $this->prHeader['prno'], $this->prHeader['id'], '10', $this->prHeader['company'], $this->prHeader['site']
-                    , $this->prHeader['buyer'], $xBuyerGrp, 1, 0, 0, 0, 0, auth()->user()->id, Carbon::now()]);
+                    , $this->prHeader['buyer'], $xBuyerGrp, 1, 0, 0, 0, 0, auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
 
                     //Create RFQ SUPPLIER (If there is at least one PR Item.Skip RFQ = TRUE) 
-                    //$strsql = "SELECT prno FROM pr_item WHERE skip_rfq=1 AND prno_id=" . $this->prHeader['id'];
-                    $strsql = "SELECT * FROM pr_item WHERE skip_rfq=1 AND prno='" . $this->prHeader['prno'] . "' AND status BETWEEN '20' AND '30'";
+                    $strsql = "SELECT * FROM pr_item WHERE skip_rfq=1 AND ISNULL(deletion_flag,0)=0 AND prno='" . $this->prHeader['prno'] . "' AND status BETWEEN '20' AND '30'";
                     $data = DB::select($strsql);
 
                     if ($data) {
@@ -1125,7 +1150,7 @@ class PurchaseRequisitionDetails extends Component
                                     , ISNULL(ROUND(SUM(final_price), 2), 0) AS total_final_price
                                     , ISNULL(ROUND(SUM(unit_price * qty * exchange_rate),2), 0) AS total_base_price_local
                                     , ISNULL(ROUND(SUM(final_price_local), 2), 0) AS total_final_price_local
-                                    FROM pr_item where prno='" . $this->prHeader['prno'] . "'";
+                                    FROM pr_item where prno='" . $this->prHeader['prno'] . "' AND ISNULL(deletion_flag,0)=0";
                             $data2 = DB::select($strsql);
                             if ($data2) {
                                 $total_base_price = $data2[0]->total_base_price;
@@ -1136,11 +1161,11 @@ class PurchaseRequisitionDetails extends Component
 
                             $strsql = "INSERT INTO rfq_supplier_quotation(rfqno, company, supplier_quotationno, supplier, supplier_name, main_contact_person
                                 , telephone_number, email, payment_term, exchange_rate, quotation_expiry_term, quotation_expiry, payment_pattern
-                                , total_base_price, total_final_price, total_base_price_local, total_final_price_local, create_by, create_on) 
+                                , total_base_price, total_final_price, total_base_price_local, total_final_price_local, create_by, create_on, changed_by, changed_on) 
                                 SELECT '" . $xNewRFQNo . "', '" . $this->prHeader['company'] . "', '', a.nominated_supplier, b.name1 + ' ' + b.name2 
                                 , b.contact_person, b.telphone_number, b.email, b.payment_key, a.exchange_rate, '', '', ''
                                 ," . $total_base_price ." ," . $total_final_price . ", " . $total_base_price_local . ", " . $total_final_price_local . "
-                                , '" . auth()->user()->id . "', '" . Carbon::now() . "'
+                                , '" . auth()->user()->id . "', '" . Carbon::now() . "', '" . auth()->user()->id . "', '" . Carbon::now() . "'
                                 FROM pr_item a
                                 LEFT JOIN supplier b ON a.nominated_supplier=b.supplier
                                 WHERE a.id='" . $row['id'] . "'";
@@ -1175,27 +1200,27 @@ class PurchaseRequisitionDetails extends Component
                                 , exchange_rate, blanket_order_type, edecisionno, edecision_fileid
                                 , rfq_supplier_quotation, final_price, total_final_price, final_price_local
                                 , total_final_price_local, cr_amount, cr_percent, cr_amount_local, cr_percent_local
-                                , supplier, create_by, create_on)
-                                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                                , supplier, create_by, create_on, changed_by, changed_on)
+                                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                                 ,[$xNewRFQNo, $row['prno'], $row['id'], $row['lineno'], $row['partno'], $row['description'], $row['skip_rfq'], $row['nonstock_control']
                                     , $row['over_1_year_life'], '11', $row['qty'], $row['purchase_unit'], $row['req_date'], $row['currency']
                                     , round($xBasePrice, 2), round($xTotalBasePrice, 2), round($xBasePriceLocal, 2), round($xTotalBasePriceLocal, 2)
                                     , $row['exchange_rate'], $row['blanket_order_type'], $row['edecision_no'], $row['edecision_file']
                                     , $row['nominated_supplier'] , round($xFinalPrice, 2), round($xTotalFinalPrice, 2), round($xFinalPriceLocal, 2)
                                     , round($xTotalFinalPriceLocal, 2), round($xCrAmount , 2), round($xCrPercent, 2), round($xCrAmountLocal, 2)
-                                    , round($xCrPercentLocal, 2), $row['nominated_supplier'], auth()->user()->id, Carbon::now()
+                                    , round($xCrPercentLocal, 2), $row['nominated_supplier'], auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()
                                 ]);
 
                             } else {
                                 DB::statement("INSERT INTO rfq_item(rfqno, prno, prlineno_id, prlineno, partno, description, skip_rfq, non_stock_control
                                 , over1_year_life, status, qty, uom, delivery_date, currency, base_price, total_base_price, base_price_local
-                                ,total_base_price_local, exchange_rate, blanket_order_type, edecisionno, edecision_fileid, create_by, create_on)
-                                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                                ,total_base_price_local, exchange_rate, blanket_order_type, edecisionno, edecision_fileid, create_by, create_on, changed_by, changed_on)
+                                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                                 ,[$xNewRFQNo, $row['prno'], $row['id'], $row['lineno'], $row['partno'], $row['description'], $row['skip_rfq']
                                     , $row['nonstock_control'], $row['over_1_year_life'], '10', $row['qty'], $row['purchase_unit'], $row['req_date']
                                     , $row['currency'], $row['unit_price'], round($row['unit_price'] * $row['qty'], 2), $row['unit_price_local']
                                     , round($row['unit_price_local'] * $row['qty'], 2) , $row['exchange_rate'], $row['blanket_order_type']
-                                    , $row['edecision_no'], $row['edecision_file'], auth()->user()->id, Carbon::now()]);
+                                    , $row['edecision_no'], $row['edecision_file'], auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
                             }
                         }
                     }
@@ -1355,11 +1380,11 @@ class PurchaseRequisitionDetails extends Component
 
                     if ($data) {
                         DB::statement("INSERT INTO dec_val_workflow_log (seqno, approval_type, approver, status, refdoc_type, refdoc_no, refdoc_id
-                            , reject_reason, submitted_date, completed_date, submitted_by, create_by, create_on)
-                            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                            , reject_reason, submitted_date, completed_date, submitted_by, create_by, create_on, changed_by, changed_on)
+                            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                         ,[$data[0]->seqno, $data[0]->approval_type, $data[0]->approver, $data[0]->status, $data[0]->ref_doc_type, $data[0]->ref_doc_no
                             , $data[0]->ref_doc_id, $data[0]->reject_reason, $data[0]->submitted_date, $data[0]->completed_date, $data[0]->submitted_by
-                            , auth()->user()->id, Carbon::now()]);
+                            , auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
                     }
 
                     //Update Status pr_header, pr_item
@@ -1525,10 +1550,10 @@ class PurchaseRequisitionDetails extends Component
                 $maxSeq = $maxSeq + 1;
 
                 DB::statement("INSERT INTO dec_val_workflow (seqno, approval_type, approver, status, ref_doc_type, ref_doc_no, ref_doc_id
-                    , create_by, create_on)
-                    VALUES(?,?,?,?,?,?,?,?,?)"
+                    , create_by, create_on, changed_by, changed_on)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?)"
                 ,[$maxSeq, 'VALIDATOR', $this->validator['username'], '10', '10', $this->prHeader['prno'], $this->prHeader['id']
-                    , auth()->user()->id, Carbon::now()]);
+                    , auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
 
                 $this->reset(['validator']);
                 $this->dispatchBrowserEvent('clear-select2');
@@ -1595,9 +1620,9 @@ class PurchaseRequisitionDetails extends Component
             }
 
             if ($myValidate){
-                DB::statement("INSERT INTO dec_val_workflow (approval_type, approver, status, ref_doc_type, ref_doc_no, ref_doc_id, create_by, create_on)
-                VALUES(?,?,?,?,?,?,?,?)"
-                ,['DECIDER', $this->decider['username'], '10', '10', $this->prHeader['prno'], $this->prHeader['id'], auth()->user()->id, Carbon::now()]);
+                DB::statement("INSERT INTO dec_val_workflow (approval_type, approver, status, ref_doc_type, ref_doc_no, ref_doc_id, create_by, create_on, changed_by, changed_on)
+                VALUES(?,?,?,?,?,?,?,?,?,?)"
+                ,['DECIDER', $this->decider['username'], '10', '10', $this->prHeader['prno'], $this->prHeader['id'], auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
 
                 $this->reset(['decider']);
                 $this->dispatchBrowserEvent('clear-select2');
@@ -1634,10 +1659,10 @@ class PurchaseRequisitionDetails extends Component
 
             //ตรวจสอบว่า QTY ที่จะ Add เกินกว่าที่เหลือหรือไม่
             if ($this->prDeliveryPlan['totalQtyPlanned'] + $this->prDeliveryPlan['qty'] <= $this->prDeliveryPlan['totalQty']) {
-                DB::statement("INSERT INTO pr_delivery_plan (qty, delivery_date, ref_prno, ref_pr_id, ref_prline_id, create_by, create_on)
-                VALUES(?,?,?,?,?,?,?)"
+                DB::statement("INSERT INTO pr_delivery_plan (qty, delivery_date, ref_prno, ref_pr_id, ref_prline_id, create_by, create_on, changed_by, changed_on)
+                VALUES(?,?,?,?,?,?,?,?,?)"
                 ,[$this->prDeliveryPlan['qty'], $this->prDeliveryPlan['delivery_date'], $this->prHeader['prno'], $this->prHeader['id']
-                , $this->prDeliveryPlan['ref_prline_id'], auth()->user()->id, Carbon::now()
+                , $this->prDeliveryPlan['ref_prline_id'], auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()
                 ]);
         
                 $this->reset(['prDeliveryPlan']);
@@ -2045,15 +2070,15 @@ class PurchaseRequisitionDetails extends Component
                             $this->prItem['account_group'] = "";
                         }
 
-                        //03-03-22 ชั่วคร่าวเพราะ Abeam ยังตกลงเรื่องนี้ไม่ได้ (สรุปว่าไม่ได้ใช้งาน)
+                        //03-03-22 สรุปว่าไม่ได้ใช้งาน
                         $this->prItem['purchase_group'] = "";
                         $this->prItem['account_group'] = "";
 
                         DB::statement("INSERT INTO pr_item (prno, prno_id, [lineno], partno, description, purchase_unit, unit_price, unit_price_local
                             , currency, exchange_rate, purchase_group, account_group, qty, req_date, internal_order, budget_code, over_1_year_life, snn_service
                             ,snn_production, nominated_supplier, remarks, skip_rfq, skip_doa, reference_pr, blanket_order_type, status, nonstock_control
-                            , create_by, create_on)
-                        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                            , create_by, create_on, changed_by, changed_on)
+                        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                             ,[$this->prHeader['prno'], $this->prHeader['id'], $lineno, $this->prItem['partno'], $this->prItem['description']
                             , $this->prItem['purchase_unit'], $this->prItem['unit_price'], $this->prItem['unit_price'] * $this->prItem['exchange_rate']
                             , $this->prItem['currency'], $this->prItem['exchange_rate']
@@ -2061,7 +2086,7 @@ class PurchaseRequisitionDetails extends Component
                             , $this->prItem['req_date'], $this->prItem['internal_order'] ,$this->prItem['budget_code'], $this->prItem['over_1_year_life']
                             , radioToBit($this->prItem['snn_service']), radioToBit($this->prItem['snn_production']) ,$this->prItem['nominated_supplier'], $this->prItem['remarks']
                             , $this->prItem['skip_rfq'], $this->prItem['skip_doa'], $this->prItem['reference_pr'], $blanket_order_type 
-                            , "10", $this->prItem['nonstock_control'] ,auth()->user()->id, Carbon::now()
+                            , "10", $this->prItem['nonstock_control'] ,auth()->user()->id, Carbon::now() ,auth()->user()->id, Carbon::now()
                             ]);
 
                         //History log
@@ -2092,7 +2117,7 @@ class PurchaseRequisitionDetails extends Component
                         $this->prItem['partno'] = "";
                         $this->prItem['account_group'] = "";
                     }
-    
+
                     DB::statement("UPDATE pr_item SET partno=?, description=?, purchase_unit=?, unit_price=?, unit_price_local=?, currency=?, exchange_rate=?
                         ,purchase_group=?, account_group=?, qty=?, req_date=?, internal_order=?, budget_code=?, over_1_year_life=?, snn_service=?
                         ,snn_production=?, nominated_supplier=?, remarks=?, skip_rfq=?, skip_doa=?, reference_pr=?, blanket_order_type=?, nonstock_control=?
@@ -3014,10 +3039,20 @@ class PurchaseRequisitionDetails extends Component
                     $array_data_before = (array)$data_before;
                     unset($array_data_before['id']);
                     unset($array_data_before['action_on']);
+                    unset($array_data_before['changed_by']);
+                    unset($array_data_before['changed_on']);
     
                     $array_data_after = (array)$data_after;
+
+                    $change_by = $array_data_after['changed_by'];
+                    $change_on = $array_data_after['changed_on'];
+                    
                     unset($array_data_after['id']);
                     unset($array_data_after['action_on']);
+                    unset($array_data_after['changed_by']);
+                    unset($array_data_after['changed_on']);
+
+                  
     
                     foreach ($array_data_before as $key => $val) {
     
@@ -3034,8 +3069,8 @@ class PurchaseRequisitionDetails extends Component
                                 'created_by' => $array_data_before['create_by'],
                                 'created_on' => $array_data_before['create_on'],
     
-                                'changed_by' => $array_data_after['changed_by'],
-                                'changed_on' => $array_data_after['changed_on'],
+                                'changed_by' => $change_by,
+                                'changed_on' => $change_on,
                             ];
     
                             PurchaseRequisitionLog::insertLog($prepareData);
