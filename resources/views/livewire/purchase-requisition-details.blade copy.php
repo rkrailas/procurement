@@ -866,7 +866,7 @@
                                     <x-select2-multiple id="attachment_lineno-select2" wire:model.defer="attachment_lineno">
                                         <option value="0" selected="selected">0 : Level PR Header</option> 
                                         @foreach($prLineNoAtt_dd as $row)
-                                        <option value="{{ $row->id }}">
+                                        <option value="{{ $row->lineno }}">
                                             {{ $row->lineno }} : {{ $row->description }}
                                         </option>
                                         @endforeach
@@ -952,18 +952,18 @@
                                         <td scope="col">{{ $row->edecision_no }}</td>
                                         <td scope="col">{{ $row->ref_doctype }}</td>
                                         <td scope="col">{{ $row->ref_docno }}</td>
-                                        <td scope="col">{{ $row->ref_lineno }}</td>
+                                        <td scope="col">{{ str_replace('[', '', (str_replace(']', '', (str_replace('"', '', $row->ref_lineno))))) }}</td>
                                         <td scope="col">{{ $row->create_by }}</td>
                                         <td scope="col">{{ $row->create_on }}</td>
                                         <td scope="col" class="d-flex justify-content-between">
                                             @if ($isRequester_RequestedFor == true AND $prHeader['status'] < '20' )
                                             <div>
-                                                <a href="" wire:click.prevent="confirmDelete('{{ $row->file_path }}', 'attachment')">
+                                                <a href="" wire:click.prevent="confirmDelete('{{ $row->id }}', 'attachment')">
                                                     <i class="fas fa-times text-center mr-2" style="color: red"></i>
                                                 </a>
                                             </div>
                                             <div>
-                                                <a href="" wire:click.prevent="editAttachment('{{ $row->file_path }}')">
+                                                <a href="" wire:click.prevent="editAttachment('{{ $row->id }}')">
                                                     <i class="fa fa-edit mr-2"></i>
                                                 </a>
                                             </div>
