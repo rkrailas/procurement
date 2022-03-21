@@ -629,8 +629,14 @@ class PurchaseRequisitionDetails extends Component
                 'cost_center' => 'required',
                 'purpose_pr' => 'required',
                 'budget_year' => 'required',
-                'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday'
             ])->validate();
+
+
+            if ($this->prHeader['ordertype'] == '20' OR $this->prHeader['ordertype'] == '21') {
+                Validator::make($this->prHeader, [
+                    'valid_until' => 'required|date|date_format:Y-m-d|after:yesterday'
+                ])->validate();
+            }
 
             // 20-03-22 เปลี่ยนไปใช้ Code ด้านล่าง (รอลบ)
             //13-03-2022 Fixed ตรวจสอบว่าต้องไม่ใช่การสร้างครั้งแรก
