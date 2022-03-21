@@ -46,9 +46,11 @@ class PurchaseRequisitionLog extends Model
                 ->join('users', 'history_logs.changed_by', '=', 'users.id')
                 ->where([
                     ['refdocno', '=', $refdocno],
-                    ['new_value','=',"UPDATE"]
+                    ['new_value','!=',"INSERT"],
+                    ['new_value','!=',"DELETE"]
                 ])->get();
 
+                // dd($result);
             $insert = DB::table('history_logs')
                 ->select(
                     'history_logs.id',
