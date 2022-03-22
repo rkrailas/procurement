@@ -894,7 +894,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-9">
                                         <div class="custom-file">
-                                            <input wire:model="attachment_file" type="file" class="custom-file-input" id="customFile" multiple>
+                                            <input wire:model="attachment_file" type="file" class="custom-file-input" id="customFile" multiple accept="image/*,.pdf,.xls,.xlsx,.txt,.ppt,.pptx,.doc,.docx,.zip">
                                             @error('attachment_file.*')
                                             <div class="alert alert-warning" role="alert">
                                                 {{-- The attachment file must not be greater than 5 mb. --}}
