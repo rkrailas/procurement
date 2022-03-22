@@ -788,6 +788,14 @@ class PurchaseRequisitionDetails extends Component
             unset($this->attachment_file[$index]);
         }
 
+        // เตรียมลบออก
+        // public function updatedAttachmentFile()
+        // {
+        //     $this->validate([
+        //         'attachment_file.*' => 'max:5120', // 5MB Max 
+        //     ]);
+        // }
+
         public function formatSizeUnits($fileSize)
         {
             //Call Golbal Function
@@ -910,21 +918,12 @@ class PurchaseRequisitionDetails extends Component
             }
         }
 
-        public function updatedAttachmentFile()
-        {
-            $this->validate([
-                //'attachment_file.*' => 'max:5120', // 5MB Max
-                'attachment_file.*' => 'mimes:pdf,jpg,msg,xls,xlsx,txt,ppt,pptx,doc,docx,zip|max:5120',
-            ]);
-        }
-
         public function addAttachment()
         {
             if ($this->attachment_file) {
 
                 $this->validate([
-                    //'attachment_file.*' => 'max:5120', // 5MB Max
-                    'attachment_file.*' => 'mimes:pdf,jpg,msg,xls,xlsx,txt,ppt,pptx,doc,docx,zip|max:5120',
+                    'attachment_file.*' => 'max:5120', // 5MB Max
                 ]);
 
                 DB::transaction(function() 

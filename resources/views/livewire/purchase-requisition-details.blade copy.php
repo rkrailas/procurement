@@ -897,8 +897,7 @@
                                             <input wire:model="attachment_file" type="file" class="custom-file-input" id="customFile" multiple>
                                             @error('attachment_file.*')
                                             <div class="alert alert-danger" role="alert">
-                                                {{-- The attachment file must not be greater than 5 mb. --}}
-                                                {{ $message }}
+                                                The attachment file must not be greater than 5 mb.
                                             </div>
                                             @enderror
                                             <label class="custom-file-label" for="customFile">Browse Files</label>
