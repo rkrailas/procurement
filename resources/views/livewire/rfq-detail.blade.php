@@ -1,4 +1,6 @@
 <div>
+    <x-loading-indicator target="selectedRows" />    
+
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -514,25 +516,35 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @foreach ($quotationDetailsList as $row)
+                            @foreach ($quotationDetailsList as $index => $row)
                             <tr>
                                 <td scope="col">
                                     <div d-inline ml-2>
                                         <input wire:model="selectedRows" type="checkbox" value="{{ $row->id }}"
-                                            id="{{ $row->id }}">
+                                            id="{{ $row->id }}" 
+                                            {{-- wire:click.prevent="updateSupplierRFQItem('{{ $row->id }}')" --}}
+                                            >
                                         <span>{{ $loop->iteration + $itemList->firstitem()-1 }}</span>
                                     </div>                                    
                                 </td>
                                 <td scope="col">{{ $row->partno }}</td>
                                 <td scope="col">{{ $row->description }}</td>
-                                <td scope="col">{{ $row->status }}</td>
+                                <td scope="col" class="text-center">{{ $row->status }}</td>
                                 <td scope="col">{{ $row->supplier }}</td>
-                                <td scope="col">{{ $row->qty }}</td>
-                                <td scope="col">{{ $row->uom }}</td>
-                                <td scope="col">{{ $row->base_price }}</td>
-                                <td scope="col">{{ $row->final_price }}</td>
-                                <td scope="col">{{ $row->total_final_price }}</td>
-                                <td scope="col">{{ $row->currency }}</td>
+                                <td scope="col" class="text-right">{{ $row->qty }}</td>
+                                <td scope="col" class="text-center">{{ $row->uom }}</td>
+                                <td scope="col" class="text-right">{{ $row->base_price }}</td>
+                                <td scope="col" class="text-right">
+                                    <input type="number" step="0.01" class="form-control form-control-sm" style="text-align: right;width: 100px;" wire:model.lazy="quotationItemLine.{{$index}}.final_price"
+                                    @if ($row->supplier AND $row->status < '21')
+                                    {{-- Eanable --}}
+                                    @else 
+                                    readonly
+                                    @endif
+                                    >
+                                </td>
+                                <td scope="col" class="text-right">{{ $row->total_final_price }}</td>
+                                <td scope="col" class="text-center">{{ $row->currency }}</td>
                                 <td scope="col">
                                 </td>
                             </tr>

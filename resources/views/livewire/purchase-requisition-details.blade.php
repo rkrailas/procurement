@@ -896,7 +896,7 @@
                                         <div class="custom-file">
                                             <input wire:model="attachment_file" type="file" class="custom-file-input" id="customFile" multiple>
                                             @error('attachment_file.*')
-                                            <div class="alert alert-danger" role="alert">
+                                            <div class="alert alert-warning" role="alert">
                                                 {{-- The attachment file must not be greater than 5 mb. --}}
                                                 {{ $message }}
                                             </div>
@@ -910,9 +910,9 @@
                                                 <a href="" wire:click.prevent="deleteAttachmentFile('{{ $k }}')">
                                                     <i class="fas fa-times text-center mr-1" style="color: red"></i>
                                                 </a>
-                                                @if ($file->getSize() > $maxSize)
+                                                {{-- @if ($file->getSize() > $maxSize)
                                                 <span class="text-danger">File size is too large.</span>
-                                                @endif
+                                                @endif --}}
                                                 <br/>
                                                 @endforeach
                                             @endif
