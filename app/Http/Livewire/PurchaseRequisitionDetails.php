@@ -957,9 +957,6 @@ class PurchaseRequisitionDetails extends Component
                             }
                         }
 
-                        //21-03-2022 กำลังแก้
-
-
                         DB::statement("INSERT INTO attactments ([file_name], file_type, file_path, ref_doctype, ref_docid, ref_docno
                             , edecision_no, isheader_level, ref_lineno, create_by, create_on, changed_by, changed_on)
                         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
@@ -1774,7 +1771,7 @@ class PurchaseRequisitionDetails extends Component
                         if ($row['uomno'] == $this->prItem['purchase_unit']) {
                             $newOption = $newOption . "selected='selected'";
                         }
-                        $newOption = $newOption . ">" . $row['uomno'] . "</option>";
+                        $newOption = $newOption . ">" . $row['description'] . "</option>";
                     }
                     $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#purchase_unit-select2']);
 
@@ -1878,7 +1875,7 @@ class PurchaseRequisitionDetails extends Component
             //การ Disable aelect2 ยังไม่ได้ใช้ตอนนี้
             //$this->dispatchBrowserEvent('disable-partno-select2');
 
-            $strsql = "SELECT a.id, a.[lineno], a.partno, a.description, a.purchase_unit, a.unit_price, a.currency, a.exchange_rate
+            $strsql = "SELECT a.id, a.[lineno], a.partno, a.description, a.purchase_unit, e.description AS purchase_unit_description, a.unit_price, a.currency, a.exchange_rate
                 , a.purchase_group, a.account_group, a.qty, a.internal_order, FORMAT(a.req_date,'yyyy-MM-dd') AS req_date, a.budget_code, a.over_1_year_life
                 , a.snn_service, a.snn_production, b.supplier AS nominated_supplier, b.name1 + ' ' + b.name2 AS nominated_supplier_name, a.remarks
                 , a.skip_rfq, a.skip_doa, a.final_price
@@ -1888,6 +1885,7 @@ class PurchaseRequisitionDetails extends Component
                 LEFT JOIN supplier b ON b.supplier = a.nominated_supplier
                 LEFT JOIN part_master c ON c.partno = a.partno
                 LEFT JOIN pr_status d ON d.status = a.status
+                LEFT JOIN inv_uom e ON e.uomno = a.purchase_unit
                 WHERE a.id ='" . $lineItemId . "'";
             $data = DB::select($strsql);
             if (count($data)) {
@@ -2193,11 +2191,12 @@ class PurchaseRequisitionDetails extends Component
 
         public function updatedPrItemPartno() 
         {
-            $strsql = "SELECT a.partno, a.part_name, a.purchase_uom, a.purchase_group, ISNULL(a.account_group,'') AS account_group, a.brand
+            $strsql = "SELECT a.partno, a.part_name, a.purchase_uom, c.description AS purchase_uom_description, a.purchase_group, ISNULL(a.account_group,'') AS account_group, a.brand
                     , a.model, a.skip_rfq, a.skip_doa, a.primary_supplier, a.base_price, a.final_price, a.currency, b.exchange_rate
                     , a.min_order_qty, a.supplier_lead_time, a.supplier_id, ISNULL(a.gl_account,'') AS gl_account
                     FROM part_master a
                     LEFT JOIN currency_exchange_rate b ON a.currency = b.from_currency
+                    LEFT JOIN inv_uom c ON a.purchase_uom = c.uomno
                     WHERE partno = '" . $this->prItem['partno'] . "'";
             $data = DB::select($strsql);
 
@@ -2205,6 +2204,7 @@ class PurchaseRequisitionDetails extends Component
                 if ($data[0]->min_order_qty) {
                     $this->prItem['description'] = $data[0]->part_name;
                     $this->prItem['purchase_unit'] = $data[0]->purchase_uom;
+                    $this->prItem['purchase_unit_description'] = $data[0]->purchase_uom_description;
                     $this->prItem['purchase_group'] = $data[0]->purchase_group;
                     $this->prItem['account_group'] = $data[0]->account_group;
                     $this->prItem['brand'] = $data[0]->brand;
@@ -2804,7 +2804,7 @@ class PurchaseRequisitionDetails extends Component
             
             //purchase_unit
             $this->purchaseunit_dd = [];
-            $strsql = "SELECT uomno FROM inv_uom ORDER BY uomno";
+            $strsql = "SELECT uomno, description FROM inv_uom ORDER BY uomno";
             $this->purchaseunit_dd = DB::select($strsql);
 
             //purchase_group

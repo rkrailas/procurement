@@ -65,7 +65,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <label>UOM</label>
-                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.purchase_unit">
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prItem.purchase_unit_description">
                     </div>
                     <div class="col-md-4">
                         {{-- Change to Not required & Readonly Ref. 18-Jan-2022: update editable and non-editable fields --}}

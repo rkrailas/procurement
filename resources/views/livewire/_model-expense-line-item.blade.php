@@ -47,7 +47,7 @@
                             <option value=" ">--- Please Select ---</option>
                             @foreach($purchaseunit_dd as $row)
                             <option value='{{ $row->uomno }}'>
-                                {{ $row->uomno }}
+                                {{ $row->description }}
                             </option>
                             @endforeach
                         </x-select2>
