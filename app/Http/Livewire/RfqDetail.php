@@ -25,7 +25,7 @@ class RfqDetail extends Component
     public $tabSupplier, $supplier_dd, $supplierContact_dd;
 
     // Tab Quotation Details
-    public $tabQuotationDetails, $quotationEexpiryTerm_dd, $paymentTerm_dd, $supplierQuotation_dd;
+    public $tabQuotationDetails, $quotationEexpiryTerm_dd, $paymentTerm_dd, $supplierQuotation_dd, $quotationItemLine;
 
 
     // public function assignSupplier()
@@ -64,6 +64,18 @@ class RfqDetail extends Component
     // Header End
 
     // Tab Quotation Details Start
+
+    //กำลังทำ 22-03-22
+    public function updateSupplierRFQItem($rowId)
+    {
+        
+        if ($this->tabQuotationDetails) {
+            DB::statement("UPDATE rfq_item SET supplier=?, changed_by=?, changed_on=?
+                WHERE id IN (?)"
+                , [$this->tabQuotationDetails['selectSupplier2'], auth()->user()->id, Carbon::now(), $rowId]);
+        }
+    }
+
     public function saveQuotation()
     {
         //???ถึงตรงนี้
@@ -227,6 +239,19 @@ class RfqDetail extends Component
             ,[$this->rfqHeader['rfqno'], $xIdrfq_supplier_quotation, $this->rfqHeader['company'], $this->tabSupplier['selectSupplier']
             , $this->tabSupplier['selectSupplierContact'], $xContactName, $xContactPhone, $xContactEmail, auth()->user()->id, Carbon::now()]);
         });
+
+        //Re-Bind ใน Dropdwon Supplier Tab Quotation Details
+        //กำลังทำตรงนี้
+        $strsql = "SELECT supplier, supplier_name FROM rfq_supplier_quotation WHERE rfqno='" . $this->rfqHeader['rfqno'] . "' ORDER BY supplier";
+        $data = DB::select($strsql);
+        $newOption = "<option value=''>--- Please Select ---</option>";
+        if ($data) {
+            foreach ($data as $row) {
+                $newOption = $newOption . "<option value='" . $row->supplier . "'>" . $row->supplier_name . "</option>";
+            }
+        }
+
+        $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#supplier2-select2']);
 
         $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='201' AND class='RFQ'";
         $data = DB::select($strsql);

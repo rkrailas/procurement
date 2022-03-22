@@ -788,14 +788,6 @@ class PurchaseRequisitionDetails extends Component
             unset($this->attachment_file[$index]);
         }
 
-        // เตรียมลบออก
-        // public function updatedAttachmentFile()
-        // {
-        //     $this->validate([
-        //         'attachment_file.*' => 'max:5120', // 5MB Max 
-        //     ]);
-        // }
-
         public function formatSizeUnits($fileSize)
         {
             //Call Golbal Function
@@ -918,12 +910,21 @@ class PurchaseRequisitionDetails extends Component
             }
         }
 
+        public function updatedAttachmentFile()
+        {
+            $this->validate([
+                //'attachment_file.*' => 'max:5120', // 5MB Max
+                'attachment_file.*' => 'mimes:pdf,jpg,msg,xls,xlsx,txt,ppt,pptx,doc,docx,zip|max:5120',
+            ]);
+        }
+
         public function addAttachment()
         {
             if ($this->attachment_file) {
 
                 $this->validate([
-                    'attachment_file.*' => 'max:5120', // 5MB Max
+                    //'attachment_file.*' => 'max:5120', // 5MB Max
+                    'attachment_file.*' => 'mimes:pdf,jpg,msg,xls,xlsx,txt,ppt,pptx,doc,docx,zip|max:5120',
                 ]);
 
                 DB::transaction(function() 
@@ -956,12 +957,15 @@ class PurchaseRequisitionDetails extends Component
                             }
                         }
 
-                        // DB::statement("INSERT INTO attactments ([file_name], file_type, file_path, ref_doctype, ref_docid, ref_docno
-                        //     , edecision_no, isheader_level, ref_lineno, create_by, create_on, changed_by, changed_on)
-                        // VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
-                        // ,[$file->getClientOriginalName(), $this->attachment_filetype, $newFileName, '10'
-                        // , $this->prHeader['id'], $this->prHeader['prno'], $this->attachment_edecisionno, $isHeader
-                        // , json_encode($this->attachment_lineno), auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
+                        //21-03-2022 กำลังแก้
+
+
+                        DB::statement("INSERT INTO attactments ([file_name], file_type, file_path, ref_doctype, ref_docid, ref_docno
+                            , edecision_no, isheader_level, ref_lineno, create_by, create_on, changed_by, changed_on)
+                        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                        ,[$file->getClientOriginalName(), $this->attachment_filetype, $newFileName, '10'
+                        , $this->prHeader['id'], $this->prHeader['prno'], $this->attachment_edecisionno, $isHeader
+                        , json_encode($this->attachment_lineno), auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
 
                         //Add History Log
                         //Get last id in table attactments
