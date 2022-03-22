@@ -788,6 +788,14 @@ class PurchaseRequisitionDetails extends Component
             unset($this->attachment_file[$index]);
         }
 
+        // เตรียมลบออก
+        // public function updatedAttachmentFile()
+        // {
+        //     $this->validate([
+        //         'attachment_file.*' => 'max:5120', // 5MB Max 
+        //     ]);
+        // }
+
         public function formatSizeUnits($fileSize)
         {
             //Call Golbal Function
@@ -910,21 +918,12 @@ class PurchaseRequisitionDetails extends Component
             }
         }
 
-        public function updatedAttachmentFile()
-        {
-            $this->validate([
-                //'attachment_file.*' => 'max:5120', // 5MB Max
-                'attachment_file.*' => 'mimes:pdf,jpg,msg,xls,xlsx,txt,ppt,pptx,doc,docx,zip|max:5120',
-            ]);
-        }
-
         public function addAttachment()
         {
             if ($this->attachment_file) {
 
                 $this->validate([
-                    //'attachment_file.*' => 'max:5120', // 5MB Max
-                    'attachment_file.*' => 'mimes:pdf,jpg,msg,xls,xlsx,txt,ppt,pptx,doc,docx,zip|max:5120',
+                    'attachment_file.*' => 'max:5120', // 5MB Max
                 ]);
 
                 DB::transaction(function() 
@@ -945,15 +944,6 @@ class PurchaseRequisitionDetails extends Component
                                 $isHeader = true;
                             }else{
                                 $isHeader = false;
-                            }
-
-                            foreach ($this->attachment_lineno as $row) {
-                                DB::statement("INSERT INTO attactments ([file_name], file_type, file_path, ref_doctype, ref_docid, ref_docno
-                                , edecision_no, isheader_level, ref_lineno, create_by, create_on, changed_by, changed_on)
-                                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
-                                ,[$file->getClientOriginalName(), $this->attachment_filetype, $newFileName, '10'
-                                , $this->prHeader['id'], $this->prHeader['prno'], $this->attachment_edecisionno, $isHeader
-                                , $row, auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
                             }
                         }
 
@@ -2865,7 +2855,8 @@ class PurchaseRequisitionDetails extends Component
             $this->editPR();
             //$this->isBlanket, $this->orderType Assign ค่าใน Function editPR
         }
-        $this->attachment_lineno[] = 0;
+        //???กำลังแก้
+        $this->attachment_lineno[] = "0";
         $this->maxSize = config('constants.maxAttachmentSize');
     }
 
@@ -2922,25 +2913,14 @@ class PurchaseRequisitionDetails extends Component
             $this->validatorList = json_decode(json_encode(DB::select($strsql)), true);
 
             //attachmentFileList
-            // $strsql = "SELECT a.id, a.file_name, a.file_path, a.file_type, a.edecision_no, a.ref_docno, a.ref_lineno
-            // , FORMAT(a.create_on, 'dd-MMM-yy HH:mm:ss') AS create_on
-            // , b.description AS ref_doctype, c.name + ' ' + c.lastname AS create_by
-            //     FROM attactments a
-            //     LEFT JOIN document_file_type b ON a.ref_doctype = b.doc_type_no
-            //     LEFT JOIN users c ON a.create_by = c.id
-            //     WHERE ref_docid =" . $this->prHeader['id'] . " ORDER BY ref_lineno";
-            
-            $strsql = "SELECT a.file_name, a.file_path, a.file_type, a.edecision_no, a.ref_docno
-                , FORMAT(a.create_on, 'dd-MMM-yy HH:mm:ss') AS create_on
-                , b.description AS ref_doctype, c.name + ' ' + c.lastname AS create_by
-                , stuff((select ', ' + cast(cc.ref_lineno as varchar(512)) from attactments cc
-                        where cc.ref_docno = a.ref_docno for xml path('')),1,2,'')as ref_lineno 
-            FROM attactments a
-            LEFT JOIN document_file_type b ON a.ref_doctype = b.doc_type_no
-            LEFT JOIN users c ON a.create_by = c.id
-            WHERE ref_docid =" . $this->prHeader['id'] . "
-            GROUP BY a.file_name, a.file_path, a.file_type, a.edecision_no, a.ref_docno, FORMAT(a.create_on, 'dd-MMM-yy HH:mm:ss') 
-            , b.description, c.name, c.lastname";
+            $strsql = "SELECT a.id, a.file_name, a.file_path, a.file_type, a.edecision_no, a.ref_docno, a.ref_lineno
+            , FORMAT(a.create_on, 'dd-MMM-yy HH:mm:ss') AS create_on
+            , b.description AS ref_doctype, c.name + ' ' + c.lastname AS create_by
+                FROM attactments a
+                LEFT JOIN document_file_type b ON a.ref_doctype = b.doc_type_no
+                LEFT JOIN users c ON a.create_by = c.id
+                
+                WHERE ref_docid =" . $this->prHeader['id'] . " ORDER BY ref_lineno";
             $attachmentFileList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
             //approval_history ที่อยู่ตรงนี้เพราะ pagination ไม่สามารถส่งค่าผ่ายตัวแปร $this->historylog ได้
