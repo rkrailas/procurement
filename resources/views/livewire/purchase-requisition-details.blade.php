@@ -887,7 +887,7 @@
                                         wire:model="attachment_edecisionno">
                                     @endif                                    
                                 </div>
-                            </div>
+                            </div> 
 
                             <form autocomplete="off" enctype="multipart/form-data" wire:submit.prevent="addAttachment">
                                 @csrf
