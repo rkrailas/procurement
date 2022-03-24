@@ -567,8 +567,8 @@ class PurchaseRequisitionDetails extends Component
 
         public function updateRefLineno()
         {
-            //24-03-2022 กำลังแก้ ลบ id ออกจาก attachment 
-            $strsql = "SELECT id, ref_lineno FROM attactments WHERE ref_docid=" . $this->prHeader['id'];
+            //24-03-2022 ลบ Lineid ออกจาก ref_lineno 
+            $strsql = "SELECT id, ref_lineno, file_path FROM attactments WHERE ref_docid=" . $this->prHeader['id'];
             $data = DB::select($strsql);
             foreach ($data as $row) {
                 $newRefLineno = "";
@@ -576,7 +576,7 @@ class PurchaseRequisitionDetails extends Component
                 foreach ($data2 as $index2 => $row2) {
                     if ($row2 <> "0") {
                         if ($this->selectedRows) {
-                            //ลบจากการ Checkbox
+                            //ลบ Item จาก Checkbox
                             if (in_array($row2, $this->selectedRows)) {
 
                             } else {
@@ -586,7 +586,7 @@ class PurchaseRequisitionDetails extends Component
                                 }
                             }
                         } else {
-                            //ลบจากการเข้าไปใน ItemLine แล้วกดปุ่มลบ
+                            //ลบ Item จากการเข้าไปใน ItemLine แล้วกดปุ่มลบ
                             if ($row2 == $this->prItem['id']) {
 
                             } else {
@@ -605,7 +605,17 @@ class PurchaseRequisitionDetails extends Component
                     }
                 }
 
-                DB::statement("UPDATE attactments SET ref_lineno ='" . $newRefLineno . "' WHERE id IN (" . $row->id . ")");
+                //ถ้า $newRefLineno ไม่มี ref_lineon ให้ลบ record นั้น
+                if ($newRefLineno == "") {
+                    //ลบไฟล์
+                    if(File::exists(public_path("storage/attachments/" . $row->file_path))){
+                        File::delete(public_path("storage/attachments/" . $row->file_path));
+                    }
+                    DB::statement("DELETE FROM attactments WHERE id IN (" . $row->id . ")");
+
+                } else {
+                    DB::statement("UPDATE attactments SET ref_lineno ='" . $newRefLineno . "' WHERE id IN (" . $row->id . ")");
+                }                
             }
         }
 
@@ -620,10 +630,10 @@ class PurchaseRequisitionDetails extends Component
                 //Histroy Log
                 $this->writeItemHistoryLog($this->selectedRows,"DELETE");
 
-                //24-03-2022 Re-Running Lineno กำลังแก้
+                //24-03-2022 Re-Running Lineno
                 $this->reRunningLineno();
 
-                //24-03-2022 กำลังแก้ ลบ id ออกจาก attachment
+                //24-03-2022 ลบ Lineid ออกจาก ref_lineno
                 $this->updateRefLineno();
 
 
@@ -861,7 +871,6 @@ class PurchaseRequisitionDetails extends Component
 
             DB::transaction(function() use ($isHeader)
             {
-                //กำลังแก้
                 DB::statement("UPDATE attactments SET file_name=?, ref_lineno=?, file_type=?, edecision_no=?, isheader_level=?, changed_by=?, changed_on=?
                 WHERE id=?" 
                 , [$this->editAttachment['file_name'], convertJsonToString(json_encode($this->editAttachment['ref_lineno'])), $this->editAttachment['file_type']
@@ -910,10 +919,8 @@ class PurchaseRequisitionDetails extends Component
                 sort($xPrLineNoAtt_dd);
 
                 //Bind ค่า editattachment_lineno-select2
-                //$xRef_lineno = json_decode($this->editAttachment['ref_lineno']);
                 $xRef_lineno = explode(",", $this->editAttachment['ref_lineno']);
 
-                //???กำลังแก้
                 $newOption = '';
                 foreach ($xPrLineNoAtt_dd as $row) {
                     $newOption = $newOption . "<option value='" . $row['id'] . "' ";
@@ -1002,7 +1009,7 @@ class PurchaseRequisitionDetails extends Component
                             }
                         }
 
-                        //24-03-2022 กำลังแก้ Convert json_encode($this->attachment_lineno)
+                        //24-03-2022
                         $xAttachmentLineno = convertJsonToString(json_encode($this->attachment_lineno));
 
                         DB::statement("INSERT INTO attactments ([file_name], file_type, file_path, ref_doctype, ref_docid, ref_docno
@@ -2026,7 +2033,7 @@ class PurchaseRequisitionDetails extends Component
 
         public function reRunningLineno()
         {
-            //24-03-2022 Re-Running Lineno กำลังแก้
+            //24-03-2022
             $strsql = "SELECT id, [lineno] FROM pr_item WHERE ISNULL(deletion_flag, 0) <> 1 AND prno_id =" . $this->prHeader['id'] . " ORDER BY [lineno]";
             $data = DB::select($strsql);
             $newRunning = 1;
@@ -2045,10 +2052,10 @@ class PurchaseRequisitionDetails extends Component
                 //Histroy Log
                 $this->writeItemHistoryLog($this->prItem['id'],"DELETE");
 
-                //24-03-2022 Re-Running Lineno กำลังแก้
+                //24-03-2022 Re-Running Lineno
                 $this->reRunningLineno();
 
-                //24-03-2022 กำลังแก้ ลบ id ออกจาก attachment
+                //24-03-2022 ลบ Lineid ออกจาก Ref_lineno
                 $this->updateRefLineno();   
             });
 
@@ -2996,7 +3003,6 @@ class PurchaseRequisitionDetails extends Component
             $attachmentFileList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
 
             //24-03-2022 Convert lineid -> lineno
-            //กำลังแก้
             $xNewRefLineno = "";
             foreach ($attachmentFileList as $index => $row) {
                 $xRow = $row->ref_lineno;
