@@ -565,17 +565,53 @@ class PurchaseRequisitionDetails extends Component
             }
         }
 
+        public function updateRefLineno()
+        {
+            //24-03-2022 กำลังแก้ ลบ id ออกจาก attachment 
+            $strsql = "SELECT id, ref_lineno FROM attactments WHERE ref_docid=" . $this->prHeader['id'];
+            $data = DB::select($strsql);
+            foreach ($data as $row) {
+                $newRefLineno = "";
+                $data2 = explode(",", $row->ref_lineno);
+                foreach ($data2 as $index2 => $row2) {
+                    if ($row2 <> "0") {
+                        if (in_array($row2, $this->selectedRows)) {
+
+                        } else {
+                            $newRefLineno = $newRefLineno . $row2;
+                            if ($index2 < count($data2) - 1){
+                                $newRefLineno = $newRefLineno . ",";
+                            }
+                        }
+                    } else {
+                        $newRefLineno = $newRefLineno . "0";
+                        if ($index2 < count($data2) - 1){
+                            $newRefLineno = $newRefLineno . ",";
+                        }
+                    }
+                }
+
+                DB::statement("UPDATE attactments SET ref_lineno ='" . $newRefLineno . "' WHERE id IN (" . $row->id . ")");
+            }
+        }
+
         public function deletePrHeader_Detail()
         {
             if ($this->selectedRows) {
-
                 $xID = myWhereInID($this->selectedRows);
-                DB::statement("UPDATE pr_item SET deletion_flag = 1 WHERE id IN (" . $xID . ")"); //19-03-2022
-                DB::statement("UPDATE pr_delivery_plan SET deletion_flag = 1 WHERE ref_prline_id IN (" . $xID . ")"); //19-03-2022
+                //19-03-2022
+                DB::statement("UPDATE pr_item SET deletion_flag = 1 WHERE id IN (" . $xID . ")");
+                DB::statement("UPDATE pr_delivery_plan SET deletion_flag = 1 WHERE ref_prline_id IN (" . $xID . ")");
 
-                 //Histroy Log
-                 $this->writeItemHistoryLog($this->selectedRows,"DELETE");
-                 //END Histroy Log
+                //Histroy Log
+                $this->writeItemHistoryLog($this->selectedRows,"DELETE");
+
+                //24-03-2022 Re-Running Lineno กำลังแก้
+                $this->reRunningLineno();
+
+                //24-03-2022 กำลังแก้ ลบ id ออกจาก attachment
+                $this->updateRefLineno();
+
 
                 $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='104' AND class='PURCHASE REQUISITION'";
                 $data = DB::select($strsql);
@@ -811,16 +847,17 @@ class PurchaseRequisitionDetails extends Component
 
             DB::transaction(function() use ($isHeader)
             {
+                //กำลังแก้
                 DB::statement("UPDATE attactments SET file_name=?, ref_lineno=?, file_type=?, edecision_no=?, isheader_level=?, changed_by=?, changed_on=?
                 WHERE id=?" 
-                , [$this->editAttachment['file_name'], json_encode($this->editAttachment['ref_lineno']), $this->editAttachment['file_type']
+                , [$this->editAttachment['file_name'], convertJsonToString(json_encode($this->editAttachment['ref_lineno'])), $this->editAttachment['file_type']
                 , $this->editAttachment['edecision_no'], $isHeader, auth()->user()->id, Carbon::now(), $this->editAttachment['id']]);
 
                 //Add History Log
-                $xNewValue = "File : " . $this->editAttachment['file_path'] . " apply to " . $this->editAttachment['ref_lineno'] . " has been updated.";
+                $xNewValue = "File : " . $this->editAttachment['file_path'] . " apply to " . convertJsonToString(json_encode($this->editAttachment['ref_lineno'])) . " has been updated.";
                 DB::statement("INSERT INTO history_logs(id_original, obj_type, line_no, refdocno, field, new_value, created_by, created_on, changed_by, changed_on)
                 VALUES(?,?,?,?,?,?,?,?,?,?)"
-                ,[$this->deleteID, "PR", "", $this->prHeader['prno'], "FILE ATTACHMENT", $xNewValue, auth()->user()->id, Carbon::now()
+                ,[$this->editAttachment['id'], "PR", "", $this->prHeader['prno'], "FILE ATTACHMENT", $xNewValue, auth()->user()->id, Carbon::now()
                     , auth()->user()->id, Carbon::now() ]);
             });
 
@@ -855,17 +892,20 @@ class PurchaseRequisitionDetails extends Component
 
                 $xPrLineNoAtt_dd = $this->prLineNoAtt_dd;
                 // Add Level 0
-                array_push($xPrLineNoAtt_dd, ["id" => "", "lineno" => "0", "description" => "Level PR Header",]);
+                array_push($xPrLineNoAtt_dd, ["id" => "0", "lineno" => "0", "description" => "Level PR Header",]);
                 sort($xPrLineNoAtt_dd);
 
                 //Bind ค่า editattachment_lineno-select2
-                $xRef_lineno = json_decode($this->editAttachment['ref_lineno']);
+                //$xRef_lineno = json_decode($this->editAttachment['ref_lineno']);
+                $xRef_lineno = explode(",", $this->editAttachment['ref_lineno']);
+
+                //???กำลังแก้
                 $newOption = '';
                 foreach ($xPrLineNoAtt_dd as $row) {
-                    $newOption = $newOption . "<option value='" . $row['lineno'] . "' ";
+                    $newOption = $newOption . "<option value='" . $row['id'] . "' ";
                     if ( !is_null($xRef_lineno) ) {
                         for ($i=0; $i < count($xRef_lineno); $i++){
-                            if ($row['lineno'] == $xRef_lineno[$i]) {
+                            if ($row['id'] == $xRef_lineno[$i]) {
                                 $newOption = $newOption . "selected='selected'";
                             }
                         }
@@ -946,23 +986,17 @@ class PurchaseRequisitionDetails extends Component
                             }else{
                                 $isHeader = false;
                             }
-
-                            foreach ($this->attachment_lineno as $row) {
-                                DB::statement("INSERT INTO attactments ([file_name], file_type, file_path, ref_doctype, ref_docid, ref_docno
-                                , edecision_no, isheader_level, ref_lineno, create_by, create_on, changed_by, changed_on)
-                                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
-                                ,[$file->getClientOriginalName(), $this->attachment_filetype, $newFileName, '10'
-                                , $this->prHeader['id'], $this->prHeader['prno'], $this->attachment_edecisionno, $isHeader
-                                , $row, auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
-                            }
                         }
+
+                        //24-03-2022 กำลังแก้ Convert json_encode($this->attachment_lineno)
+                        $xAttachmentLineno = convertJsonToString(json_encode($this->attachment_lineno));
 
                         DB::statement("INSERT INTO attactments ([file_name], file_type, file_path, ref_doctype, ref_docid, ref_docno
                             , edecision_no, isheader_level, ref_lineno, create_by, create_on, changed_by, changed_on)
                         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
                         ,[$file->getClientOriginalName(), $this->attachment_filetype, $newFileName, '10'
                         , $this->prHeader['id'], $this->prHeader['prno'], $this->attachment_edecisionno, $isHeader
-                        , json_encode($this->attachment_lineno), auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
+                        , $xAttachmentLineno, auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
 
                         //Add History Log
                         //Get last id in table attactments
@@ -1973,36 +2007,50 @@ class PurchaseRequisitionDetails extends Component
                     $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#budgetcode-select2']);
             }
 
- 
             $this->setDefaultSelect2InModelLineItem();
+        }
+
+        public function reRunningLineno()
+        {
+            //24-03-2022 Re-Running Lineno กำลังแก้
+            $strsql = "SELECT id, [lineno] FROM pr_item WHERE ISNULL(deletion_flag, 0) <> 1 AND prno_id =" . $this->prHeader['id'] . " ORDER BY [lineno]";
+            $data = DB::select($strsql);
+            $newRunning = 1;
+            foreach ($data as $row) {
+                DB::statement("UPDATE pr_item SET [lineno] =" . $newRunning . " WHERE id = " . $row->id );
+                $newRunning = $newRunning + 1;
+            }
         }
 
         public function deleteLineItem()
         {
-            //???ต้องลบ Delivery Plan ออกด้วย
-
             DB::transaction(function() 
             {
                 DB::statement("UPDATE pr_item SET deletion_flag = 1 WHERE id = " . $this->prItem['id'] ); //19-03-2022
                 DB::statement("UPDATE pr_delivery_plan SET deletion_flag = 1 WHERE ref_prline_id=" . $this->prItem['id'] ); //19-03-2022
-                
-
                 //Histroy Log
                 $this->writeItemHistoryLog($this->prItem['id'],"DELETE");
-                //Histroy Log
-                $strsql = "SELECT msg_text FROM message_list WHERE msg_no='104' AND class='PURCHASE REQUISITION'";
-                $data = DB::select($strsql);
-                if (count($data) > 0) {
-                    $this->dispatchBrowserEvent('popup-success', [
-                        'title' => $data[0]->msg_text,
-                    ]);                
-                }
 
+                //24-03-2022 Re-Running Lineno กำลังแก้
+                $this->reRunningLineno();
+
+                //24-03-2022 กำลังแก้ ลบ id ออกจาก attachment
+                $this->updateRefLineno();   
             });
+
+            $strsql = "SELECT msg_text FROM message_list WHERE msg_no='104' AND class='PURCHASE REQUISITION'";
+            $data = DB::select($strsql);
+            if (count($data) > 0) {
+                $this->dispatchBrowserEvent('popup-success', [
+                    'title' => $data[0]->msg_text,
+                ]);                
+            }
 
             $this->reset(['prItem']);
             $this->dispatchBrowserEvent('hide-modelPartLineItem');
             $this->dispatchBrowserEvent('hide-modelExpenseLineItem');
+
+            return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
         }
 
         public function saveLineItem()
@@ -2081,7 +2129,7 @@ class PurchaseRequisitionDetails extends Component
                 if ($this->isCreateLineItem) {
                     DB::transaction(function () use ($blanket_order_type) {
                         //หา Line no
-                        $strsql = "SELECT MAX([lineno]) as max_lineno FROM pr_item WHERE prno='". $this->prHeader['prno'] . "'";
+                        $strsql = "SELECT MAX([lineno]) as max_lineno FROM pr_item WHERE ISNULL(deletion_flag,0)<>1 AND prno='". $this->prHeader['prno'] . "'";
                         $data = DB::select($strsql);
                         if ($data) {
                             $lineno = $data[0]->max_lineno + 1;
@@ -2136,6 +2184,8 @@ class PurchaseRequisitionDetails extends Component
                     $this->reset(['prItem']);
                     $this->dispatchBrowserEvent('hide-modelPartLineItem');
                     $this->dispatchBrowserEvent('hide-modelExpenseLineItem');
+
+                    return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
                 }else{
                     //Assign ค่าให้ Partno, account_group กรณีเป็น Free Text
                     if ($this->orderType == "11" or $this->orderType == "21"){
@@ -2922,26 +2972,42 @@ class PurchaseRequisitionDetails extends Component
             $this->validatorList = json_decode(json_encode(DB::select($strsql)), true);
 
             //attachmentFileList
-            // $strsql = "SELECT a.id, a.file_name, a.file_path, a.file_type, a.edecision_no, a.ref_docno, a.ref_lineno
-            // , FORMAT(a.create_on, 'dd-MMM-yy HH:mm:ss') AS create_on
-            // , b.description AS ref_doctype, c.name + ' ' + c.lastname AS create_by
-            //     FROM attactments a
-            //     LEFT JOIN document_file_type b ON a.ref_doctype = b.doc_type_no
-            //     LEFT JOIN users c ON a.create_by = c.id
-            //     WHERE ref_docid =" . $this->prHeader['id'] . " ORDER BY ref_lineno";
-            
-            $strsql = "SELECT a.file_name, a.file_path, a.file_type, a.edecision_no, a.ref_docno
-                , FORMAT(a.create_on, 'dd-MMM-yy HH:mm:ss') AS create_on
-                , b.description AS ref_doctype, c.name + ' ' + c.lastname AS create_by
-                , stuff((select ', ' + cast(cc.ref_lineno as varchar(512)) from attactments cc
-                        where cc.ref_docno = a.ref_docno for xml path('')),1,2,'')as ref_lineno 
-            FROM attactments a
-            LEFT JOIN document_file_type b ON a.ref_doctype = b.doc_type_no
-            LEFT JOIN users c ON a.create_by = c.id
-            WHERE ref_docid =" . $this->prHeader['id'] . "
-            GROUP BY a.file_name, a.file_path, a.file_type, a.edecision_no, a.ref_docno, FORMAT(a.create_on, 'dd-MMM-yy HH:mm:ss') 
-            , b.description, c.name, c.lastname";
+            $strsql = "SELECT a.id, a.file_name, a.file_path, a.file_type, a.edecision_no, a.ref_docno, a.ref_lineno
+            , FORMAT(a.create_on, 'dd-MMM-yy HH:mm:ss') AS create_on
+            , b.description AS ref_doctype, c.name + ' ' + c.lastname AS create_by
+                FROM attactments a
+                LEFT JOIN document_file_type b ON a.ref_doctype = b.doc_type_no
+                LEFT JOIN users c ON a.create_by = c.id
+                WHERE ref_docid =" . $this->prHeader['id'] . " ORDER BY ref_lineno";
             $attachmentFileList = (new Collection(DB::select($strsql)))->paginate($this->numberOfPage);
+
+            //24-03-2022 Convert lineid -> lineno
+            //กำลังแก้
+            $xNewRefLineno = "";
+            foreach ($attachmentFileList as $index => $row) {
+                $xRow = $row->ref_lineno;
+                $xRow = explode(",", $xRow);
+                $xNewRefLineno = "";
+
+                foreach ($xRow as $index2 => $xxRow) {
+                    if ($xxRow == 0) {
+                        $xNewRefLineno = $xNewRefLineno . "0";
+                    } else {
+                        if ($xxRow <> "") {
+                            $strsql = "SELECT [lineno] FROM pr_item WHERE id=" . $xxRow;
+                            $data = DB::select($strsql);
+                            if ($data) {
+                                $xNewRefLineno = $xNewRefLineno . $data[0]->lineno;
+                            }
+                        }
+                    }
+
+                    if ($index2 < count($xRow) - 1){
+                        $xNewRefLineno = $xNewRefLineno . ", ";
+                    }             
+                }
+                $attachmentFileList[$index]->ref_lineno = $xNewRefLineno;
+            }
 
             //approval_history ที่อยู่ตรงนี้เพราะ pagination ไม่สามารถส่งค่าผ่ายตัวแปร $this->historylog ได้
             $strsql = "SELECT a.approver, b.name + ' ' + b.lastname as fullname, a.approval_type, b.company, b.department, b.position

@@ -897,7 +897,6 @@
                                             <input wire:model="attachment_file" type="file" class="custom-file-input" id="customFile" multiple accept="image/*,.pdf,.xls,.xlsx,.txt,.ppt,.pptx,.doc,.docx,.zip">
                                             @error('attachment_file.*')
                                             <div class="alert alert-warning" role="alert">
-                                                {{-- The attachment file must not be greater than 5 mb. --}}
                                                 {{ $message }}
                                             </div>
                                             @enderror
@@ -959,12 +958,12 @@
                                         <td scope="col" class="d-flex justify-content-between">
                                             @if ($isRequester_RequestedFor == true AND $prHeader['status'] < '20' )
                                             <div>
-                                                <a href="" wire:click.prevent="confirmDelete('{{ $row->file_path }}', 'attachment')">
+                                                <a href="" wire:click.prevent="confirmDelete('{{ $row->id }}', 'attachment')">
                                                     <i class="fas fa-times text-center mr-2" style="color: red"></i>
                                                 </a>
                                             </div>
                                             <div>
-                                                <a href="" wire:click.prevent="editAttachment('{{ $row->file_path }}')">
+                                                <a href="" wire:click.prevent="editAttachment('{{ $row->id }}')">
                                                     <i class="fa fa-edit mr-2"></i>
                                                 </a>
                                             </div>
