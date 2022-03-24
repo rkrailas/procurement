@@ -167,7 +167,7 @@ class PurchaseRequisitionDetails extends Component
 
         public function releaseForPO()
         {
-            //??? for test
+
         }
 
         public function reopen()
@@ -575,14 +575,28 @@ class PurchaseRequisitionDetails extends Component
                 $data2 = explode(",", $row->ref_lineno);
                 foreach ($data2 as $index2 => $row2) {
                     if ($row2 <> "0") {
-                        if (in_array($row2, $this->selectedRows)) {
+                        if ($this->selectedRows) {
+                            //ลบจากการ Checkbox
+                            if (in_array($row2, $this->selectedRows)) {
 
+                            } else {
+                                $newRefLineno = $newRefLineno . $row2;
+                                if ($index2 < count($data2) - 1){
+                                    $newRefLineno = $newRefLineno . ",";
+                                }
+                            }
                         } else {
-                            $newRefLineno = $newRefLineno . $row2;
-                            if ($index2 < count($data2) - 1){
-                                $newRefLineno = $newRefLineno . ",";
+                            //ลบจากการเข้าไปใน ItemLine แล้วกดปุ่มลบ
+                            if ($row2 == $this->prItem['id']) {
+
+                            } else {
+                                $newRefLineno = $newRefLineno . $row2;
+                                if ($index2 < count($data2) - 1){
+                                    $newRefLineno = $newRefLineno . ",";
+                                }
                             }
                         }
+
                     } else {
                         $newRefLineno = $newRefLineno . "0";
                         if ($index2 < count($data2) - 1){
@@ -623,7 +637,7 @@ class PurchaseRequisitionDetails extends Component
                 
                 $this->reset(['selectedRows']);
 
-                //return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
+                return redirect("purchaserequisitiondetails?mode=edit&prno=" . $this->prHeader['prno'] . "&tab=item");
 
             }else{
                 DB::statement("UPDATE pr_header SET deletion_flag=?, changed_by=?, changed_on=?
