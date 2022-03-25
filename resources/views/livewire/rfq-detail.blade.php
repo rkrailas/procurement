@@ -406,7 +406,6 @@
                     <div class="col-md-3">
                         <label>Expiration Term <span style="color: red">*</span></label>
                         <select class="form-control form-control-sm" wire:model="tabQuotationDetails.quotation_expiry_term">
-                            <option value="">--- Please Select ---</option>
                             @foreach($quotationEexpiryTerm_dd as $row)
                             <option value="{{ $row->termno }}">
                                 {{ $row->description }}
@@ -518,19 +517,13 @@
                             <tbody>
                             @foreach ($quotationDetailsList as $index => $row)
                             <tr>
-                                <td scope="col">
-                                    <div d-inline ml-2>
-                                        <input wire:model="selectedRows" type="checkbox" value="{{ $row->id }}"
-                                            id="{{ $row->id }}" 
-                                            {{-- wire:click.prevent="updateSupplierRFQItem('{{ $row->id }}')" --}}
-                                            >
-                                        <span>{{ $loop->iteration + $itemList->firstitem()-1 }}</span>
-                                    </div>                                    
+                                <td scope="col" class="text-center">
+                                    {{ $loop->iteration + $itemList->firstitem()-1 }}                              
                                 </td>
                                 <td scope="col">{{ $row->partno }}</td>
                                 <td scope="col">{{ $row->description }}</td>
                                 <td scope="col" class="text-center">{{ $row->status }}</td>
-                                <td scope="col">{{ $row->supplier }}</td>
+                                <td scope="col">{{ $row->supplier }} : {{ $row->supplier_name }}</td>
                                 <td scope="col" class="text-right">{{ $row->qty }}</td>
                                 <td scope="col" class="text-center">{{ $row->uom }}</td>
                                 <td scope="col" class="text-right">{{ $row->base_price }}</td>
@@ -546,6 +539,12 @@
                                 <td scope="col" class="text-right">{{ $row->total_final_price }}</td>
                                 <td scope="col" class="text-center">{{ $row->currency }}</td>
                                 <td scope="col">
+                                    <a href="" wire:click.prevent="addSupplierToItem('{{ $row->id }}')">
+                                        <i class="fa fa-plus-square text-center mr-1" aria-hidden="true" style="color: red"></i>
+                                    </a>
+                                    <a href="" wire:click.prevent="removeSupplierFromItem('{{ $row->id }}')">
+                                        <i class="fa fa-minus-square text-center mr-1" aria-hidden="true" style="color: red"></i>
+                                    </a>
                                 </td>
                             </tr>
                             @endforeach

@@ -4,11 +4,26 @@ namespace App\Http\Controllers\Form;
 
 use App\Http\Controllers\Controller;
 use PHPJasper\PHPJasper;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class PRForm extends Controller
 {
     public function genForm($prno)
     {
+        //24-03-2022 ???กำลังแก้
+        $signature_img = "C:/xampp/htdocs/procurement/public/images/signature/";
+        $strsql = "SELECT username FROM users WHERE id=" . auth()->user()->id;
+        $data = DB::select($strsql);
+        if ($data) {
+            $signature_img = $signature_img . $data[0]->username . ".png";
+        }
+
+        //ตรวจสอบว่ามีไฟล์หรือไม่ ถ้าไม่มีจะใช้รูปพื้นสีขาว
+        if(!File::exists($signature_img)){
+            $signature_img = "C:/xampp/htdocs/procurement/public/images/signature/no_signature.png";
+        }
+
         //.jrxml extension source code / .jasper extension compiled
         $input = storage_path("app/public/myforms/pr_form1.jasper"); 
         $name = "pr_form";
@@ -18,7 +33,7 @@ class PRForm extends Controller
         $options = [
             'format' => ['pdf'],
             'locale' => 'en',
-            'params' => ['prno' => $prno],
+            'params' => ['prno' => $prno, 'signature_img' => $signature_img],
             'db_connection' => [
                 'driver'    => 'generic',
                 'host'      => env('DB_HOST'),
