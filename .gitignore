@@ -1,7 +1,9 @@
 /node_modules
 /public/hot
-/public/storage
+/public/images
+/public/storage/attachments
 /storage/*.key
+/storage/app/livewire-tmp
 /vendor
 .env
 .env.backup
