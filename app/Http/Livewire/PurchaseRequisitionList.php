@@ -197,7 +197,8 @@ class PurchaseRequisitionList extends Component
                 LEFT JOIN users buyername ON prh.buyer=buyername.username
                 LEFT JOIN (SELECT site, delivery_location FROM site WHERE address_id LIKE '%-EN') site ON site.site=prh.site
                 LEFT JOIN (SELECT prno, MIN(id) AS id
-                            FROM pr_item 
+                            FROM pr_item
+                            WHERE ISNULL(deletion_flag,0)=0
                             GROUP BY prno) b ON b.prno=prh.prno
                 LEFT JOIN pr_item c ON c.id=b.id";
 
