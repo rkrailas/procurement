@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Livewire\Test1;
 use App\Http\Livewire\Test2;
 use App\Http\Controllers\PHPJasperController;
+use App\Http\Livewire\GoodsReceipt;
+use App\Http\Livewire\GoodsReceiptDetails;
 
 
 /*
