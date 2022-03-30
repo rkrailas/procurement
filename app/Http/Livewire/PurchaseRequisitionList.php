@@ -182,7 +182,7 @@ class PurchaseRequisitionList extends Component
 
         $strsql = "SELECT prh.prno, ort.description AS order_type, ISNULL(req_f.name,'') + ' ' + ISNULL(req_f.lastname,'') AS requested_for
                 , pr_status.description AS status, prh.request_date, ISNULL(buyername.name,'') + ' ' + ISNULL(buyername.lastname,'') AS buyer
-                , pri.total_budget, pri.total_final_price, site.delivery_location as site
+                , pri.total_budget, pri.total_final_price, site.site_description as site
                 , ISNULL(req.name,'') + ' ' + ISNULL(req.lastname,'') AS requestor, c.description as item_desc
                 FROM pr_header prh
                 LEFT JOIN (SELECT prno, SUM(qty * unit_price_local) as total_budget
@@ -195,7 +195,7 @@ class PurchaseRequisitionList extends Component
                 LEFT JOIN users req ON req.id=prh.requestor
                 LEFT JOIN pr_status ON pr_status.status=prh.status
                 LEFT JOIN users buyername ON prh.buyer=buyername.username
-                LEFT JOIN (SELECT site, delivery_location FROM site WHERE address_id LIKE '%-EN') site ON site.site=prh.site
+                LEFT JOIN (SELECT site, site_description FROM site WHERE address_id LIKE '%-EN') site ON site.site=prh.site
                 LEFT JOIN (SELECT prno, MIN(id) AS id
                             FROM pr_item
                             WHERE ISNULL(deletion_flag,0)=0
@@ -204,7 +204,7 @@ class PurchaseRequisitionList extends Component
 
         $strsql = $strsql . $xWhere;
         $strsql = $strsql . " GROUP BY prh.prno, ort.description, req_f.name, req_f.lastname, pr_status.description, prh.request_date
-                        , buyername.name, buyername.lastname, pri.total_budget, pri.total_final_price, site.delivery_location, prh.site, prh.status
+                        , buyername.name, buyername.lastname, pri.total_budget, pri.total_final_price, site.site_description, prh.site, prh.status
                         , req.name, req.lastname, c.description";
         $strsql = $strsql . " ORDER BY " . $this->sortBy . " " . $this->sortDirection;
 
