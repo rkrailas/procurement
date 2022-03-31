@@ -11,16 +11,18 @@ class PRForm extends Controller
 {
     public function genForm($prno)
     {
-        //24-03-2022 ???กำลังแก้
         $signature_img = "C:/xampp/htdocs/procurement/public/images/signature/";
-        $strsql = "SELECT username FROM users WHERE id=" . auth()->user()->id;
+        $strsql = "SELECT approver FROM dec_val_workflow WHERE approval_type='DECIDER' AND status='30' AND ref_doc_type='10' 
+                AND ref_doc_no='" . $prno . "'";
         $data = DB::select($strsql);
         if ($data) {
-            $signature_img = $signature_img . $data[0]->username . ".png";
-        }
-
-        //ตรวจสอบว่ามีไฟล์หรือไม่ ถ้าไม่มีจะใช้รูปพื้นสีขาว
-        if(!File::exists($signature_img)){
+            $signature_img = $signature_img . $data[0]->approver . ".png";
+            
+            //ตรวจสอบว่ามีไฟล์หรือไม่ ถ้าไม่มีจะใช้รูปพื้นสีขาว
+            if(!File::exists($signature_img)){
+                $signature_img = "C:/xampp/htdocs/procurement/public/images/signature/no_signature.png";
+            }
+        } else {
             $signature_img = "C:/xampp/htdocs/procurement/public/images/signature/no_signature.png";
         }
 
