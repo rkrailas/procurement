@@ -94,7 +94,7 @@
                             </option>
                             @endforeach
                         </x-select2-multiple> --}}
-                        <x-select2-page-multiple id="requestorfor-select2" wire:model.defer="requested_for" url="datarequestorforseleect2">
+                        <x-select2-page-multiple id="requestedfor-select2" wire:model.defer="requested_for" url="datarequestorforseleect2">
                         </x-select2-page-multiple>
                     </div>
                     <div class="col-3">

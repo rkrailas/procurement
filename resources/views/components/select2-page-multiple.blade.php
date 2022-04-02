@@ -33,9 +33,9 @@
         $(function(){
             $('#{{ $id }}').select2({
                 theme: 'bootstrap4',
-                placeholder: '...Please select...',
+                // placeholder: '...Please select...',
                 // width: '350px',
-                allowClear: true,
+                // allowClear: true,
                 ajax: {
                     url: '{{ $url }}',
                     dataType: 'json',
