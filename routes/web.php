@@ -8,6 +8,7 @@ use App\Http\Controllers\Form\PRForm;
 
 use App\Http\Livewire\RfqList;
 use App\Http\Livewire\RfqDetail;
+use App\Http\Livewire\RfqInbox;
 
 use App\Http\Livewire\PurchaseOrderList;
 use App\Http\Livewire\PurchaseOrderDetails;
@@ -50,9 +51,12 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('requisitioninbox', RequisitionInbox::class)->name('requisitioninbox');
     Route::get('rfqlist', RfqList::class)->name('rfqlist');
     Route::get('rfqdetail', RfqDetail::class)->name('rfqdetail');
+    Route::get('rfqinbox', Rfqinbox::class)->name('rfqinbox');
     Route::get('PRForm/{prno}', [PRForm::class,'genForm']);
     Route::get('purchaseorderlist', PurchaseOrderList::class)->name('purchaseorderlist');
     Route::get('purchaseorderdetails', PurchaseOrderDetails::class)->name('purchaseorderdetails');
+
+    Route::get('datarequestorforseleect2', [PurchaseRequisitionList::class, 'dataRequestorForSeleect2'])->name('datarequestorforseleect2');
 });
 
 Route::get('admin/changepassword', ChangePassword::class)->name('admin.changepassword');
@@ -63,3 +67,4 @@ Route::post('logout', [ClientController::class, 'logout'])->name('logout');
 Route::get('test1', Test1::class)->name('test1');
 Route::get('test2', Test2::class)->name('test2');
 Route::get('PHPJasper/{prno}', [PHPJasperController::class,'genReport'])->name('PHPJasper');
+Route::get('dataforselect2', [Test1::class, 'getdataforselect2'])->name('dataforselect2');

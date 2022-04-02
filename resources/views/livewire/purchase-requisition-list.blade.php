@@ -75,23 +75,27 @@
                 <div class="row">
                     <div class="col-3">
                         <label>Requestor</label>
-                        <x-select2-multiple id="requestor-select2" wire:model.defer="requestor">
+                        {{-- <x-select2-multiple id="requestor-select2" wire:model.defer="requestor">
                             @foreach($requestor_dd as $row)
                             <option value='{{ $row->id }}'>
                                 {{ $row->fullname }}
                             </option>
                             @endforeach
-                        </x-select2-multiple>
+                        </x-select2-multiple> --}}
+                        <x-select2-page-multiple id="requestor-select2" wire:model.defer="requestor" url="datarequestorforseleect2">
+                        </x-select2-page-multiple>
                     </div>
                     <div class="col-3">
                         <label>Requested For</label>
-                        <x-select2-multiple id="requestedfor-select2" wire:model.defer="requested_for">
+                        {{-- <x-select2-multiple id="requestedfor-select2" wire:model.defer="requested_for">
                             @foreach($requestedfor_dd as $row)
                             <option value='{{ $row->id }}'>
                                 {{ $row->fullname }}
                             </option>
                             @endforeach
-                        </x-select2-multiple>
+                        </x-select2-multiple> --}}
+                        <x-select2-page-multiple id="requestorfor-select2" wire:model.defer="requested_for" url="datarequestorforseleect2">
+                        </x-select2-page-multiple>
                     </div>
                     <div class="col-3">
                         <label>Buyer</label>
