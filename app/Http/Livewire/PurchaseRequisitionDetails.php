@@ -2953,7 +2953,7 @@ class PurchaseRequisitionDetails extends Component
     public function dataDeciderValidatorForSeleect2(Request $request)
     {
         $term = trim($request->term);
-        $posts = DB::table('users')->selectRaw("users.id, users.name + ' ' + users.lastname as text")
+        $posts = DB::table('users')->selectRaw("users.username as id, users.name + ' ' + users.lastname as text")
             ->join('user_roles','users.username','=','user_roles.username') 
             ->where('user_roles.role_id','10')
             ->where('users.name', 'LIKE',  '%' . $term. '%')
