@@ -74,13 +74,14 @@
                     <div class="col-md-3">
                         <label>Requested For <span style="color: red">*</span></label>
                         @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) 
-                        <x-select2 id="requestedfor-select2" disabled="true" wire:model.defer="prHeader.requested_for">
+                        {{-- <x-select2 id="requestedfor-select2" disabled="true" wire:model.defer="prHeader.requested_for">
                             @foreach($requested_for_dd as $row)
                             <option value="{{ $row->id }}">
                                 {{ $row->fullname }}
                             </option>
                             @endforeach
-                        </x-select2>
+                        </x-select2> --}}
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.requested_for_name">
                         @else
                         <x-select2 id="requestedfor-select2" wire:model.defer="prHeader.requested_for">
                             @foreach($requested_for_dd as $row)
@@ -516,14 +517,17 @@
                                                 <div class="row">
                                                     <div class="col-md-3">
                                                         <label>Select Decider</label>
-                                                        <x-select2 id="decider-select2" wire:model.defer="decider.username">
+                                                        {{-- 03-04-2022 เปลี่ยนไปใช้ select2 แบบ pagination --}}
+                                                        {{-- <x-select2 id="decider-select2" wire:model.defer="decider.username">
                                                             <option value="">--- Please Select ---</option>
                                                             @foreach($decider_dd as $row)
                                                             <option value="{{ $row->username }}">
                                                                 {{ $row->fullname }}
                                                             </option>
                                                             @endforeach
-                                                        </x-select2>
+                                                        </x-select2> --}}
+                                                        <x-select2-page id="decider-select2" wire:model.defer="decider.username" url="datadecidervalidatorforseleect2">
+                                                        </x-select2-page>
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label>Company</label>
@@ -654,14 +658,17 @@
                                                 <div class="row">
                                                     <div class="col-md-3">
                                                         <label>Select Validator</label>
-                                                        <x-select2 id="validator-select2" wire:model.defer="validator.username">
+                                                        {{-- 03-04-2022 เปลี่ยนไปใช้ select2 แบบ pagination --}}
+                                                        {{-- <x-select2 id="validator-select2" wire:model.defer="validator.username">
                                                             <option value="">--- Please Select ---</option>
                                                             @foreach($validator_dd as $row)
                                                             <option value="{{ $row->username }}">
                                                                 {{ $row->fullname }}
                                                             </option>
                                                             @endforeach
-                                                        </x-select2>
+                                                        </x-select2> --}}
+                                                        <x-select2-page id="validator-select2" wire:model.defer="validator.username" url="datadecidervalidatorforseleect2">
+                                                        </x-select2-page>
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label>Company</label>

@@ -57,6 +57,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('purchaseorderdetails', PurchaseOrderDetails::class)->name('purchaseorderdetails');
 
     Route::get('datarequestorforseleect2', [PurchaseRequisitionList::class, 'dataRequestorForSeleect2'])->name('datarequestorforseleect2');
+    Route::get('datadecidervalidatorforseleect2', [PurchaseRequisitionDetails::class, 'dataDeciderValidatorForSeleect2'])->name('datadecidervalidatorforseleect2');
 });
 
 Route::get('admin/changepassword', ChangePassword::class)->name('admin.changepassword');

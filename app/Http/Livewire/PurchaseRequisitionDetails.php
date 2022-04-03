@@ -1196,13 +1196,16 @@ class PurchaseRequisitionDetails extends Component
 
                     //Find Buyer Group
                     $xBuyerGrp = '';
-                    $strsql = "SELECT b.buyer_group_code
-                        FROM buyer a
-                        LEFT JOIN buyer_group b ON a.username=b.buyer_id
-                        WHERE b.ismark_delete=0 AND a.username='" . $this->prHeader['buyer'] . "'";
+                    $xCountBuyerGrp = 0;
+                    $strsql = "SELECT buyer_group FROM buyer_group_mapping WHERE buyer='" . $this->prHeader['buyer'] . "'";
                     $data = DB::select($strsql);
                     if ($data) {
-                        $xBuyerGrp = $data[0]->buyer_group_code;
+                        $xBuyerGrp = $data[0]->buyer_group;
+                        $xCountBuyerGrp = count($data);
+                    } else {
+                        $this->dispatchBrowserEvent('popup-alert', ['title' => 'This buyer is not configured.']);
+
+                        return;
                     }
 
                     //Create RFQ HEADER
@@ -1281,19 +1284,22 @@ class PurchaseRequisitionDetails extends Component
                                 , total_final_price_local, cr_amount, cr_percent, cr_amount_local, cr_percent_local
                                 , supplier, create_by, create_on, changed_by, changed_on)
                                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-                                ,[$xNewRFQNo, $row['prno'], $row['id'], $row['lineno'], $row['partno'], $row['description'], $row['skip_rfq'], $row['nonstock_control']
+                                ,[$xNewRFQNo, $row['prno'], $row['id'], $row['lineno'], $row['partno'], $row['description'], $row['skip_rfq']
+                                , $row['nonstock_control']
                                     , $row['over_1_year_life'], '11', $row['qty'], $row['purchase_unit'], $row['req_date'], $row['currency']
                                     , round($xBasePrice, 2), round($xTotalBasePrice, 2), round($xBasePriceLocal, 2), round($xTotalBasePriceLocal, 2)
                                     , $row['exchange_rate'], $row['blanket_order_type'], $row['edecision_no'], $row['edecision_file']
                                     , $row['nominated_supplier'] , round($xFinalPrice, 2), round($xTotalFinalPrice, 2), round($xFinalPriceLocal, 2)
                                     , round($xTotalFinalPriceLocal, 2), round($xCrAmount , 2), round($xCrPercent, 2), round($xCrAmountLocal, 2)
-                                    , round($xCrPercentLocal, 2), $row['nominated_supplier'], auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()
+                                    , round($xCrPercentLocal, 2), $row['nominated_supplier']
+                                    , auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()
                                 ]);
 
                             } else {
                                 DB::statement("INSERT INTO rfq_item(rfqno, prno, prlineno_id, prlineno, partno, description, skip_rfq, non_stock_control
                                 , over1_year_life, status, qty, uom, delivery_date, currency, base_price, total_base_price, base_price_local
-                                ,total_base_price_local, exchange_rate, blanket_order_type, edecisionno, edecision_fileid, create_by, create_on, changed_by, changed_on)
+                                , total_base_price_local, exchange_rate, blanket_order_type, edecisionno, edecision_fileid
+                                , create_by, create_on, changed_by, changed_on)
                                     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                                 ,[$xNewRFQNo, $row['prno'], $row['id'], $row['lineno'], $row['partno'], $row['description'], $row['skip_rfq']
                                     , $row['nonstock_control'], $row['over_1_year_life'], '10', $row['qty'], $row['purchase_unit'], $row['req_date']
@@ -1302,6 +1308,30 @@ class PurchaseRequisitionDetails extends Component
                                     , $row['edecision_no'], $row['edecision_file'], auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
                             }
                         }
+                    }
+
+                    //Create PURCH WORKFLOW
+                    if ($xCountBuyerGrp > 1) {//List Buyer Group in Approval Group in the RFQ Authorization Tab. 
+                        // ไม่ต้องทำอะไร
+
+                    } else {//Get PURCH APPROVAL MATRIX
+                        
+                        $xTotalFinalPriceLocal = 0;
+                        $strsql = "SELECT total_final_price_local FROM rfq_header WHERE rfqno='" . $xNewRFQNo . "'";
+                        $data2 = DB::select($strsql);
+                        if ($data2) {
+                            $xTotalFinalPriceLocal = $data2[0]->total_final_price_local;
+                        }
+                        
+                        DB::statement("INSERT INTO purch_workflow(seq, approver, status, ref_doctype, ref_docno, approval_group, totalamt_thb
+                            , create_by, create_on, changed_by, changed_on)
+                            SELECT seq, approver_id, '10', 'RFQ', '" . $xNewRFQNo . "', '" . $xBuyerGrp . "', " 
+                            . $xTotalFinalPriceLocal . ", " . auth()->user()->id . ", '" . Carbon::now() . "', " . auth()->user()->id . ", '" 
+                            . Carbon::now() . "'
+                            FROM purch_approval_matrix 
+                            WHERE ref_doctype='RFQ' AND approval_group='" . $xBuyerGrp . "'");
+
+                            //??? รอตรวจสอบว่าถ้าใช้ xTotalFinalPriceLocal ถูกต้องหรือไม่ " AND value_from >=" . $xTotalFinalPriceLocal AND value_to <=" . $xTotalFinalPriceLocal . ")";
                     }
 
                     //Update PR Item Reference RFQ, Reference RFQ Item
@@ -2262,7 +2292,8 @@ class PurchaseRequisitionDetails extends Component
 
         public function updatedPrItemPartno() 
         {
-            $strsql = "SELECT a.partno, a.part_name, a.purchase_uom, c.description AS purchase_uom_description, a.purchase_group, ISNULL(a.account_group,'') AS account_group, a.brand
+            $strsql = "SELECT a.partno, a.part_name, a.purchase_uom, c.description AS purchase_uom_description, a.purchase_group
+                    , ISNULL(a.account_group,'') AS account_group, a.brand
                     , a.model, a.skip_rfq, a.skip_doa, a.primary_supplier, a.base_price, a.final_price, a.currency, b.exchange_rate
                     , a.min_order_qty, a.supplier_lead_time, a.supplier_id, ISNULL(a.gl_account,'') AS gl_account
                     FROM part_master a
@@ -2483,7 +2514,7 @@ class PurchaseRequisitionDetails extends Component
         $strsql = "SELECT prh.id, prh.prno, ort.description AS ordertypename
                 , isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requestor_name, prh.requestor_ext AS extention, prh.requestor_phone AS phone
                 , prh.requested_for, prh.requested_for_email AS email_reqf, prh.requested_for_ext AS extention_reqf
-                , prh.requested_for_phone AS phone_reqf
+                , prh.requested_for_phone AS phone_reqf, isnull(reqf.name,'') + ' ' + isnull(reqf.lastname,'') AS requested_for_name
                 , prh.company, company.name AS company_name, prh.site, prh.site + ' : ' + site.site_description AS site_description, prh.functions, prh.department, prh.division, prh.section
                 , prh.cost_center, cc.description AS costcenter_desc
                 , prh.buyer, prh.delivery_address, prh.delivery_location, prh.delivery_site, prh.budget_year, prh.purpose_pr, prh.capexno
@@ -2600,26 +2631,26 @@ class PurchaseRequisitionDetails extends Component
             $this->loadDD_partno_dd(true);
             $this->loadDD_buyer_dd(true);    
             
-            //18-3-2022
-            $this->decider_dd = [];
-            $this->validator_dd = [];
-            $strsql = "SELECT usr.username, usr.name + ' ' + usr.lastname AS fullname FROM users usr
-                        JOIN user_roles uro ON uro.username = usr.username
-                        WHERE uro.role_id='10' 
-                            AND (usr.id <> " . $this->prHeader['requestor'] . " AND usr.id <> " . $this->prHeader['requested_for'] . ")
-                        ORDER BY usr.username";
-            $this->decider_dd = DB::select($strsql);
+            //03-04-2022 ปิด Function นี้ไว้ก่อนเพราะทำให้ทำงานช้า
+                // $this->decider_dd = [];
+                // $this->validator_dd = [];
+                // $strsql = "SELECT usr.username, usr.name + ' ' + usr.lastname AS fullname FROM users usr
+                //             JOIN user_roles uro ON uro.username = usr.username
+                //             WHERE uro.role_id='10' 
+                //                 AND (usr.id <> " . $this->prHeader['requestor'] . " AND usr.id <> " . $this->prHeader['requested_for'] . ")
+                //             ORDER BY usr.username";
+                // $this->decider_dd = DB::select($strsql);
 
-            if ($this->decider_dd){
-                $newOption = "<option value=' '>--- Please Select ---</option>";
-                $xdecider_dd = json_decode(json_encode($this->decider_dd), true);
-                foreach ($xdecider_dd as $row) {
-                    $newOption = $newOption . "<option value='" . $row['username'] . "'>" . $row['fullname'] . "</option>";
-                }
+                // if ($this->decider_dd){
+                //     $newOption = "<option value=' '>--- Please Select ---</option>";
+                //     $xdecider_dd = json_decode(json_encode($this->decider_dd), true);
+                //     foreach ($xdecider_dd as $row) {
+                //         $newOption = $newOption . "<option value='" . $row['username'] . "'>" . $row['fullname'] . "</option>";
+                //     }
 
-                $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#decider-select2']);
-                $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#validator-select2']);
-            }
+                //     $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#decider-select2']);
+                //     $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#validator-select2']);
+                // }
 
         } else {
             $this->prHeader['company'] = "";
@@ -2917,6 +2948,31 @@ class PurchaseRequisitionDetails extends Component
                     ORDER BY [lineno]";
             $this->prLineNoAtt_dd = DB::select($strsql);
         //Attachment End
+    }
+
+    public function dataDeciderValidatorForSeleect2(Request $request)
+    {
+        $term = trim($request->term);
+        $posts = DB::table('users')->selectRaw("users.id, users.name + ' ' + users.lastname as text")
+            ->join('user_roles','users.username','=','user_roles.username') 
+            ->where('user_roles.role_id','10')
+            ->where('users.name', 'LIKE',  '%' . $term. '%')
+            ->Orwhere('users.lastname', 'LIKE',  '%' . $term. '%')
+            ->orderBy('users.name', 'asc')->simplePaginate(10);
+     
+        $morePages=true;
+        $pagination_obj= json_encode($posts);
+        if (empty($posts->nextPageUrl())){
+            $morePages=false;
+        }
+            $results = array(
+            "results" => $posts->items(),
+            "pagination" => array(
+                "more" => $morePages
+            )
+            );
+    
+        return response()->json($results);
     }
 
     public function mount()
