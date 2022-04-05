@@ -1,5 +1,4 @@
 <?php
-
     function convertJsonToString($xJson)
     {
         $xJson = str_replace("[", "", $xJson);

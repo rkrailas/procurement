@@ -7,8 +7,8 @@ $key = 'a3c4b614a1f072e0f968c2712a36323f'; //A md5 hash (length 32)
 $encrypter = new Encrypter($key, 'AES-256-CBC');
 
 // For Generate 
-$str = $encrypter->encryptString('P@ssw0rd');
-die($str);
+// $str = $encrypter->encryptString('P@ssw0rd');
+// die($str);
 
 return [
 
