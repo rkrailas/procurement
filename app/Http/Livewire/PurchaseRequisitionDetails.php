@@ -2746,6 +2746,7 @@ class PurchaseRequisitionDetails extends Component
         $data = DB::select($strsql);
         if (count($data)) {
             $this->prHeader['requestor_name'] = $data[0]->requestor_name;
+            $this->prHeader['requested_for_name'] = $data[0]->requestor_name;
         }
         $this->prHeader['phone'] =  auth()->user()->phone;
         $this->prHeader['extention'] =  auth()->user()->extention;
