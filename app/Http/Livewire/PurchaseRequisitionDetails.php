@@ -2455,17 +2455,22 @@ class PurchaseRequisitionDetails extends Component
     public function setDefaultSelect2()
     {
         //requestedfor-select2
-        $xRequested_for_dd = json_decode(json_encode($this->requested_for_dd), true);
-        // $newOption = "<option value=' '>--- Please Select ---</option>";
-        $newOption = "";
-        foreach ($xRequested_for_dd as $row) {
-            $newOption = $newOption . "<option value='" . $row['id'] . "' ";
-            if ($row['id'] == $this->prHeader['requested_for']) {
-                $newOption = $newOption . "selected='selected'";
-            }
-            $newOption = $newOption . ">" . $row['fullname'] . "</option>";
+        if ($this->prHeader['requested_for']) {
+            // รอลบ
+            // $xRequested_for_dd = json_decode(json_encode($this->requested_for_dd), true);
+            // $newOption = "";
+            // foreach ($xRequested_for_dd as $row) {
+            //     $newOption = $newOption . "<option value='" . $row['id'] . "' ";
+            //     if ($row['id'] == $this->prHeader['requested_for']) {
+            //         $newOption = $newOption . "selected='selected'";
+            //     }
+            //     $newOption = $newOption . ">" . $row['fullname'] . "</option>";
+            // }
+            $newOption = "<option value='" . $this->prHeader['requested_for'] . "' selected='selected'>" 
+                    . $this->prHeader['requested_for_name'] . "</option>";
+            $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#requestedfor-select2']);
         }
-        $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#requestedfor-select2']);
+
 
         //buyer-select2
         $xBuyer_dd = json_decode(json_encode($this->buyer_dd), true);
@@ -2952,6 +2957,29 @@ class PurchaseRequisitionDetails extends Component
                     ORDER BY [lineno]";
             $this->prLineNoAtt_dd = DB::select($strsql);
         //Attachment End
+    }
+
+    public function dataRequested_forForSeleect2(Request $request)
+    {
+        $term = trim($request->term);
+        $posts = DB::table('users')->selectRaw("users.id, users.name + ' ' + users.lastname as text")
+            ->where('users.name', 'LIKE',  '%' . $term. '%')
+            ->Orwhere('users.lastname', 'LIKE',  '%' . $term. '%')
+            ->orderBy('users.name', 'asc')->simplePaginate(10);
+     
+        $morePages=true;
+        $pagination_obj= json_encode($posts);
+        if (empty($posts->nextPageUrl())){
+            $morePages=false;
+        }
+            $results = array(
+            "results" => $posts->items(),
+            "pagination" => array(
+                "more" => $morePages
+            )
+            );
+    
+        return response()->json($results);
     }
 
     public function dataDeciderValidatorForSeleect2(Request $request)

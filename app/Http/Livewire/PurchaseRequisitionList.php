@@ -32,28 +32,25 @@ class PurchaseRequisitionList extends Component
 
     //??? 02-04-2022 กำลังแก้
     public function dataRequestorForSeleect2(Request $request){
-        if ($request) {
-
-            $term = trim($request->term);
-            $posts = DB::table('users')->selectRaw("id, name + ' ' + lastname as text")
-                ->where('name', 'LIKE',  '%' . $term. '%')
-                ->Orwhere('lastname', 'LIKE',  '%' . $term. '%')
-                ->orderBy('name', 'asc')->simplePaginate(10);
-         
-            $morePages=true;
-            $pagination_obj= json_encode($posts);
-            if (empty($posts->nextPageUrl())){
-                $morePages=false;
-            }
-                $results = array(
-                "results" => $posts->items(),
-                "pagination" => array(
-                    "more" => $morePages
-                )
-                );
+        $term = trim($request->term);
+        $posts = DB::table('users')->selectRaw("id, name + ' ' + lastname as text")
+            ->where('name', 'LIKE',  '%' . $term. '%')
+            ->Orwhere('lastname', 'LIKE',  '%' . $term. '%')
+            ->orderBy('name', 'asc')->simplePaginate(10);
         
-            return response()->json($results);
+        $morePages=true;
+        $pagination_obj= json_encode($posts);
+        if (empty($posts->nextPageUrl())){
+            $morePages=false;
         }
+            $results = array(
+            "results" => $posts->items(),
+            "pagination" => array(
+                "more" => $morePages
+            )
+            );
+    
+        return response()->json($results);
     }
 
     public function edit($prno)

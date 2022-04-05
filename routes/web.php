@@ -51,13 +51,15 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('requisitioninbox', RequisitionInbox::class)->name('requisitioninbox');
     Route::get('rfqlist', RfqList::class)->name('rfqlist');
     Route::get('rfqdetail', RfqDetail::class)->name('rfqdetail');
-    Route::get('rfqinbox', Rfqinbox::class)->name('rfqinbox');
+    // Route::get('rfqinbox', Rfqinbox::class)->name('rfqinbox');
     Route::get('PRForm/{prno}', [PRForm::class,'genForm']);
-    Route::get('purchaseorderlist', PurchaseOrderList::class)->name('purchaseorderlist');
-    Route::get('purchaseorderdetails', PurchaseOrderDetails::class)->name('purchaseorderdetails');
+    // Route::get('purchaseorderlist', PurchaseOrderList::class)->name('purchaseorderlist');
+    // Route::get('purchaseorderdetails', PurchaseOrderDetails::class)->name('purchaseorderdetails');
 
     Route::get('datarequestorforseleect2', [PurchaseRequisitionList::class, 'dataRequestorForSeleect2'])->name('datarequestorforseleect2');
     Route::get('datadecidervalidatorforseleect2', [PurchaseRequisitionDetails::class, 'dataDeciderValidatorForSeleect2'])->name('datadecidervalidatorforseleect2');
+    Route::get('datarequested_forforseleect2', [PurchaseRequisitionDetails::class, 'dataRequested_forForSeleect2'])->name('datarequested_forforseleect2');
+    
 });
 
 Route::get('admin/changepassword', ChangePassword::class)->name('admin.changepassword');

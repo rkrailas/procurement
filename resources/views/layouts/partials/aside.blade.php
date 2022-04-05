@@ -68,11 +68,18 @@
                 <p>RFQ List</p>
               </a>
             </li>
+            {{-- <li class="nav-item">
+              <a href="{{ route('rfqinbox') }}" 
+                class="nav-link {{ request()->is('rfqinbox') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon-submenu"></i>
+                <p>RFQ Inbox</p>
+              </a>
+            </li> --}}
           </ul>
         </li>
 
         <!-- Purchase Order -->
-        <li class="nav-item">
+        {{-- <li class="nav-item">
           <a href="#" class="nav-link">
             <i class="nav-icon far fa-file-alt"></i>
             <p>
@@ -89,7 +96,7 @@
               </a>
             </li>
           </ul>
-        </li>
+        </li> --}}
 
       </ul>
     </nav>
