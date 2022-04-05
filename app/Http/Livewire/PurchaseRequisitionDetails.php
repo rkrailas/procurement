@@ -2604,7 +2604,7 @@ class PurchaseRequisitionDetails extends Component
         if ($this->prHeader['requested_for'] != " " AND $this->prHeader['requested_for'] != "") {
             $strsql = "SELECT usr.company, usr.department, usr.site, usr.functions, usr.division, usr.section, usr.cost_center
                         , usr.email, usr.extention, cost.description AS costcenter_desc
-                        , usr.site + ' : ' + site.site_description AS site_description
+                        , usr.site + ' : ' + site.site_description AS site_description, site.address_id
                         , CASE 
                             WHEN ISNULL(mobile,'') = '' THEN phone
                             ELSE mobile
@@ -2612,7 +2612,7 @@ class PurchaseRequisitionDetails extends Component
                         FROM users usr
                         LEFT JOIN company com ON com.company = usr.company
                         LEFT JOIN cost_center cost ON cost.cost_center = usr.cost_center
-                        LEFT JOIN site ON usr.site = site.site
+                        LEFT JOIN site ON usr.site = site.site AND SUBSTRING(address_id, 7, 2)='EN'
                         WHERE usr.id='" . $this->prHeader['requested_for'] . "'";
             $data = DB::select($strsql);
             if (count($data)) {
@@ -2628,6 +2628,7 @@ class PurchaseRequisitionDetails extends Component
                 $this->prHeader['extention_reqf'] = $data[0]->extention;
                 $this->prHeader['cost_center'] = $data[0]->cost_center;
                 $this->prHeader['costcenter_desc'] = $data[0]->costcenter_desc;
+                $this->prHeader['delivery_address'] = $data[0]->address_id;
             }
 
             //9-2-2022 Update partno for CR No.10
