@@ -2604,6 +2604,7 @@ class PurchaseRequisitionDetails extends Component
         if ($this->prHeader['requested_for'] != " " AND $this->prHeader['requested_for'] != "") {
             $strsql = "SELECT usr.company, usr.department, usr.site, usr.functions, usr.division, usr.section, usr.cost_center
                         , usr.email, usr.extention, cost.description AS costcenter_desc
+                        , usr.site + ' : ' + site.site_description AS site_description
                         , CASE 
                             WHEN ISNULL(mobile,'') = '' THEN phone
                             ELSE mobile
@@ -2611,11 +2612,13 @@ class PurchaseRequisitionDetails extends Component
                         FROM users usr
                         LEFT JOIN company com ON com.company = usr.company
                         LEFT JOIN cost_center cost ON cost.cost_center = usr.cost_center
+                        LEFT JOIN site ON usr.site = site.site
                         WHERE usr.id='" . $this->prHeader['requested_for'] . "'";
             $data = DB::select($strsql);
             if (count($data)) {
                 $this->prHeader['company'] = $data[0]->company;
                 $this->prHeader['site'] = $data[0]->site;
+                $this->prHeader['site_description'] = $data[0]->site_description;
                 $this->prHeader['functions'] = $data[0]->functions;
                 $this->prHeader['department'] = $data[0]->department;
                 $this->prHeader['division'] = $data[0]->division;
