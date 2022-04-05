@@ -1190,22 +1190,22 @@ class PurchaseRequisitionDetails extends Component
 
             } else if ($xApproval_type == 'DECIDER'){
                 //Create RFQ & update status pr_header and pr_item
-                DB::transaction(function() 
-                {
+                DB::transaction(function(){
                     $xNewRFQNo = $this->getNewRFQNo();
 
                     //Find Buyer Group
                     $xBuyerGrp = '';
                     $xCountBuyerGrp = 0;
-                    $strsql = "SELECT buyer_group FROM buyer_group_mapping WHERE buyer='" . $this->prHeader['buyer'] . "'";
+                    $strsql = "SELECT buyer_group FROM buyer_group_mapping WHERE 1=2 AND buyer='" . $this->prHeader['buyer'] . "'";
                     $data = DB::select($strsql);
                     if ($data) {
                         $xBuyerGrp = $data[0]->buyer_group;
                         $xCountBuyerGrp = count($data);
-                    } else {
-                        $this->dispatchBrowserEvent('popup-alert', ['title' => 'This buyer is not configured.']);
 
-                        return;
+                    } else {
+                        // 4-4-2022 ยังไมี Error Comment ไว้ก่อน
+                        // $this->dispatchBrowserEvent('popup-alert', ['title' => 'This buyer is not configured.']);
+                        // return;
                     }
 
                     //Create RFQ HEADER
@@ -1398,63 +1398,63 @@ class PurchaseRequisitionDetails extends Component
                         }
                     }
                 });
-
-                //Send Mail
-                if (config('app.sendmail') == "Yes") {
-                    
-                    //requester
-                    // $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                    //     WHERE company = '" . $this->prHeader['company'] . "' 
-                    //     AND id=" . $this->prHeader['requestor'];
-                    $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                    WHERE id=" . $this->prHeader['requestor'];
-                    $data = DB::select($strsql);
-                    if ($data) {
-                        $requester_fullname = $data[0]->fullname;
-                        $requester_email = $data[0]->email;
-                    }
-
-                    //requested_for
-                    $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                        WHERE id=" . $this->prHeader['requested_for'];
-                    $data = DB::select($strsql);
-                    if ($data) {
-                        $requested_for_fullname = $data[0]->fullname;
-                        $requested_for_email = $data[0]->email;
-                    }
-
-                    //approver
-                    $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                        WHERE id=" . auth()->user()->id;
-                    $data = DB::select($strsql);
-                    if ($data) {
-                        $approver_fullname = $data[0]->fullname;
-                        $approver_email = $data[0]->email;
-                    }
-
-                    //เนื้อหาใน Mail
-                    $detailMail = [
-                        'template' => 'MAIL_PR02_Approval',
-                        'subject' => 'You Purchase Requisition No ' . $this->prHeader['prno'] . ' has been approved.',
-                        'dear' => $requester_fullname,
-                        'docno' => $this->prHeader['prno'],
-                        'actionby' => $approver_fullname,
-                        'link_url' => url('/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
-                    ];
-
-                    //Validate Email
-                    $this->emailAddress['approver_email'] = $approver_email;
-                    $this->emailAddress['requester_email'] = $requester_email;
-                    $this->emailAddress['requested_for_email'] = $requested_for_email;
-            
-                    $this->validate([
-                        'emailAddress.*' => 'required|email',
-                    ]);
-
-                    Mail::to($requester_email)->cc([$approver_email, $requested_for_email])->send(New WelcomeMail($detailMail));
-                }
-                //Send Mail End
             }
+
+            //Send Mail
+            if (config('app.sendmail') == "Yes") {
+
+                //requester
+                // $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                //     WHERE company = '" . $this->prHeader['company'] . "' 
+                //     AND id=" . $this->prHeader['requestor'];
+                $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                WHERE id=" . $this->prHeader['requestor'];
+                $data = DB::select($strsql);
+                if ($data) {
+                    $requester_fullname = $data[0]->fullname;
+                    $requester_email = $data[0]->email;
+                }
+
+                //requested_for
+                $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                    WHERE id=" . $this->prHeader['requested_for'];
+                $data = DB::select($strsql);
+                if ($data) {
+                    $requested_for_fullname = $data[0]->fullname;
+                    $requested_for_email = $data[0]->email;
+                }
+
+                //approver
+                $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                    WHERE id=" . auth()->user()->id;
+                $data = DB::select($strsql);
+                if ($data) {
+                    $approver_fullname = $data[0]->fullname;
+                    $approver_email = $data[0]->email;
+                }
+
+                //เนื้อหาใน Mail
+                $detailMail = [
+                    'template' => 'MAIL_PR02_Approval',
+                    'subject' => 'You Purchase Requisition No ' . $this->prHeader['prno'] . ' has been approved.',
+                    'dear' => $requester_fullname,
+                    'docno' => $this->prHeader['prno'],
+                    'actionby' => $approver_fullname,
+                    'link_url' => url('/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
+                ];
+
+                //Validate Email
+                $this->emailAddress['approver_email'] = $approver_email;
+                $this->emailAddress['requester_email'] = $requester_email;
+                $this->emailAddress['requested_for_email'] = $requested_for_email;
+        
+                $this->validate([
+                    'emailAddress.*' => 'required|email',
+                ]);
+
+                Mail::to($requester_email)->cc([$approver_email, $requested_for_email])->send(New WelcomeMail($detailMail));
+            }
+            //Send Mail End
 
             $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='100' AND class='DECIDER VALIDATOR'";
             $data = DB::select($strsql);
@@ -2855,7 +2855,7 @@ class PurchaseRequisitionDetails extends Component
     {
         //Herder
             //Requested_For & Buyer
-            $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users WHERE company='" . auth()->user()->company . "' ORDER BY users.name";
+            $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users ORDER BY users.name";
             $this->requested_for_dd = DB::select($strsql);
 
             //16-03-22 แก้เพิ่มเพราะเปลี่ยน Table
@@ -2881,10 +2881,10 @@ class PurchaseRequisitionDetails extends Component
             $xMonth = date_format(Carbon::now(),'m');
             if ($xMonth == '01' OR $xMonth == '02' OR $xMonth == '03'){
                 $xYear = intval(date_format(Carbon::now(),'Y'));
-                $this->budgetyear_dd = [['year' => $xYear - 1], ['year' => $xYear], ['year' => $xYear + 1]];
+                $this->budgetyear_dd = [['year' => $xYear - 2], ['year' => $xYear - 1], ['year' => $xYear]];
             }else{
                 $xYear = intval(date_format(Carbon::now(),'Y'));
-                $this->budgetyear_dd = [['year' => $xYear], ['year' => $xYear + 1], ['year' => $xYear + 2]];
+                $this->budgetyear_dd = [['year' => $xYear - 1], ['year' => $xYear ], ['year' => $xYear + 1]];
             }
             
         //Header End

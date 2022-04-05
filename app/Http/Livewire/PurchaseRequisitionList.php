@@ -142,8 +142,9 @@ class PurchaseRequisitionList extends Component
                     ORDER BY status";
         $this->status_dd = DB::select($strsql);
 
-        $strsql = "SELECT * FROM company";
-        $companys =  DB::select($strsql);
+        // Comment from Abeam
+        // $strsql = "SELECT * FROM company";
+        // $companys =  DB::select($strsql);
     }
 
     public function render()
