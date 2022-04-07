@@ -73,25 +73,14 @@
                 <div class="row">
                     <div class="col-md-3">
                         <label>Requested For <span style="color: red">*</span></label>
+
                         @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) 
-                        {{-- <x-select2 id="requestedfor-select2" disabled="true" wire:model.defer="prHeader.requested_for">
-                            @foreach($requested_for_dd as $row)
-                            <option value="{{ $row->id }}">
-                                {{ $row->fullname }}
-                            </option>
-                            @endforeach
-                        </x-select2> --}}
                         <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.requested_for_name">
+
                         @else
-                        {{-- <x-select2 id="requestedfor-select2" wire:model.defer="prHeader.requested_for">
-                            @foreach($requested_for_dd as $row)
-                            <option value="{{ $row->id }}">
-                                {{ $row->fullname }}
-                            </option>
-                            @endforeach
-                        </x-select2> --}}
                         <x-select2-page id="requestedfor-select2" wire:model.defer="prHeader.requested_for" url="datarequested_forforseleect2">
                         </x-select2-page>
+
                         @endif
 
                         @error('requested_for') <span class="text-red">{{ $message }}</span> @enderror
@@ -146,15 +135,6 @@
                     <div class="col-md-3">
                         <label>Cost Center (Department Code) <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" readonly wire:model="prHeader.cost_center">
-                        {{-- <select class="form-control form-control-sm" id="cost_center" wire:model="prHeader.cost_center"
-                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) disabled @endif>
-                            <option value="">--- Please Select ---</option>
-                            @foreach($cost_center_dd as $row)
-                            <option value="{{ $row->cost_center }}">
-                                {{ $row->cost_center }}
-                            </option>
-                            @endforeach
-                        </select> --}}
                         @error('cost_center') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
@@ -166,15 +146,10 @@
                 <div class="row">
                     <div class="col-md-3">
                         <label>Buyer <span style="color: red">*</span></label>
+
                         @if($prHeader['status'] >= '20' OR $isValidator_Decider == true)
-                        <x-select2 id="buyer-select2" disabled="true" wire:model.defer="prHeader.buyer">
-                            <option value=" ">--- Please Select ---</option>
-                            @foreach($buyer_dd as $row)
-                            <option value="{{ $row->username }}">
-                                {{ $row->fullname }}
-                            </option>
-                            @endforeach
-                        </x-select2>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.buyer_name">
+
                         @else
                         <x-select2 id="buyer-select2" wire:model.defer="prHeader.buyer">
                             <option value=" ">--- Please Select ---</option>
@@ -184,7 +159,9 @@
                             </option>
                             @endforeach
                         </x-select2>
+
                         @endif
+
                         @error('buyer') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
@@ -1312,23 +1289,48 @@
         clearSelect2('validator-select2'); 
     })
 
-    // ย้ายไปไว้ที่ App.blade.php
-    // window.addEventListener('bindToSelect2', event => {
-    //     $(event.detail.selectName).html(" ");
-    //     $(event.detail.selectName).append(event.detail.newOption);
-    // });
-
     window.addEventListener('prheader-disable', event => {
         $("#PR_Header :input").attr("disabled", true);
     });
 
-    // Set default requester for & buyer
-    document.addEventListener("livewire:load", function() { 
-        @this.setDefaultSelect2();
+    // Set default requester for & buyer แบบเดิม
+    // document.addEventListener("livewire:load", function() { 
+    //     @this.setDefaultSelect2(); 
 
-        // ไม่ Work กรณีกด Modal แล้วมันจะหลด
-        // @this.disablePRHeader();
+    //     // ไม่ Work กรณีกด Modal แล้วมันจะหลด
+    //     // @this.disablePRHeader();
+    // });
+    
+    // Set default requester for & buyer แบบใหม่ แต่ Buyer ยังไม่ Work
+    // $(document ).ready(function() {
+    //     //Requested_for
+    //     var x = document.getElementById("requestedfor-select2");
+    //     var option = document.createElement("option");
+    //     option.value = @this.prHeader['requested_for'];
+    //     option.text = @this.prHeader['requested_for_name'];
+    //     x.add(option);
+
+    //     //Buyer
+    //     var x = document.getElementById("buyer-select2");
+    //     document.getElementById("buyer-select2").value = @this.prHeader['buyer'];
+    // });
+
+    // Set default requester for & buyer แบบใหม่
+    document.addEventListener("livewire:load", function() { 
+        //Requested_for
+        var x = document.getElementById("requestedfor-select2");
+        var option = document.createElement("option");
+        option.value = @this.prHeader['requested_for'];
+        option.text = @this.prHeader['requested_for_name'];
+        x.add(option);
+
+        //Buyer
+        if (@this.prHeader['buyer']) {
+            var x = document.getElementById("buyer-select2");
+            document.getElementById("buyer-select2").value = @this.prHeader['buyer'];
+        }
     });
+
 
 </script>
 

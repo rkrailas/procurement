@@ -2520,9 +2520,11 @@ class PurchaseRequisitionDetails extends Component
                 , isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requestor_name, prh.requestor_ext AS extention, prh.requestor_phone AS phone
                 , prh.requested_for, prh.requested_for_email AS email_reqf, prh.requested_for_ext AS extention_reqf
                 , prh.requested_for_phone AS phone_reqf, isnull(reqf.name,'') + ' ' + isnull(reqf.lastname,'') AS requested_for_name
-                , prh.company, company.name AS company_name, prh.site, prh.site + ' : ' + site.site_description AS site_description, prh.functions, prh.department, prh.division, prh.section
+                , prh.company, company.name AS company_name, prh.site, prh.site + ' : ' + site.site_description AS site_description
+                , prh.functions, prh.department, prh.division, prh.section
                 , prh.cost_center, cc.description AS costcenter_desc
-                , prh.buyer, prh.delivery_address, prh.delivery_location, prh.delivery_site, prh.budget_year, prh.purpose_pr, prh.capexno
+                , prh.buyer, isnull(buyer.name,'') + ' ' + isnull(buyer.lastname,'') AS buyer_name
+                , prh.delivery_address, prh.delivery_location, prh.delivery_site, prh.budget_year, prh.purpose_pr, prh.capexno
                 , FORMAT(prh.request_date,'yyy-MM-dd') AS request_date                    
                 , pr_status.description AS statusname, FORMAT(prh.valid_until,'yyy-MM-dd') AS valid_until, prh.days_to_notify, prh.notify_below_10
                 , prh.notify_below_25, prh.notify_below_35, prh.ordertype, prh.requestor, prh.status
@@ -2530,6 +2532,7 @@ class PurchaseRequisitionDetails extends Component
                 LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
                 LEFT JOIN users req ON req.id=prh.requestor
                 LEFT JOIN users reqf ON reqf.id=prh.requested_for
+                LEFT JOIN users buyer ON buyer.username=prh.buyer
                 LEFT JOIN pr_status ON pr_status.status=prh.status
                 LEFT JOIN company ON company.company=prh.company
                 LEFT JOIN cost_center cc ON cc.cost_center=prh.cost_center 
