@@ -1097,6 +1097,9 @@
                         <button wire:click.prevent="backToPRList" class="btn btn-sm btn-light">
                             <i class="fas fa-arrow-alt-circle-left mr-1"></i></i>Back</button>
 
+                        {{-- <button onclick="location.href='purchaserequisitionlist';" class="btn btn-sm btn-light">
+                            <i class="fas fa-arrow-alt-circle-left mr-1"></i></i>Back</button> --}}
+
                         {{-- 01-Draft, 10-Planned --}}
                         @if ($prHeader['status'] == '01' OR $prHeader['status'] == '10')
                         <button wire:click.prevent="savePR" class="btn btn-sm btn-danger" class="btn btn-sm btn-light">
