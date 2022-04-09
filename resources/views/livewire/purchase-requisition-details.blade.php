@@ -845,73 +845,76 @@
                 
                 {{-- Tab Attachments --}} 
                     <div class="tab-pane fade {{ $currentTab == 'attachments' ? 'show active' : '' }}" id="pills-attachments" role="tabpanel" aria-labelledby="pills-attachments-tab" wire:ignore.self>
+
                         @if ($isRequester_RequestedFor == true)
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <label>Attachment Level <span style="color: blue; font-weight: normal">(Please select before add new files.)</span></label>
-                                    <x-select2-multiple id="attachment_lineno-select2" wire:model.defer="attachment_lineno">
-                                        <option value="0" selected="selected">0 : Level PR Header</option> 
-                                        @foreach($prLineNoAtt_dd as $row)
-                                        <option value="{{ $row->id }}">
-                                            {{ $row->lineno }} : {{ $row->description }}
-                                        </option>
-                                        @endforeach
-                                    </x-select2-multiple>
-                                </div>
-                                <div class="col-md-4">
-                                    <label>Document Type</label>
-                                    <select class="form-control form-control-sm" wire:model="attachment_filetype">
-                                        <option value="">--- Please Select ---</option>
-                                        <option value="General_Documents">General Documents</option>
-                                        <option value="eDecision">eDecision</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    @if ($attachment_filetype == 'eDecision')
-                                    <label>eDecision No.</label>
-                                    <input class="form-control form-control-sm" type="text" 
-                                        wire:model="attachment_edecisionno">
-                                    @endif                                    
-                                </div>
-                            </div> 
+                            @if ( $prHeader['status'] <= '21' )
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label>Attachment Level <span style="color: blue; font-weight: normal">(Please select before add new files.)</span></label>
+                                        <x-select2-multiple id="attachment_lineno-select2" wire:model.defer="attachment_lineno">
+                                            <option value="0" selected="selected">0 : Level PR Header</option> 
+                                            @foreach($prLineNoAtt_dd as $row)
+                                            <option value="{{ $row->id }}">
+                                                {{ $row->lineno }} : {{ $row->description }}
+                                            </option>
+                                            @endforeach
+                                        </x-select2-multiple>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Document Type</label>
+                                        <select class="form-control form-control-sm" wire:model="attachment_filetype">
+                                            <option value="">--- Please Select ---</option>
+                                            <option value="General_Documents">General Documents</option>
+                                            <option value="eDecision">eDecision</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        @if ($attachment_filetype == 'eDecision')
+                                        <label>eDecision No.</label>
+                                        <input class="form-control form-control-sm" type="text" 
+                                            wire:model="attachment_edecisionno">
+                                        @endif                                    
+                                    </div>
+                                </div> 
+                            
+                                <form autocomplete="off" enctype="multipart/form-data" wire:submit.prevent="addAttachment">
+                                    @csrf
+                                    <div class="row mb-3">
+                                        <div class="col-md-9">
+                                            <div class="custom-file">
+                                                <input wire:model="attachment_file" type="file" class="custom-file-input" id="customFile" multiple accept="image/*,.pdf,.xls,.xlsx,.txt,.ppt,.pptx,.doc,.docx,.zip">
 
-                            <form autocomplete="off" enctype="multipart/form-data" wire:submit.prevent="addAttachment">
-                                @csrf
-                                <div class="row mb-3">
-                                    <div class="col-md-9">
-                                        <div class="custom-file">
-                                            <input wire:model="attachment_file" type="file" class="custom-file-input" id="customFile" multiple accept="image/*,.pdf,.xls,.xlsx,.txt,.ppt,.pptx,.doc,.docx,.zip">
-                                            @error('attachment_file.*')
-                                            <div class="alert alert-warning" role="alert">
-                                                {{ $message }}
+                                                @error('attachment_file.*')
+                                                <div class="alert alert-warning" role="alert">
+                                                    {{ $message }}
+                                                </div>
+                                                @enderror
+
+                                                <label class="custom-file-label" for="customFile">Browse Files</label>
+
+                                                {{-- ตรวจสอบขนาดไฟล์ และแสดงรายชื่อไฟล์ --}}
+                                                @if ($attachment_file)
+                                                    @foreach ($attachment_file as $k => $file)
+                                                    {{ $file->getClientOriginalName() }} ({{ $this->formatSizeUnits($file->getSize()) }}) 
+                                                    <a href="" wire:click.prevent="deleteAttachmentFile('{{ $k }}')">
+                                                        <i class="fas fa-times text-center mr-1" style="color: red"></i>
+                                                    </a>
+                                                    {{-- @if ($file->getSize() > $maxSize)
+                                                    <span class="text-danger">File size is too large.</span>
+                                                    @endif --}}
+                                                    <br/>
+                                                    @endforeach
+                                                @endif
+                                                
                                             </div>
-                                            @enderror
-                                            <label class="custom-file-label" for="customFile">Browse Files</label>
-
-                                            {{-- ตรวจสอบขนาดไฟล์ และแสดงรายชื่อไฟล์ --}}
-                                            @if ($attachment_file)
-                                                @foreach ($attachment_file as $k => $file)
-                                                {{ $file->getClientOriginalName() }} ({{ $this->formatSizeUnits($file->getSize()) }}) 
-                                                <a href="" wire:click.prevent="deleteAttachmentFile('{{ $k }}')">
-                                                    <i class="fas fa-times text-center mr-1" style="color: red"></i>
-                                                </a>
-                                                {{-- @if ($file->getSize() > $maxSize)
-                                                <span class="text-danger">File size is too large.</span>
-                                                @endif --}}
-                                                <br/>
-                                                @endforeach
-                                            @endif
-                                            
+                                        </div>
+                                        <div class="col-md-3 text-left">
+                                            <button type="submit" class="btn btn-danger"><i class="fas fa-cloud-upload-alt mr-1"></i>Upload</button>
+                                            <span style="vertical-align:bottom; color:red">max file size 5 mb.</span> 
                                         </div>
                                     </div>
-                                    <div class="col-md-3 text-left">
-                                        @if ( $prHeader['status'] < '20' ) 
-                                        <button type="submit" class="btn btn-danger"><i class="fas fa-cloud-upload-alt mr-1"></i>Upload</button>
-                                        <span style="vertical-align:bottom; color:red">max file size 5 mb.</span> 
-                                        @endif
-                                    </div>
-                                </div>
-                            </form>
+                                </form>
+                            @endif
                         @endif
                         
                         <div class="row">

@@ -2612,7 +2612,7 @@ class PurchaseRequisitionDetails extends Component
         if ($this->prHeader['requested_for'] != " " AND $this->prHeader['requested_for'] != "") {
             $strsql = "SELECT usr.company, usr.department, usr.site, usr.functions, usr.division, usr.section, usr.cost_center
                         , usr.email, usr.extention, cost.description AS costcenter_desc
-                        , usr.site + ' : ' + site.site_description AS site_description, site.address_id
+                        , usr.site + ' : ' + site.site_description AS site_description
                         , CASE 
                             WHEN ISNULL(mobile,'') = '' THEN phone
                             ELSE mobile
@@ -2623,6 +2623,7 @@ class PurchaseRequisitionDetails extends Component
                         LEFT JOIN site ON usr.site = site.site AND SUBSTRING(address_id, 7, 2)='EN'
                         WHERE usr.id='" . $this->prHeader['requested_for'] . "'";
             $data = DB::select($strsql);
+
             if (count($data)) {
                 $this->prHeader['company'] = $data[0]->company;
                 $this->prHeader['site'] = $data[0]->site;
@@ -2636,7 +2637,9 @@ class PurchaseRequisitionDetails extends Component
                 $this->prHeader['extention_reqf'] = $data[0]->extention;
                 $this->prHeader['cost_center'] = $data[0]->cost_center;
                 $this->prHeader['costcenter_desc'] = $data[0]->costcenter_desc;
-                $this->prHeader['delivery_address'] = $data[0]->address_id;
+
+                $this->loadDeliveryAddress_DD();
+                $this->prHeader['delivery_address'] = $data[0]->site;
             }
 
             //9-2-2022 Update partno for CR No.10
@@ -2762,11 +2765,12 @@ class PurchaseRequisitionDetails extends Component
         $this->prHeader['phone_reqf'] = auth()->user()->phone;
         $this->prHeader['extention_reqf'] = auth()->user()->extention;
         $this->prHeader['email_reqf'] = auth()->user()->email;
+        $this->prHeader['delivery_address'] = auth()->user()->site;
 
-        $strsql = "SELECT TOP 1 address_id, site, SUBSTRING(address,1,30) AS address FROM site WHERE company='" . auth()->user()->company . "'";
+        $strsql = "SELECT TOP 1 address_id, site, SUBSTRING(address,1,30) AS address 
+                FROM site WHERE company='" . auth()->user()->company . "'";
         $data = DB::select($strsql);
         if (count($data)) {
-            $this->prHeader['delivery_address'] = $data[0]->address_id;
             $this->prHeader['delivery_location'] = $data[0]->address_id;
             $this->prHeader['delivery_site'] = $data[0]->site;
         }
@@ -2863,6 +2867,25 @@ class PurchaseRequisitionDetails extends Component
             $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#buyer-select2']);
         }
     }
+    
+    public function loadDeliveryAddress_DD()
+    {
+        $xCompany = auth()->user()->company;
+
+        if (isset($this->prHeader['requested_for'])) {
+            $strsql = "SELECT company FROM users WHERE id=" . $this->prHeader['requested_for'];
+            $data = DB::select($strsql);
+
+            if ($data) {
+                $xCompany = $data[0]->company;
+            }
+        }
+
+        $strsql = "SELECT site AS address_id, delivery_location FROM site 
+                WHERE company = '" . $xCompany . "' AND SUBSTRING(address_id, 7, 2)='EN'
+                ORDER BY address_id";
+        $this->delivery_address_dd = DB::select($strsql);
+    }
 
     public function loadDropdownList()
     {
@@ -2880,10 +2903,12 @@ class PurchaseRequisitionDetails extends Component
             $this->buyer_dd = DB::select($strsql);
 
             //Delivery Address
-            $strsql = "SELECT address_id, delivery_location FROM site 
-                    WHERE company = '" . auth()->user()->company . "' AND SUBSTRING(address_id, 7, 2)='EN'
-                    ORDER BY address_id";
-            $this->delivery_address_dd = DB::select($strsql);
+            // $strsql = "SELECT address_id, delivery_location FROM site 
+            //         WHERE company = '" . auth()->user()->company . "' AND SUBSTRING(address_id, 7, 2)='EN'
+            //         ORDER BY address_id";
+            // $this->delivery_address_dd = DB::select($strsql);
+
+            $this->loadDeliveryAddress_DD();
 
             //Cost_Center
             $strsql = "SELECT cost_center, description FROM cost_center WHERE company = '" . auth()->user()->company . "' ORDER BY department";
