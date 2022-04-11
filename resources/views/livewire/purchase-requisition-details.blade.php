@@ -945,17 +945,17 @@
                                         <td scope="col">{{ $row->create_by }}</td>
                                         <td scope="col">{{ $row->create_on }}</td>
                                         <td scope="col" class="d-flex justify-content-between">
-                                            @if ($isRequester_RequestedFor == true AND $prHeader['status'] < '20' )
-                                            <div>
-                                                <a href="" wire:click.prevent="confirmDelete('{{ $row->id }}', 'attachment')">
-                                                    <i class="fas fa-times text-center mr-2" style="color: red"></i>
-                                                </a>
-                                            </div>
-                                            <div>
-                                                <a href="" wire:click.prevent="editAttachment('{{ $row->id }}')">
-                                                    <i class="fa fa-edit mr-2"></i>
-                                                </a>
-                                            </div>
+                                            @if ($isRequester_RequestedFor == true AND $prHeader['status'] <= '21' )
+                                                <div>
+                                                    <a href="" wire:click.prevent="confirmDelete('{{ $row->id }}', 'attachment')">
+                                                        <i class="fas fa-times text-center mr-2" style="color: red"></i>
+                                                    </a>
+                                                </div>
+                                                <div>
+                                                    <a href="" wire:click.prevent="editAttachment('{{ $row->id }}')">
+                                                        <i class="fa fa-edit mr-2"></i>
+                                                    </a>
+                                                </div>
                                             @endif
                                             <div>
                                                 <a href="{{url('storage/attachments/' . $row->file_path )}}">
