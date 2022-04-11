@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\PurchaseRequisitionLog;
 use Exception;
 
+
 class PurchaseRequisitionDetails extends Component
 {
     use WithFileUploads;
