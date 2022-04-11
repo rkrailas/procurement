@@ -1272,10 +1272,18 @@ class PurchaseRequisitionDetails extends Component
                                 $xFinalPriceLocal = $row['unit_price_local'];
                                 $xTotalFinalPriceLocal = $row['unit_price_local'] * $row['qty'];
                                 $xCrAmount = $xTotalFinalPrice - $xTotalBasePrice;
-                                $xCrPercent = ($xCrAmount / $xTotalBasePrice) * 100;
-                                $xCrAmountLocal = $xTotalFinalPriceLocal - $xTotalBasePriceLocal;
-                                $xCrPercentLocal = ($xCrAmountLocal / $xTotalBasePriceLocal) * 100;
 
+                                $xCrPercent = 0;
+                                if ($xTotalBasePrice != 0) {
+                                    $xCrPercent = ($xCrAmount / $xTotalBasePrice) * 100;
+                                }                                
+                                $xCrAmountLocal = $xTotalFinalPriceLocal - $xTotalBasePriceLocal;
+
+                                $xCrPercentLocal = 0;
+                                if ($xTotalBasePriceLocal != 0) {
+                                    $xCrPercentLocal = ($xCrAmountLocal / $xTotalBasePriceLocal) * 100;
+                                }
+                                
                                 DB::statement("INSERT INTO rfq_item(rfqno, prno, prlineno_id, prlineno, partno, description, skip_rfq, non_stock_control
                                 , over1_year_life, status, qty, uom, delivery_date, currency
                                 , base_price, total_base_price, base_price_local, total_base_price_local
