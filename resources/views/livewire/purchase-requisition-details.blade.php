@@ -73,40 +73,32 @@
                 <div class="row">
                     <div class="col-md-3">
                         <label>Requested For <span style="color: red">*</span></label>
+
                         @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) 
-                        <x-select2 id="requestedfor-select2" disabled="true" wire:model.defer="prHeader.requested_for">
-                            @foreach($requested_for_dd as $row)
-                            <option value="{{ $row->id }}">
-                                {{ $row->fullname }}
-                            </option>
-                            @endforeach
-                        </x-select2>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.requested_for_name">
+
                         @else
-                        <x-select2 id="requestedfor-select2" wire:model.defer="prHeader.requested_for">
-                            @foreach($requested_for_dd as $row)
-                            <option value="{{ $row->id }}">
-                                {{ $row->fullname }}
-                            </option>
-                            @endforeach
-                        </x-select2>
+                        <x-select2-page id="requestedfor-select2" wire:model.defer="prHeader.requested_for" url="datarequested_forforseleect2">
+                        </x-select2-page>
+
                         @endif
 
                         @error('requested_for') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
-                        <label>Phone (Requestor For)<span style="color: red">*</span></label>
+                        <label>Phone (Requested For)<span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.phone_reqf"
                             @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) readonly @endif>
                         @error('phone_reqf') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
-                        <label>Ext. (Requestor For)<span style="color: red">*</span></label>
+                        <label>Ext. (Requested For)<span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.extention_reqf"
                             @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) readonly @endif>
                         @error('extention_reqf') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
-                        <label>Email (Requestor For)</label>
+                        <label>Email (Requested For)</label>
                         <input class="form-control form-control-sm" type="text" maxlength="40" wire:model.defer="prHeader.email_reqf"
                             @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) readonly @endif>
                     </div>
@@ -143,15 +135,6 @@
                     <div class="col-md-3">
                         <label>Cost Center (Department Code) <span style="color: red">*</span></label>
                         <input class="form-control form-control-sm" type="text" readonly wire:model="prHeader.cost_center">
-                        {{-- <select class="form-control form-control-sm" id="cost_center" wire:model="prHeader.cost_center"
-                            @if($prHeader['status'] >= '20' OR $isValidator_Decider == true) disabled @endif>
-                            <option value="">--- Please Select ---</option>
-                            @foreach($cost_center_dd as $row)
-                            <option value="{{ $row->cost_center }}">
-                                {{ $row->cost_center }}
-                            </option>
-                            @endforeach
-                        </select> --}}
                         @error('cost_center') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
@@ -163,15 +146,10 @@
                 <div class="row">
                     <div class="col-md-3">
                         <label>Buyer <span style="color: red">*</span></label>
+
                         @if($prHeader['status'] >= '20' OR $isValidator_Decider == true)
-                        <x-select2 id="buyer-select2" disabled="true" wire:model.defer="prHeader.buyer">
-                            <option value=" ">--- Please Select ---</option>
-                            @foreach($buyer_dd as $row)
-                            <option value="{{ $row->username }}">
-                                {{ $row->fullname }}
-                            </option>
-                            @endforeach
-                        </x-select2>
+                        <input class="form-control form-control-sm" type="text" readonly wire:model.defer="prHeader.buyer_name">
+
                         @else
                         <x-select2 id="buyer-select2" wire:model.defer="prHeader.buyer">
                             <option value=" ">--- Please Select ---</option>
@@ -181,7 +159,9 @@
                             </option>
                             @endforeach
                         </x-select2>
+
                         @endif
+
                         @error('buyer') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-3">
@@ -516,14 +496,17 @@
                                                 <div class="row">
                                                     <div class="col-md-3">
                                                         <label>Select Decider</label>
-                                                        <x-select2 id="decider-select2" wire:model.defer="decider.username">
+                                                        {{-- 03-04-2022 เปลี่ยนไปใช้ select2 แบบ pagination --}}
+                                                        {{-- <x-select2 id="decider-select2" wire:model.defer="decider.username">
                                                             <option value="">--- Please Select ---</option>
                                                             @foreach($decider_dd as $row)
                                                             <option value="{{ $row->username }}">
                                                                 {{ $row->fullname }}
                                                             </option>
                                                             @endforeach
-                                                        </x-select2>
+                                                        </x-select2> --}}
+                                                        <x-select2-page id="decider-select2" wire:model.defer="decider.username" url="datadecidervalidatorforseleect2">
+                                                        </x-select2-page>
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label>Company</label>
@@ -654,14 +637,17 @@
                                                 <div class="row">
                                                     <div class="col-md-3">
                                                         <label>Select Validator</label>
-                                                        <x-select2 id="validator-select2" wire:model.defer="validator.username">
+                                                        {{-- 03-04-2022 เปลี่ยนไปใช้ select2 แบบ pagination --}}
+                                                        {{-- <x-select2 id="validator-select2" wire:model.defer="validator.username">
                                                             <option value="">--- Please Select ---</option>
                                                             @foreach($validator_dd as $row)
                                                             <option value="{{ $row->username }}">
                                                                 {{ $row->fullname }}
                                                             </option>
                                                             @endforeach
-                                                        </x-select2>
+                                                        </x-select2> --}}
+                                                        <x-select2-page id="validator-select2" wire:model.defer="validator.username" url="datadecidervalidatorforseleect2">
+                                                        </x-select2-page>
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label>Company</label>
@@ -859,73 +845,76 @@
                 
                 {{-- Tab Attachments --}} 
                     <div class="tab-pane fade {{ $currentTab == 'attachments' ? 'show active' : '' }}" id="pills-attachments" role="tabpanel" aria-labelledby="pills-attachments-tab" wire:ignore.self>
+
                         @if ($isRequester_RequestedFor == true)
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <label>Attachment Level <span style="color: blue; font-weight: normal">(Please select before add new files.)</span></label>
-                                    <x-select2-multiple id="attachment_lineno-select2" wire:model.defer="attachment_lineno">
-                                        <option value="0" selected="selected">0 : Level PR Header</option> 
-                                        @foreach($prLineNoAtt_dd as $row)
-                                        <option value="{{ $row->id }}">
-                                            {{ $row->lineno }} : {{ $row->description }}
-                                        </option>
-                                        @endforeach
-                                    </x-select2-multiple>
-                                </div>
-                                <div class="col-md-4">
-                                    <label>Document Type</label>
-                                    <select class="form-control form-control-sm" wire:model="attachment_filetype">
-                                        <option value="">--- Please Select ---</option>
-                                        <option value="General_Documents">General Documents</option>
-                                        <option value="eDecision">eDecision</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    @if ($attachment_filetype == 'eDecision')
-                                    <label>eDecision No.</label>
-                                    <input class="form-control form-control-sm" type="text" 
-                                        wire:model="attachment_edecisionno">
-                                    @endif                                    
-                                </div>
-                            </div> 
+                            @if ( $prHeader['status'] <= '21' )
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label>Attachment Level <span style="color: blue; font-weight: normal">(Please select before add new files.)</span></label>
+                                        <x-select2-multiple id="attachment_lineno-select2" wire:model.defer="attachment_lineno">
+                                            <option value="0" selected="selected">0 : Level PR Header</option> 
+                                            @foreach($prLineNoAtt_dd as $row)
+                                            <option value="{{ $row->id }}">
+                                                {{ $row->lineno }} : {{ $row->description }}
+                                            </option>
+                                            @endforeach
+                                        </x-select2-multiple>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Document Type</label>
+                                        <select class="form-control form-control-sm" wire:model="attachment_filetype">
+                                            <option value="">--- Please Select ---</option>
+                                            <option value="General_Documents">General Documents</option>
+                                            <option value="eDecision">eDecision</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        @if ($attachment_filetype == 'eDecision')
+                                        <label>eDecision No.</label>
+                                        <input class="form-control form-control-sm" type="text" 
+                                            wire:model="attachment_edecisionno">
+                                        @endif                                    
+                                    </div>
+                                </div> 
+                            
+                                <form autocomplete="off" enctype="multipart/form-data" wire:submit.prevent="addAttachment">
+                                    @csrf
+                                    <div class="row mb-3">
+                                        <div class="col-md-9">
+                                            <div class="custom-file">
+                                                <input wire:model="attachment_file" type="file" class="custom-file-input" id="customFile" multiple accept="image/*,.pdf,.xls,.xlsx,.txt,.ppt,.pptx,.doc,.docx,.zip">
 
-                            <form autocomplete="off" enctype="multipart/form-data" wire:submit.prevent="addAttachment">
-                                @csrf
-                                <div class="row mb-3">
-                                    <div class="col-md-9">
-                                        <div class="custom-file">
-                                            <input wire:model="attachment_file" type="file" class="custom-file-input" id="customFile" multiple accept="image/*,.pdf,.xls,.xlsx,.txt,.ppt,.pptx,.doc,.docx,.zip">
-                                            @error('attachment_file.*')
-                                            <div class="alert alert-warning" role="alert">
-                                                {{ $message }}
+                                                @error('attachment_file.*')
+                                                <div class="alert alert-warning" role="alert">
+                                                    {{ $message }}
+                                                </div>
+                                                @enderror
+
+                                                <label class="custom-file-label" for="customFile">Browse Files</label>
+
+                                                {{-- ตรวจสอบขนาดไฟล์ และแสดงรายชื่อไฟล์ --}}
+                                                @if ($attachment_file)
+                                                    @foreach ($attachment_file as $k => $file)
+                                                    {{ $file->getClientOriginalName() }} ({{ $this->formatSizeUnits($file->getSize()) }}) 
+                                                    <a href="" wire:click.prevent="deleteAttachmentFile('{{ $k }}')">
+                                                        <i class="fas fa-times text-center mr-1" style="color: red"></i>
+                                                    </a>
+                                                    {{-- @if ($file->getSize() > $maxSize)
+                                                    <span class="text-danger">File size is too large.</span>
+                                                    @endif --}}
+                                                    <br/>
+                                                    @endforeach
+                                                @endif
+                                                
                                             </div>
-                                            @enderror
-                                            <label class="custom-file-label" for="customFile">Browse Files</label>
-
-                                            {{-- ตรวจสอบขนาดไฟล์ และแสดงรายชื่อไฟล์ --}}
-                                            @if ($attachment_file)
-                                                @foreach ($attachment_file as $k => $file)
-                                                {{ $file->getClientOriginalName() }} ({{ $this->formatSizeUnits($file->getSize()) }}) 
-                                                <a href="" wire:click.prevent="deleteAttachmentFile('{{ $k }}')">
-                                                    <i class="fas fa-times text-center mr-1" style="color: red"></i>
-                                                </a>
-                                                {{-- @if ($file->getSize() > $maxSize)
-                                                <span class="text-danger">File size is too large.</span>
-                                                @endif --}}
-                                                <br/>
-                                                @endforeach
-                                            @endif
-                                            
+                                        </div>
+                                        <div class="col-md-3 text-left">
+                                            <button type="submit" class="btn btn-danger"><i class="fas fa-cloud-upload-alt mr-1"></i>Upload</button>
+                                            <span style="vertical-align:bottom; color:red">max file size 5 mb.</span> 
                                         </div>
                                     </div>
-                                    <div class="col-md-3 text-left">
-                                        @if ( $prHeader['status'] < '20' ) 
-                                        <button type="submit" class="btn btn-danger"><i class="fas fa-cloud-upload-alt mr-1"></i>Upload</button>
-                                        <span style="vertical-align:bottom; color:red">max file size 5 mb.</span> 
-                                        @endif
-                                    </div>
-                                </div>
-                            </form>
+                                </form>
+                            @endif
                         @endif
                         
                         <div class="row">
@@ -956,17 +945,17 @@
                                         <td scope="col">{{ $row->create_by }}</td>
                                         <td scope="col">{{ $row->create_on }}</td>
                                         <td scope="col" class="d-flex justify-content-between">
-                                            @if ($isRequester_RequestedFor == true AND $prHeader['status'] < '20' )
-                                            <div>
-                                                <a href="" wire:click.prevent="confirmDelete('{{ $row->id }}', 'attachment')">
-                                                    <i class="fas fa-times text-center mr-2" style="color: red"></i>
-                                                </a>
-                                            </div>
-                                            <div>
-                                                <a href="" wire:click.prevent="editAttachment('{{ $row->id }}')">
-                                                    <i class="fa fa-edit mr-2"></i>
-                                                </a>
-                                            </div>
+                                            @if ($isRequester_RequestedFor == true AND $prHeader['status'] <= '21' )
+                                                <div>
+                                                    <a href="" wire:click.prevent="confirmDelete('{{ $row->id }}', 'attachment')">
+                                                        <i class="fas fa-times text-center mr-2" style="color: red"></i>
+                                                    </a>
+                                                </div>
+                                                <div>
+                                                    <a href="" wire:click.prevent="editAttachment('{{ $row->id }}')">
+                                                        <i class="fa fa-edit mr-2"></i>
+                                                    </a>
+                                                </div>
                                             @endif
                                             <div>
                                                 <a href="{{url('storage/attachments/' . $row->file_path )}}">
@@ -1110,6 +1099,9 @@
                     <div>
                         <button wire:click.prevent="backToPRList" class="btn btn-sm btn-light">
                             <i class="fas fa-arrow-alt-circle-left mr-1"></i></i>Back</button>
+
+                        {{-- <button onclick="location.href='purchaserequisitionlist';" class="btn btn-sm btn-light">
+                            <i class="fas fa-arrow-alt-circle-left mr-1"></i></i>Back</button> --}}
 
                         {{-- 01-Draft, 10-Planned --}}
                         @if ($prHeader['status'] == '01' OR $prHeader['status'] == '10')
@@ -1303,23 +1295,48 @@
         clearSelect2('validator-select2'); 
     })
 
-    // ย้ายไปไว้ที่ App.blade.php
-    // window.addEventListener('bindToSelect2', event => {
-    //     $(event.detail.selectName).html(" ");
-    //     $(event.detail.selectName).append(event.detail.newOption);
-    // });
-
     window.addEventListener('prheader-disable', event => {
         $("#PR_Header :input").attr("disabled", true);
     });
 
-    // Set default requester for & buyer
-    document.addEventListener("livewire:load", function() { 
-        @this.setDefaultSelect2();
+    // Set default requester for & buyer แบบเดิม
+    // document.addEventListener("livewire:load", function() { 
+    //     @this.setDefaultSelect2(); 
 
-        // ไม่ Work กรณีกด Modal แล้วมันจะหลด
-        // @this.disablePRHeader();
+    //     // ไม่ Work กรณีกด Modal แล้วมันจะหลด
+    //     // @this.disablePRHeader();
+    // });
+    
+    // Set default requester for & buyer แบบใหม่ แต่ Buyer ยังไม่ Work
+    // $(document ).ready(function() {
+    //     //Requested_for
+    //     var x = document.getElementById("requestedfor-select2");
+    //     var option = document.createElement("option");
+    //     option.value = @this.prHeader['requested_for'];
+    //     option.text = @this.prHeader['requested_for_name'];
+    //     x.add(option);
+
+    //     //Buyer
+    //     var x = document.getElementById("buyer-select2");
+    //     document.getElementById("buyer-select2").value = @this.prHeader['buyer'];
+    // });
+
+    // Set default requester for & buyer แบบใหม่
+    document.addEventListener("livewire:load", function() { 
+        //Requested_for
+        var x = document.getElementById("requestedfor-select2");
+        var option = document.createElement("option");
+        option.value = @this.prHeader['requested_for'];
+        option.text = @this.prHeader['requested_for_name'];
+        x.add(option);
+
+        //Buyer
+        if (@this.prHeader['buyer']) {
+            var x = document.getElementById("buyer-select2");
+            document.getElementById("buyer-select2").value = @this.prHeader['buyer'];
+        }
     });
+
 
 </script>
 
@@ -1333,3 +1350,4 @@
     });
 </script>
 @endpush
+

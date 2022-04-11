@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\PurchaseRequisitionLog;
 use Exception;
 
+
 class PurchaseRequisitionDetails extends Component
 {
     use WithFileUploads;
@@ -1190,19 +1191,22 @@ class PurchaseRequisitionDetails extends Component
 
             } else if ($xApproval_type == 'DECIDER'){
                 //Create RFQ & update status pr_header and pr_item
-                DB::transaction(function() 
-                {
+                DB::transaction(function(){
                     $xNewRFQNo = $this->getNewRFQNo();
 
                     //Find Buyer Group
                     $xBuyerGrp = '';
-                    $strsql = "SELECT b.buyer_group_code
-                        FROM buyer a
-                        LEFT JOIN buyer_group b ON a.username=b.buyer_id
-                        WHERE b.ismark_delete=0 AND a.username='" . $this->prHeader['buyer'] . "'";
+                    $xCountBuyerGrp = 0;
+                    $strsql = "SELECT buyer_group FROM buyer_group_mapping WHERE 1=2 AND buyer='" . $this->prHeader['buyer'] . "'";
                     $data = DB::select($strsql);
                     if ($data) {
-                        $xBuyerGrp = $data[0]->buyer_group_code;
+                        $xBuyerGrp = $data[0]->buyer_group;
+                        $xCountBuyerGrp = count($data);
+
+                    } else {
+                        // 4-4-2022 ยังไมี Error Comment ไว้ก่อน
+                        // $this->dispatchBrowserEvent('popup-alert', ['title' => 'This buyer is not configured.']);
+                        // return;
                     }
 
                     //Create RFQ HEADER
@@ -1269,10 +1273,18 @@ class PurchaseRequisitionDetails extends Component
                                 $xFinalPriceLocal = $row['unit_price_local'];
                                 $xTotalFinalPriceLocal = $row['unit_price_local'] * $row['qty'];
                                 $xCrAmount = $xTotalFinalPrice - $xTotalBasePrice;
-                                $xCrPercent = ($xCrAmount / $xTotalBasePrice) * 100;
-                                $xCrAmountLocal = $xTotalFinalPriceLocal - $xTotalBasePriceLocal;
-                                $xCrPercentLocal = ($xCrAmountLocal / $xTotalBasePriceLocal) * 100;
 
+                                $xCrPercent = 0;
+                                if ($xTotalBasePrice != 0) {
+                                    $xCrPercent = ($xCrAmount / $xTotalBasePrice) * 100;
+                                }                                
+                                $xCrAmountLocal = $xTotalFinalPriceLocal - $xTotalBasePriceLocal;
+
+                                $xCrPercentLocal = 0;
+                                if ($xTotalBasePriceLocal != 0) {
+                                    $xCrPercentLocal = ($xCrAmountLocal / $xTotalBasePriceLocal) * 100;
+                                }
+                                
                                 DB::statement("INSERT INTO rfq_item(rfqno, prno, prlineno_id, prlineno, partno, description, skip_rfq, non_stock_control
                                 , over1_year_life, status, qty, uom, delivery_date, currency
                                 , base_price, total_base_price, base_price_local, total_base_price_local
@@ -1281,19 +1293,22 @@ class PurchaseRequisitionDetails extends Component
                                 , total_final_price_local, cr_amount, cr_percent, cr_amount_local, cr_percent_local
                                 , supplier, create_by, create_on, changed_by, changed_on)
                                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-                                ,[$xNewRFQNo, $row['prno'], $row['id'], $row['lineno'], $row['partno'], $row['description'], $row['skip_rfq'], $row['nonstock_control']
+                                ,[$xNewRFQNo, $row['prno'], $row['id'], $row['lineno'], $row['partno'], $row['description'], $row['skip_rfq']
+                                , $row['nonstock_control']
                                     , $row['over_1_year_life'], '11', $row['qty'], $row['purchase_unit'], $row['req_date'], $row['currency']
                                     , round($xBasePrice, 2), round($xTotalBasePrice, 2), round($xBasePriceLocal, 2), round($xTotalBasePriceLocal, 2)
                                     , $row['exchange_rate'], $row['blanket_order_type'], $row['edecision_no'], $row['edecision_file']
                                     , $row['nominated_supplier'] , round($xFinalPrice, 2), round($xTotalFinalPrice, 2), round($xFinalPriceLocal, 2)
                                     , round($xTotalFinalPriceLocal, 2), round($xCrAmount , 2), round($xCrPercent, 2), round($xCrAmountLocal, 2)
-                                    , round($xCrPercentLocal, 2), $row['nominated_supplier'], auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()
+                                    , round($xCrPercentLocal, 2), $row['nominated_supplier']
+                                    , auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()
                                 ]);
 
                             } else {
                                 DB::statement("INSERT INTO rfq_item(rfqno, prno, prlineno_id, prlineno, partno, description, skip_rfq, non_stock_control
                                 , over1_year_life, status, qty, uom, delivery_date, currency, base_price, total_base_price, base_price_local
-                                ,total_base_price_local, exchange_rate, blanket_order_type, edecisionno, edecision_fileid, create_by, create_on, changed_by, changed_on)
+                                , total_base_price_local, exchange_rate, blanket_order_type, edecisionno, edecision_fileid
+                                , create_by, create_on, changed_by, changed_on)
                                     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                                 ,[$xNewRFQNo, $row['prno'], $row['id'], $row['lineno'], $row['partno'], $row['description'], $row['skip_rfq']
                                     , $row['nonstock_control'], $row['over_1_year_life'], '10', $row['qty'], $row['purchase_unit'], $row['req_date']
@@ -1302,6 +1317,30 @@ class PurchaseRequisitionDetails extends Component
                                     , $row['edecision_no'], $row['edecision_file'], auth()->user()->id, Carbon::now(), auth()->user()->id, Carbon::now()]);
                             }
                         }
+                    }
+
+                    //Create PURCH WORKFLOW
+                    if ($xCountBuyerGrp > 1) {//List Buyer Group in Approval Group in the RFQ Authorization Tab. 
+                        // ไม่ต้องทำอะไร
+
+                    } else {//Get PURCH APPROVAL MATRIX
+                        
+                        $xTotalFinalPriceLocal = 0;
+                        $strsql = "SELECT total_final_price_local FROM rfq_header WHERE rfqno='" . $xNewRFQNo . "'";
+                        $data2 = DB::select($strsql);
+                        if ($data2) {
+                            $xTotalFinalPriceLocal = $data2[0]->total_final_price_local;
+                        }
+                        
+                        DB::statement("INSERT INTO purch_workflow(seq, approver, status, ref_doctype, ref_docno, approval_group, totalamt_thb
+                            , create_by, create_on, changed_by, changed_on)
+                            SELECT seq, approver_id, '10', 'RFQ', '" . $xNewRFQNo . "', '" . $xBuyerGrp . "', " 
+                            . $xTotalFinalPriceLocal . ", " . auth()->user()->id . ", '" . Carbon::now() . "', " . auth()->user()->id . ", '" 
+                            . Carbon::now() . "'
+                            FROM purch_approval_matrix 
+                            WHERE ref_doctype='RFQ' AND approval_group='" . $xBuyerGrp . "'");
+
+                            //??? รอตรวจสอบว่าถ้าใช้ xTotalFinalPriceLocal ถูกต้องหรือไม่ " AND value_from >=" . $xTotalFinalPriceLocal AND value_to <=" . $xTotalFinalPriceLocal . ")";
                     }
 
                     //Update PR Item Reference RFQ, Reference RFQ Item
@@ -1368,63 +1407,63 @@ class PurchaseRequisitionDetails extends Component
                         }
                     }
                 });
-
-                //Send Mail
-                if (config('app.sendmail') == "Yes") {
-                    
-                    //requester
-                    // $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                    //     WHERE company = '" . $this->prHeader['company'] . "' 
-                    //     AND id=" . $this->prHeader['requestor'];
-                    $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                    WHERE id=" . $this->prHeader['requestor'];
-                    $data = DB::select($strsql);
-                    if ($data) {
-                        $requester_fullname = $data[0]->fullname;
-                        $requester_email = $data[0]->email;
-                    }
-
-                    //requested_for
-                    $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                        WHERE id=" . $this->prHeader['requested_for'];
-                    $data = DB::select($strsql);
-                    if ($data) {
-                        $requested_for_fullname = $data[0]->fullname;
-                        $requested_for_email = $data[0]->email;
-                    }
-
-                    //approver
-                    $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
-                        WHERE id=" . auth()->user()->id;
-                    $data = DB::select($strsql);
-                    if ($data) {
-                        $approver_fullname = $data[0]->fullname;
-                        $approver_email = $data[0]->email;
-                    }
-
-                    //เนื้อหาใน Mail
-                    $detailMail = [
-                        'template' => 'MAIL_PR02_Approval',
-                        'subject' => 'You Purchase Requisition No ' . $this->prHeader['prno'] . ' has been approved.',
-                        'dear' => $requester_fullname,
-                        'docno' => $this->prHeader['prno'],
-                        'actionby' => $approver_fullname,
-                        'link_url' => url('/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
-                    ];
-
-                    //Validate Email
-                    $this->emailAddress['approver_email'] = $approver_email;
-                    $this->emailAddress['requester_email'] = $requester_email;
-                    $this->emailAddress['requested_for_email'] = $requested_for_email;
-            
-                    $this->validate([
-                        'emailAddress.*' => 'required|email',
-                    ]);
-
-                    Mail::to($requester_email)->cc([$approver_email, $requested_for_email])->send(New WelcomeMail($detailMail));
-                }
-                //Send Mail End
             }
+
+            //Send Mail
+            if (config('app.sendmail') == "Yes") {
+
+                //requester
+                // $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                //     WHERE company = '" . $this->prHeader['company'] . "' 
+                //     AND id=" . $this->prHeader['requestor'];
+                $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                WHERE id=" . $this->prHeader['requestor'];
+                $data = DB::select($strsql);
+                if ($data) {
+                    $requester_fullname = $data[0]->fullname;
+                    $requester_email = $data[0]->email;
+                }
+
+                //requested_for
+                $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                    WHERE id=" . $this->prHeader['requested_for'];
+                $data = DB::select($strsql);
+                if ($data) {
+                    $requested_for_fullname = $data[0]->fullname;
+                    $requested_for_email = $data[0]->email;
+                }
+
+                //approver
+                $strsql = "SELECT name + ' ' + lastname as fullname, email FROM users 
+                    WHERE id=" . auth()->user()->id;
+                $data = DB::select($strsql);
+                if ($data) {
+                    $approver_fullname = $data[0]->fullname;
+                    $approver_email = $data[0]->email;
+                }
+
+                //เนื้อหาใน Mail
+                $detailMail = [
+                    'template' => 'MAIL_PR02_Approval',
+                    'subject' => 'You Purchase Requisition No ' . $this->prHeader['prno'] . ' has been approved.',
+                    'dear' => $requester_fullname,
+                    'docno' => $this->prHeader['prno'],
+                    'actionby' => $approver_fullname,
+                    'link_url' => url('/purchaserequisitiondetails?mode=edit&prno=' . $this->prHeader['prno'] . '&tab=auth'),
+                ];
+
+                //Validate Email
+                $this->emailAddress['approver_email'] = $approver_email;
+                $this->emailAddress['requester_email'] = $requester_email;
+                $this->emailAddress['requested_for_email'] = $requested_for_email;
+        
+                $this->validate([
+                    'emailAddress.*' => 'required|email',
+                ]);
+
+                Mail::to($requester_email)->cc([$approver_email, $requested_for_email])->send(New WelcomeMail($detailMail));
+            }
+            //Send Mail End
 
             $strsql = "SELECT msg_text, class FROM message_list WHERE msg_no='100' AND class='DECIDER VALIDATOR'";
             $data = DB::select($strsql);
@@ -2262,7 +2301,8 @@ class PurchaseRequisitionDetails extends Component
 
         public function updatedPrItemPartno() 
         {
-            $strsql = "SELECT a.partno, a.part_name, a.purchase_uom, c.description AS purchase_uom_description, a.purchase_group, ISNULL(a.account_group,'') AS account_group, a.brand
+            $strsql = "SELECT a.partno, a.part_name, a.purchase_uom, c.description AS purchase_uom_description, a.purchase_group
+                    , ISNULL(a.account_group,'') AS account_group, a.brand
                     , a.model, a.skip_rfq, a.skip_doa, a.primary_supplier, a.base_price, a.final_price, a.currency, b.exchange_rate
                     , a.min_order_qty, a.supplier_lead_time, a.supplier_id, ISNULL(a.gl_account,'') AS gl_account
                     FROM part_master a
@@ -2424,17 +2464,22 @@ class PurchaseRequisitionDetails extends Component
     public function setDefaultSelect2()
     {
         //requestedfor-select2
-        $xRequested_for_dd = json_decode(json_encode($this->requested_for_dd), true);
-        // $newOption = "<option value=' '>--- Please Select ---</option>";
-        $newOption = "";
-        foreach ($xRequested_for_dd as $row) {
-            $newOption = $newOption . "<option value='" . $row['id'] . "' ";
-            if ($row['id'] == $this->prHeader['requested_for']) {
-                $newOption = $newOption . "selected='selected'";
-            }
-            $newOption = $newOption . ">" . $row['fullname'] . "</option>";
+        if ($this->prHeader['requested_for']) {
+            // รอลบ
+            // $xRequested_for_dd = json_decode(json_encode($this->requested_for_dd), true);
+            // $newOption = "";
+            // foreach ($xRequested_for_dd as $row) {
+            //     $newOption = $newOption . "<option value='" . $row['id'] . "' ";
+            //     if ($row['id'] == $this->prHeader['requested_for']) {
+            //         $newOption = $newOption . "selected='selected'";
+            //     }
+            //     $newOption = $newOption . ">" . $row['fullname'] . "</option>";
+            // }
+            $newOption = "<option value='" . $this->prHeader['requested_for'] . "' selected='selected'>" 
+                    . $this->prHeader['requested_for_name'] . "</option>";
+            $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#requestedfor-select2']);
         }
-        $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#requestedfor-select2']);
+
 
         //buyer-select2
         $xBuyer_dd = json_decode(json_encode($this->buyer_dd), true);
@@ -2483,10 +2528,12 @@ class PurchaseRequisitionDetails extends Component
         $strsql = "SELECT prh.id, prh.prno, ort.description AS ordertypename
                 , isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requestor_name, prh.requestor_ext AS extention, prh.requestor_phone AS phone
                 , prh.requested_for, prh.requested_for_email AS email_reqf, prh.requested_for_ext AS extention_reqf
-                , prh.requested_for_phone AS phone_reqf
-                , prh.company, company.name AS company_name, prh.site, prh.site + ' : ' + site.site_description AS site_description, prh.functions, prh.department, prh.division, prh.section
+                , prh.requested_for_phone AS phone_reqf, isnull(reqf.name,'') + ' ' + isnull(reqf.lastname,'') AS requested_for_name
+                , prh.company, company.name AS company_name, prh.site, prh.site + ' : ' + site.site_description AS site_description
+                , prh.functions, prh.department, prh.division, prh.section
                 , prh.cost_center, cc.description AS costcenter_desc
-                , prh.buyer, prh.delivery_address, prh.delivery_location, prh.delivery_site, prh.budget_year, prh.purpose_pr, prh.capexno
+                , prh.buyer, isnull(buyer.name,'') + ' ' + isnull(buyer.lastname,'') AS buyer_name
+                , prh.delivery_address, prh.delivery_location, prh.delivery_site, prh.budget_year, prh.purpose_pr, prh.capexno
                 , FORMAT(prh.request_date,'yyy-MM-dd') AS request_date                    
                 , pr_status.description AS statusname, FORMAT(prh.valid_until,'yyy-MM-dd') AS valid_until, prh.days_to_notify, prh.notify_below_10
                 , prh.notify_below_25, prh.notify_below_35, prh.ordertype, prh.requestor, prh.status
@@ -2494,6 +2541,7 @@ class PurchaseRequisitionDetails extends Component
                 LEFT JOIN order_type ort ON ort.ordertype=prh.ordertype
                 LEFT JOIN users req ON req.id=prh.requestor
                 LEFT JOIN users reqf ON reqf.id=prh.requested_for
+                LEFT JOIN users buyer ON buyer.username=prh.buyer
                 LEFT JOIN pr_status ON pr_status.status=prh.status
                 LEFT JOIN company ON company.company=prh.company
                 LEFT JOIN cost_center cc ON cc.cost_center=prh.cost_center 
@@ -2573,6 +2621,7 @@ class PurchaseRequisitionDetails extends Component
         if ($this->prHeader['requested_for'] != " " AND $this->prHeader['requested_for'] != "") {
             $strsql = "SELECT usr.company, usr.department, usr.site, usr.functions, usr.division, usr.section, usr.cost_center
                         , usr.email, usr.extention, cost.description AS costcenter_desc
+                        , usr.site + ' : ' + site.site_description AS site_description
                         , CASE 
                             WHEN ISNULL(mobile,'') = '' THEN phone
                             ELSE mobile
@@ -2580,11 +2629,14 @@ class PurchaseRequisitionDetails extends Component
                         FROM users usr
                         LEFT JOIN company com ON com.company = usr.company
                         LEFT JOIN cost_center cost ON cost.cost_center = usr.cost_center
+                        LEFT JOIN site ON usr.site = site.site AND SUBSTRING(address_id, 7, 2)='EN'
                         WHERE usr.id='" . $this->prHeader['requested_for'] . "'";
             $data = DB::select($strsql);
+
             if (count($data)) {
                 $this->prHeader['company'] = $data[0]->company;
                 $this->prHeader['site'] = $data[0]->site;
+                $this->prHeader['site_description'] = $data[0]->site_description;
                 $this->prHeader['functions'] = $data[0]->functions;
                 $this->prHeader['department'] = $data[0]->department;
                 $this->prHeader['division'] = $data[0]->division;
@@ -2594,32 +2646,35 @@ class PurchaseRequisitionDetails extends Component
                 $this->prHeader['extention_reqf'] = $data[0]->extention;
                 $this->prHeader['cost_center'] = $data[0]->cost_center;
                 $this->prHeader['costcenter_desc'] = $data[0]->costcenter_desc;
+
+                $this->loadDeliveryAddress_DD();
+                $this->prHeader['delivery_address'] = $data[0]->site;
             }
 
             //9-2-2022 Update partno for CR No.10
             $this->loadDD_partno_dd(true);
             $this->loadDD_buyer_dd(true);    
             
-            //18-3-2022
-            $this->decider_dd = [];
-            $this->validator_dd = [];
-            $strsql = "SELECT usr.username, usr.name + ' ' + usr.lastname AS fullname FROM users usr
-                        JOIN user_roles uro ON uro.username = usr.username
-                        WHERE uro.role_id='10' 
-                            AND (usr.id <> " . $this->prHeader['requestor'] . " AND usr.id <> " . $this->prHeader['requested_for'] . ")
-                        ORDER BY usr.username";
-            $this->decider_dd = DB::select($strsql);
+            //03-04-2022 ปิด Function นี้ไว้ก่อนเพราะทำให้ทำงานช้า
+                // $this->decider_dd = [];
+                // $this->validator_dd = [];
+                // $strsql = "SELECT usr.username, usr.name + ' ' + usr.lastname AS fullname FROM users usr
+                //             JOIN user_roles uro ON uro.username = usr.username
+                //             WHERE uro.role_id='10' 
+                //                 AND (usr.id <> " . $this->prHeader['requestor'] . " AND usr.id <> " . $this->prHeader['requested_for'] . ")
+                //             ORDER BY usr.username";
+                // $this->decider_dd = DB::select($strsql);
 
-            if ($this->decider_dd){
-                $newOption = "<option value=' '>--- Please Select ---</option>";
-                $xdecider_dd = json_decode(json_encode($this->decider_dd), true);
-                foreach ($xdecider_dd as $row) {
-                    $newOption = $newOption . "<option value='" . $row['username'] . "'>" . $row['fullname'] . "</option>";
-                }
+                // if ($this->decider_dd){
+                //     $newOption = "<option value=' '>--- Please Select ---</option>";
+                //     $xdecider_dd = json_decode(json_encode($this->decider_dd), true);
+                //     foreach ($xdecider_dd as $row) {
+                //         $newOption = $newOption . "<option value='" . $row['username'] . "'>" . $row['fullname'] . "</option>";
+                //     }
 
-                $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#decider-select2']);
-                $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#validator-select2']);
-            }
+                //     $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#decider-select2']);
+                //     $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#validator-select2']);
+                // }
 
         } else {
             $this->prHeader['company'] = "";
@@ -2706,6 +2761,7 @@ class PurchaseRequisitionDetails extends Component
         $data = DB::select($strsql);
         if (count($data)) {
             $this->prHeader['requestor_name'] = $data[0]->requestor_name;
+            $this->prHeader['requested_for_name'] = $data[0]->requestor_name;
         }
         $this->prHeader['phone'] =  auth()->user()->phone;
         $this->prHeader['extention'] =  auth()->user()->extention;
@@ -2718,11 +2774,12 @@ class PurchaseRequisitionDetails extends Component
         $this->prHeader['phone_reqf'] = auth()->user()->phone;
         $this->prHeader['extention_reqf'] = auth()->user()->extention;
         $this->prHeader['email_reqf'] = auth()->user()->email;
+        $this->prHeader['delivery_address'] = auth()->user()->site;
 
-        $strsql = "SELECT TOP 1 address_id, site, SUBSTRING(address,1,30) AS address FROM site WHERE company='" . auth()->user()->company . "'";
+        $strsql = "SELECT TOP 1 address_id, site, SUBSTRING(address,1,30) AS address 
+                FROM site WHERE company='" . auth()->user()->company . "'";
         $data = DB::select($strsql);
         if (count($data)) {
-            $this->prHeader['delivery_address'] = $data[0]->address_id;
             $this->prHeader['delivery_location'] = $data[0]->address_id;
             $this->prHeader['delivery_site'] = $data[0]->site;
         }
@@ -2819,12 +2876,31 @@ class PurchaseRequisitionDetails extends Component
             $this->dispatchBrowserEvent('bindToSelect2', ['newOption' => $newOption, 'selectName' => '#buyer-select2']);
         }
     }
+    
+    public function loadDeliveryAddress_DD()
+    {
+        $xCompany = auth()->user()->company;
+
+        if (isset($this->prHeader['requested_for'])) {
+            $strsql = "SELECT company FROM users WHERE id=" . $this->prHeader['requested_for'];
+            $data = DB::select($strsql);
+
+            if ($data) {
+                $xCompany = $data[0]->company;
+            }
+        }
+
+        $strsql = "SELECT site AS address_id, delivery_location FROM site 
+                WHERE company = '" . $xCompany . "' AND SUBSTRING(address_id, 7, 2)='EN'
+                ORDER BY address_id";
+        $this->delivery_address_dd = DB::select($strsql);
+    }
 
     public function loadDropdownList()
     {
         //Herder
             //Requested_For & Buyer
-            $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users WHERE company='" . auth()->user()->company . "' ORDER BY users.name";
+            $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users ORDER BY users.name";
             $this->requested_for_dd = DB::select($strsql);
 
             //16-03-22 แก้เพิ่มเพราะเปลี่ยน Table
@@ -2836,10 +2912,12 @@ class PurchaseRequisitionDetails extends Component
             $this->buyer_dd = DB::select($strsql);
 
             //Delivery Address
-            $strsql = "SELECT address_id, delivery_location FROM site 
-                    WHERE company = '" . auth()->user()->company . "' AND SUBSTRING(address_id, 7, 2)='EN'
-                    ORDER BY address_id";
-            $this->delivery_address_dd = DB::select($strsql);
+            // $strsql = "SELECT address_id, delivery_location FROM site 
+            //         WHERE company = '" . auth()->user()->company . "' AND SUBSTRING(address_id, 7, 2)='EN'
+            //         ORDER BY address_id";
+            // $this->delivery_address_dd = DB::select($strsql);
+
+            $this->loadDeliveryAddress_DD();
 
             //Cost_Center
             $strsql = "SELECT cost_center, description FROM cost_center WHERE company = '" . auth()->user()->company . "' ORDER BY department";
@@ -2850,10 +2928,10 @@ class PurchaseRequisitionDetails extends Component
             $xMonth = date_format(Carbon::now(),'m');
             if ($xMonth == '01' OR $xMonth == '02' OR $xMonth == '03'){
                 $xYear = intval(date_format(Carbon::now(),'Y'));
-                $this->budgetyear_dd = [['year' => $xYear - 1], ['year' => $xYear], ['year' => $xYear + 1]];
+                $this->budgetyear_dd = [['year' => $xYear - 2], ['year' => $xYear - 1], ['year' => $xYear]];
             }else{
                 $xYear = intval(date_format(Carbon::now(),'Y'));
-                $this->budgetyear_dd = [['year' => $xYear], ['year' => $xYear + 1], ['year' => $xYear + 2]];
+                $this->budgetyear_dd = [['year' => $xYear - 1], ['year' => $xYear ], ['year' => $xYear + 1]];
             }
             
         //Header End
@@ -2917,6 +2995,54 @@ class PurchaseRequisitionDetails extends Component
                     ORDER BY [lineno]";
             $this->prLineNoAtt_dd = DB::select($strsql);
         //Attachment End
+    }
+
+    public function dataRequested_forForSeleect2(Request $request)
+    {
+        $term = trim($request->term);
+        $posts = DB::table('users')->selectRaw("users.id, users.name + ' ' + users.lastname as text")
+            ->where('users.name', 'LIKE',  '%' . $term. '%')
+            ->Orwhere('users.lastname', 'LIKE',  '%' . $term. '%')
+            ->orderBy('users.name', 'asc')->simplePaginate(10);
+     
+        $morePages=true;
+        $pagination_obj= json_encode($posts);
+        if (empty($posts->nextPageUrl())){
+            $morePages=false;
+        }
+            $results = array(
+            "results" => $posts->items(),
+            "pagination" => array(
+                "more" => $morePages
+            )
+            );
+    
+        return response()->json($results);
+    }
+
+    public function dataDeciderValidatorForSeleect2(Request $request)
+    {
+        $term = trim($request->term);
+        $posts = DB::table('users')->selectRaw("users.username as id, users.name + ' ' + users.lastname as text")
+            ->join('user_roles','users.username','=','user_roles.username') 
+            ->where('user_roles.role_id','10')
+            ->where('users.name', 'LIKE',  '%' . $term. '%')
+            ->Orwhere('users.lastname', 'LIKE',  '%' . $term. '%')
+            ->orderBy('users.name', 'asc')->simplePaginate(10);
+     
+        $morePages=true;
+        $pagination_obj= json_encode($posts);
+        if (empty($posts->nextPageUrl())){
+            $morePages=false;
+        }
+            $results = array(
+            "results" => $posts->items(),
+            "pagination" => array(
+                "more" => $morePages
+            )
+            );
+    
+        return response()->json($results);
     }
 
     public function mount()

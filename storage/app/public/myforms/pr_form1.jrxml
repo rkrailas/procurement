@@ -817,36 +817,36 @@ Delivery Date]]></text>
 	<pageFooter>
 		<band height="139" splitType="Stretch">
 			<rectangle>
-				<reportElement x="-1" y="40" width="189" height="82" uuid="e8f6e210-3abf-4deb-b161-a3837da5c496"/>
+				<reportElement x="-1" y="30" width="189" height="109" uuid="e8f6e210-3abf-4deb-b161-a3837da5c496"/>
 			</rectangle>
 			<staticText>
-				<reportElement x="-1" y="20" width="100" height="30" uuid="9a8f62ad-ab40-4476-8b40-6c9294636879"/>
+				<reportElement x="-1" y="11" width="100" height="19" uuid="9a8f62ad-ab40-4476-8b40-6c9294636879"/>
 				<text><![CDATA[Business Approver:]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="210" y="40" width="961" height="82" uuid="f0350420-a471-44cc-a918-ee58e576c734"/>
+				<reportElement x="210" y="30" width="961" height="109" uuid="f0350420-a471-44cc-a918-ee58e576c734"/>
 			</rectangle>
 			<staticText>
-				<reportElement x="210" y="20" width="321" height="30" uuid="0de085bf-bdca-4bfe-af4c-4929a9f60993"/>
+				<reportElement x="210" y="11" width="321" height="19" uuid="0de085bf-bdca-4bfe-af4c-4929a9f60993"/>
 				<text><![CDATA[Purchase Deparmtnet (RFQ Approver)]]></text>
 			</staticText>
 			<textField isBlankWhenNull="true">
-				<reportElement x="43" y="40" width="100" height="20" uuid="fbbfcecf-9c13-429f-9c16-5da0271c0c19"/>
+				<reportElement x="43" y="31" width="100" height="20" uuid="fbbfcecf-9c13-429f-9c16-5da0271c0c19"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{approver}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="43" y="60" width="100" height="20" uuid="baf05944-b152-49b5-9e61-43b9ae562764"/>
+				<reportElement x="43" y="51" width="100" height="20" uuid="baf05944-b152-49b5-9e61-43b9ae562764"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{position}]]></textFieldExpression>
 			</textField>
 			<textField pattern="dd-MMM-yyyy" isBlankWhenNull="true">
-				<reportElement x="43" y="100" width="100" height="20" uuid="eb20eb01-64af-4fb7-9478-79f4070d5cdb"/>
+				<reportElement x="43" y="117" width="100" height="20" uuid="eb20eb01-64af-4fb7-9478-79f4070d5cdb"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{approve_date}]]></textFieldExpression>
 			</textField>
 			<image>
-				<reportElement x="300" y="50" width="60" height="52" uuid="2f16d162-5484-4c20-9fbe-591a20f97510"/>
+				<reportElement x="70" y="70" width="60" height="52" uuid="2f16d162-5484-4c20-9fbe-591a20f97510"/>
 				<imageExpression><![CDATA[$P{signature_img}]]></imageExpression>
 			</image>
 		</band>
