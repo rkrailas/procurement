@@ -25,8 +25,8 @@ use App\Http\Livewire\Test2;
 use App\Http\Controllers\PHPJasperController;
 use App\Http\Livewire\GoodsReceipt;
 use App\Http\Livewire\GoodsReceiptDetails;
-
-
+use App\Http\Livewire\UserList;
+use App\Http\Livewire\UserForm;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -61,8 +61,13 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('datarequestorforseleect2', [PurchaseRequisitionList::class, 'dataRequestorForSeleect2'])->name('datarequestorforseleect2');
     Route::get('datadecidervalidatorforseleect2', [PurchaseRequisitionDetails::class, 'dataDeciderValidatorForSeleect2'])->name('datadecidervalidatorforseleect2');
     Route::get('datarequested_forforseleect2', [PurchaseRequisitionDetails::class, 'dataRequested_forForSeleect2'])->name('datarequested_forforseleect2');
-    
+
+    Route::prefix('user_management')->group(function () {
+        Route::get('/list', UserList::class)->name('list_user');
+        Route::get('/form', UserForm::class)->name('form_user');
+    });
 });
+
 
 Route::get('admin/changepassword', ChangePassword::class)->name('admin.changepassword');
 Route::post('logout', [ClientController::class, 'logout'])->name('logout');
