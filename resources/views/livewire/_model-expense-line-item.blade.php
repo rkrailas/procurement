@@ -104,7 +104,7 @@
                         @error('qty') <span class="text-red">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-md-4">
-                        @if ($orderType == "10" OR $orderType == "10" OR $orderType == "10")
+                        @if ($orderType == "10" OR $orderType == "11")
                         <label>Request Delivery Date <span style="color: red">*</span></label>
                         @else
                         <label>Earliest Delivery Date <span style="color: red">*</span></label>
