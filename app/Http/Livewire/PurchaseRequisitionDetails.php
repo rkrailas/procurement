@@ -2622,6 +2622,7 @@ class PurchaseRequisitionDetails extends Component
             $strsql = "SELECT usr.company, usr.department, usr.site, usr.functions, usr.division, usr.section, usr.cost_center
                         , usr.email, usr.extention, cost.description AS costcenter_desc
                         , usr.site + ' : ' + site.site_description AS site_description
+                        , com.name AS company_name
                         , CASE 
                             WHEN ISNULL(mobile,'') = '' THEN phone
                             ELSE mobile
@@ -2635,6 +2636,7 @@ class PurchaseRequisitionDetails extends Component
 
             if (count($data)) {
                 $this->prHeader['company'] = $data[0]->company;
+                $this->prHeader['company_name'] = $data[0]->company_name;
                 $this->prHeader['site'] = $data[0]->site;
                 $this->prHeader['site_description'] = $data[0]->site_description;
                 $this->prHeader['functions'] = $data[0]->functions;
@@ -2879,16 +2881,16 @@ class PurchaseRequisitionDetails extends Component
     
     public function loadDeliveryAddress_DD()
     {
-        $xCompany = auth()->user()->company;
+        $xCompany = $this->prHeader['company'];
 
-        if (isset($this->prHeader['requested_for'])) {
-            $strsql = "SELECT company FROM users WHERE id=" . $this->prHeader['requested_for'];
-            $data = DB::select($strsql);
+        // if (isset($this->prHeader['requested_for'])) {
+        //     $strsql = "SELECT company FROM users WHERE id=" . $this->prHeader['requested_for'];
+        //     $data = DB::select($strsql);
 
-            if ($data) {
-                $xCompany = $data[0]->company;
-            }
-        }
+        //     if ($data) {
+        //         $xCompany = $data[0]->company;
+        //     }
+        // }
 
         $strsql = "SELECT site AS address_id, site_description AS delivery_location FROM site 
                 WHERE company = '" . $xCompany . "' AND SUBSTRING(address_id, 7, 2)='EN'
