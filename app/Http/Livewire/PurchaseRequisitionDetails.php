@@ -2890,7 +2890,7 @@ class PurchaseRequisitionDetails extends Component
             }
         }
 
-        $strsql = "SELECT site AS address_id, delivery_location FROM site 
+        $strsql = "SELECT site AS address_id, site_description AS delivery_location FROM site 
                 WHERE company = '" . $xCompany . "' AND SUBSTRING(address_id, 7, 2)='EN'
                 ORDER BY address_id";
         $this->delivery_address_dd = DB::select($strsql);
