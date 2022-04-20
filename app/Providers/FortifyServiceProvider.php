@@ -37,6 +37,19 @@ class FortifyServiceProvider extends ServiceProvider
             return view('auth.login');
         });
 
+        //???Test
+        //dd(Hash::make('pawe1234'));
+        // $userpwd = '$2y$10$g.2ZOZGwiMI677wjkUeyvufCz1771T7M6BZIH8jxEChS.IhY5YrJq';
+        // $inputpwd = 'a1a2a3a4a5';
+
+        // if (Hash::check($inputpwd, $userpwd)) {
+        //     dd("=");
+        // } else {
+        //     dd("!=");
+        // }
+
+        
+
         fortify::authenticateUsing(function (Request $request) {
             $user = User::where('username', $request->username)
                     // ->where('company', $request->company)

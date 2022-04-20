@@ -5,6 +5,8 @@ namespace App\Actions\Fortify;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class UpdateUserPassword implements UpdatesUserPasswords
 {
@@ -19,6 +21,7 @@ class UpdateUserPassword implements UpdatesUserPasswords
      */
     public function update($user, array $input)
     {
+
         Validator::make($input, [
             'current_password' => ['required', 'string'],
             'password' => $this->passwordRules(),
@@ -28,8 +31,13 @@ class UpdateUserPassword implements UpdatesUserPasswords
             }
         })->validateWithBag('updatePassword');
 
-        $user->forceFill([
-            'password' => Hash::make($input['password']),
-        ])->save();
+        // ของเดิม
+        // $user->forceFill([
+        //     'password' => Hash::make($input['password']),
+        // ])->save();
+
+        DB::statement("UPDATE users SET password=?, updated_at=? WHERE id=?"
+                , [Hash::make($input['password']), Carbon::now(), $user->id]);
+
     }
 }
