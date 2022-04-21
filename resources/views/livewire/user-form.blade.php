@@ -95,7 +95,7 @@
             </div>
             <div class="col-12 col-lg-3">
                 <label for="passwordInput">Password<span class="text-danger">*</span></label>
-                <input type="password" class="form-control" id="passwordInput" name="password" required @if($user_id) disabled @endif>
+                <input type="password" class="form-control" id="passwordInput" name="password" required  wire:model.defer="password" @if($user_id) disabled @endif>
                 @error('password') <span class="text-red">{{ $message }}</span> @enderror
             </div>
             <div class="col-12 col-lg-3 d-flex justify-content-start align-items-end">
@@ -119,6 +119,13 @@
             icon: 'success',
         }).then(() => {
             window.location = "{{ route('list_user') }}"
+        })
+    });
+    window.addEventListener('save-user-error',function(e) {
+        Swal.fire({
+            title:  'Error!',
+            text: e.detail.text, 
+            icon: 'error',
         })
     });
 </script>

@@ -4,9 +4,7 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
-use Livewire\WithPagination;
 use Illuminate\Support\Carbon;
-use App\Support\Collection;
 use App\Models\User;
 
 use Illuminate\Http\Request;
@@ -14,12 +12,12 @@ use Illuminate\Support\Facades\Validator;
 
 class UserForm extends Component
 {
-    public $user_id,$username,$company,$site,$name,$lastname,$name_th, $lastname_th,$position,$function,$department,$division,$section,$email,$phone,$ext,$cost_center,$role,$password = null;
+    public $user_id, $username, $company, $site, $name, $lastname, $name_th, $lastname_th, $position, $function, $department, $division, $section, $email, $phone, $ext, $cost_center, $role, $password = null;
     public $active = true;
-    
+
     public function mount(Request $request)
     {
-        if($request->id){
+        if ($request->id) {
             $this->user_id = $request->id;
             $this->loadUser();
         }
@@ -52,9 +50,15 @@ class UserForm extends Component
     {
         $strsql = "SELECT site, site_description FROM site";
         $this->site_dd = DB::select($strsql);
+        if (!empty($this->site_dd)) {
+            $this->site = $this->site_dd[0]->site;
+        }
 
-        $strsql = "SELECT * FROM company";
+        $strsql = "SELECT company, name FROM company";
         $this->company_dd =  DB::select($strsql);
+        if (!empty($this->company_dd)) {
+            $this->company = $this->company_dd[0]->company;
+        }
     }
 
     public function render()
@@ -63,8 +67,9 @@ class UserForm extends Component
         return view('livewire.user-form');
     }
 
-    public function saveUser(){
-        if($this->user_id){
+    public function saveUser()
+    {
+        if ($this->user_id) {
             Validator::make([
                 'company' => $this->company,
                 'site' => $this->site,
@@ -86,7 +91,26 @@ class UserForm extends Component
             ])->validate();
 
             $user = User::findOrFail($this->user_id);
-        }else{
+            $user->company = $this->company;
+            $user->site = $this->site;
+            $user->name = $this->name;
+            $user->lastname = $this->lastname;
+            $user->name_th = $this->name_th;
+            $user->lastname_th = $this->lastname_th;
+            $user->position = $this->position;
+            $user->functions = $this->function;
+            $user->department = $this->department;
+            $user->division = $this->division;
+            $user->section = $this->section;
+            $user->email = $this->email;
+            $user->phone = $this->phone;
+            $user->extention = $this->ext;
+            $user->cost_center = $this->cost_center;
+            $user->role = $this->role;
+            $user->isactive = $this->active;
+
+            $user->save();
+        } else {
             Validator::make([
                 'username' => $this->username,
                 'password' => $this->password,
@@ -115,30 +139,38 @@ class UserForm extends Component
             $user->username = $this->username;
             $user->employee_id = $this->username;
             $user->password = $this->password;
+            $user->company = $this->company;
+            $user->site = $this->site;
+            $user->name = $this->name;
+            $user->lastname = $this->lastname;
+            $user->name_th = $this->name_th;
+            $user->lastname_th = $this->lastname_th;
+            $user->position = $this->position;
+            $user->functions = $this->function;
+            $user->department = $this->department;
+            $user->division = $this->division;
+            $user->section = $this->section;
+            $user->email = $this->email;
+            $user->phone = $this->phone;
+            $user->extention = $this->ext;
+            $user->cost_center = $this->cost_center;
+            $user->role = $this->role;
+            $user->isactive = $this->active;
+
+            DB::transaction(function () use ($user) {
+                $user->save();
+
+                DB::table('user_roles')->insert([
+                    'username' => $this->username,
+                    'username_id' => $user->id,
+                    'role_id' => 10,
+                    'create_by' => auth()->user()->id,
+                    'create_on' => Carbon::now()
+                ]);
+            });
         }
-
-        $user->company = $this->company;
-        $user->site = $this->site;
-        $user->name = $this->name;
-        $user->lastname = $this->lastname;
-        $user->name_th = $this->name_th;
-        $user->lastname_th = $this->lastname_th;
-        $user->position = $this->position;
-        $user->functions = $this->function;
-        $user->department = $this->department;
-        $user->division = $this->division;
-        $user->section = $this->section;
-        $user->email = $this->email;
-        $user->phone = $this->phone;
-        $user->extention = $this->ext;
-        $user->cost_center = $this->cost_center;
-        $user->role = $this->role;
-        $user->isactive = $this->active;
-
-        $user->save();
-
         $this->dispatchBrowserEvent('save-user-success', [
-            'text' => "User : ".$user->id." has been saved!"
+            'text' => "User : " . $user->id . " has been saved!"
         ]);
     }
 }
