@@ -1050,7 +1050,7 @@
 
                             {{-- Between 30-PRAuthorized and 60-Closed --}}
                             {{-- @if ( $prHeader['status'] >= '30' OR $isValidator_Decider == true AND  $prHeader['status'] <= '60')  --}}
-                            @if ($prHeader['status'] >= '30' AND  $prHeader['status'] <= '60') 
+                            @if ($prHeader['status'] >= '20' AND  $prHeader['status'] <= '60') 
                             <a href="PRForm/{{ $prHeader['prno'] }}" target="_blank">
                                 <button class="btn btn-sm btn-danger">
                                     <i class="fas fa-print mr-2"></i>Print</button>
