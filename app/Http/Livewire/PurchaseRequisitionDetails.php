@@ -2981,10 +2981,15 @@ class PurchaseRequisitionDetails extends Component
         //Authorization
             $this->decider_dd = [];
             $this->validator_dd = [];
-            $strsql = "SELECT usr.username, usr.name + ' ' + usr.lastname AS fullname FROM users usr
-                        JOIN user_roles uro ON uro.username = usr.username
-                        WHERE uro.role_id='10' 
-                            AND (usr.id <> " . $this->prHeader['requestor'] . " AND usr.id <> " . $this->prHeader['requested_for'] . ")
+            //22-04-2022 คนที่อยู่ใน users สามารถเป็น decider & validator ได้ทั้งหมด
+            // $strsql = "SELECT usr.username, usr.name + ' ' + usr.lastname AS fullname FROM users usr
+            //             JOIN user_roles uro ON uro.username = usr.username
+            //             WHERE uro.role_id='10' 
+            //                 AND (usr.id <> " . $this->prHeader['requestor'] . " AND usr.id <> " . $this->prHeader['requested_for'] . ")
+            //             ORDER BY usr.username";
+            $strsql = "SELECT usr.username, usr.name + ' ' + usr.lastname AS fullname 
+                        FROM users usr
+                        WHERE usr.isactive=1
                         ORDER BY usr.username";
             $this->decider_dd = DB::select($strsql);
             $this->validator_dd = DB::select($strsql);

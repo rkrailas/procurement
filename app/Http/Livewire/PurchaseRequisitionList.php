@@ -167,7 +167,9 @@ class PurchaseRequisitionList extends Component
             $this->skipRender();
         }
 
-        $xWhere = " WHERE prh.company='" . auth()->user()->company . "' AND ISNULL(prh.deletion_flag, 0) <> 1";
+        //22-04-2022 ไม่ต้องตรวจสอบ company
+        //$xWhere = " WHERE prh.company='" . auth()->user()->company . "' AND ISNULL(prh.deletion_flag, 0) <> 1";
+        $xWhere = " WHERE ISNULL(prh.deletion_flag, 0) <> 1";
 
         //ตรวจสอบว่าเป็น Buyer หรือไม่
         $strsql = "SELECT username FROM buyer WHERE username='" . auth()->user()->username . "'";
