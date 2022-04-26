@@ -1,4 +1,12 @@
 <?php
+    function checkSQLInjection($xCondition)
+    {
+        $xCondition = str_replace("--","",$xCondition);
+        $xCondition = str_replace("or","",$xCondition);
+        $xCondition = str_replace("OR","",$xCondition);
+        return $xCondition;
+    }
+
     function convertJsonToString($xJson)
     {
         $xJson = str_replace("[", "", $xJson);
