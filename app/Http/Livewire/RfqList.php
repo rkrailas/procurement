@@ -63,7 +63,7 @@ class RfqList extends Component
             left join users b ON a.username=b.username";
         $this->buyer_dd = DB::select($strsql);
 
-        $strsql = "SELECT buyer_group_code FROM buyer_group ORDER BY buyer_group_code";
+        $strsql = "SELECT buyer_group AS buyer_group_code FROM buyer_group_mapping ORDER BY buyer_group";
         $this->buyergroup_dd = DB::select($strsql);
 
         $strsql = "SELECT site FROM site GROUP BY site ORDER BY site";
@@ -85,13 +85,13 @@ class RfqList extends Component
     public function mount()
     {
         $this->myBuyerGroup = "";
-        $strsql = "SELECT c.buyer_group_code
+        $strsql = "SELECT b.buyer_group AS buyer_group_code
                 FROM buyer a
-                JOIN buyer_group c ON a.username=c.buyer_id
+                JOIN buyer_group_mapping b ON a.username=b.buyer
                 WHERE a.username='" . auth()->user()->username . "'";
         $data = DB::select($strsql);
         if ($data) {
-            $this->myBuyerGroup = $data[0]->buyer_group_code;
+            $this->myBuyerGroup = $data[0]->buyer_group;
         }
 
         $this->resetSearch();
@@ -108,6 +108,7 @@ class RfqList extends Component
             $this->skipRender();
         }
 
+        //??? 26-04-2022 กำลังแก้ SQL injection
         //แสดงเฉพาะ User ที่เป็น Buyer และอยู่ใน Buyer Group ใน rfq_header เท่านั้น
         $xWhere = " WHERE a.buyer_group='" . $this->myBuyerGroup . "' AND a.prno LIKE '%" . $this->prno . "%' ";
         $xWhere = $xWhere . " AND a.rfqno LIKE '%" . $this->rfqno . "%' ";

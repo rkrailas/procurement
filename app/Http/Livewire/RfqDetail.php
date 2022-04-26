@@ -85,7 +85,7 @@ class RfqDetail extends Component
 
     public function updatedTabQuotationDetailsSelectSupplier2()
     {
-        // กำลังแก้ Query ข้อมูลของ Supplier ใหม่ quotation_expiry_term, quotation_expiry, payment_term
+        //???กำลังแก้ Query ข้อมูลของ Supplier ใหม่ quotation_expiry_term, quotation_expiry, payment_term
         
 
         //Bind ค่า mainContactPersonier-select2
