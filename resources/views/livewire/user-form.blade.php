@@ -51,25 +51,55 @@
         <div class="row">
             <div class="col-12 col-lg-3">
                 <label for="positionInput">Position</label>
-                <input type="text" class="form-control" id="positionInput" name="position" placeholder="ex. CEO" wire:model.defer="position">
+                <x-select2-tag id="positionInput" wire:model.defer="position">
+                    @foreach($position_dd as $row)
+                    <option value="{{ $row->position }}" @if($row->position == $position) selected @endif>
+                        {{ $row->position }}
+                    </option>
+                    @endforeach
+                </x-select2-tag>
             </div>
             <div class="col-12 col-lg-3">
                 <label for="functionInput">Function</label>
-                <input type="text" class="form-control" id="functionInput" name="function" placeholder="ex. ADM" wire:model.defer="function">
+                <x-select2-tag id="functionInput" wire:model.defer="function">
+                    @foreach($function_dd as $row)
+                    <option value="{{ $row->functions }}" @if($row->functions == $function) selected @endif>
+                        {{ $row->functions }}
+                    </option>
+                    @endforeach
+                </x-select2-tag>
             </div>
             <div class="col-12 col-lg-3">
                 <label for="departmentInput">Department</label>
-                <input type="text" class="form-control" id="departmentInput" name="department" placeholder="ex. ADM" wire:model.defer="department">
+                <x-select2-tag id="departmentInput" wire:model.defer="department">
+                    @foreach($department_dd as $row)
+                    <option value="{{ $row->department }}" @if($row->department == $department) selected @endif>
+                        {{ $row->department }}
+                    </option>
+                    @endforeach
+                </x-select2-tag>
             </div>
             <div class="col-12 col-lg-3">
                 <label for="divisionInput">Division</label>
-                <input type="text" class="form-control" id="divisionInput" name="division" placeholder="ex. Administration" wire:model.defer="division">
+                <x-select2-tag id="divisionInput" wire:model.defer="division">
+                    @foreach($division_dd as $row)
+                    <option value="{{ $row->division }}" @if($row->division == $division) selected @endif>
+                        {{ $row->division }}
+                    </option>
+                    @endforeach
+                </x-select2-tag>
             </div>
         </div>
         <div class="row">
             <div class="col-12 col-lg-3">
                 <label for="sectionInput">Section</label>
-                <input type="text" class="form-control" id="sectionInput" name="section" placeholder="ex. Administration" wire:model.defer="section">
+                <x-select2-tag id="sectionInput" wire:model.defer="section">
+                    @foreach($section_dd as $row)
+                    <option value="{{ $row->section }}" @if($row->section == $section) selected @endif>
+                        {{ $row->section }}
+                    </option>
+                    @endforeach
+                </x-select2-tag>
             </div>
             <div class="col-12 col-lg-3">
                 <label for="emailInput">Email</label>

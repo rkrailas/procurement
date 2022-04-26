@@ -59,6 +59,21 @@ class UserForm extends Component
         if (!empty($this->company_dd)) {
             $this->company = $this->company_dd[0]->company;
         }
+
+        $strsql = "SELECT position FROM users WHERE position != ' ' GROUP BY position";
+        $this->position_dd =  DB::select($strsql);
+
+        $strsql = "SELECT functions FROM users WHERE functions != ' ' GROUP BY functions";
+        $this->function_dd =  DB::select($strsql);
+
+        $strsql = "SELECT department FROM users WHERE department != ' ' GROUP BY department";
+        $this->department_dd =  DB::select($strsql);
+
+        $strsql = "SELECT division FROM users WHERE division != ' ' GROUP BY division";
+        $this->division_dd =  DB::select($strsql);
+
+        $strsql = "SELECT section FROM users WHERE section != ' ' GROUP BY section";
+        $this->section_dd =  DB::select($strsql);
     }
 
     public function render()
