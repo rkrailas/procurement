@@ -167,7 +167,7 @@
                     <div class="col-md-3">
                         <label>Delivery Location <span style="color: red">*</span></label>
                         @if ($prHeader['status'] >= '20' OR $isValidator_Decider == true)
-                        <input class="form-control form-control-sm" type="text" readonly wire:model="prHeader.delivery_address">
+                        <input class="form-control form-control-sm" type="text" readonly wire:model="prHeader.delivery_location_desc">
                         @else 
                         <select class="form-control form-control-sm" id="delivery_address" wire:model="prHeader.delivery_address">
                             <option value="">--- Please Select ---</option>
