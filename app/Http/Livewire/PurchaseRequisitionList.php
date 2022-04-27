@@ -185,8 +185,10 @@ class PurchaseRequisitionList extends Component
                                 )"; //Decider & Validator can view the PR/MR since the PR Released for Sourcing
         }
         
+        
         //$xWhere = $xWhere . " AND prh.prno LIKE '%" . checkSQLInjection($this->prno) . "%'
-        $xWhere = $xWhere . " AND prh.prno LIKE ?
+        //แก้ปัญหาเรื่อง SQL Injection
+        $xWhere = $xWhere . " AND prh.prno LIKE ? 
             AND prh.request_date BETWEEN '" . $this->requestdate_from . "' AND '" . $this->requestdate_to . "'";
 
         if ($this->ordertype) {
@@ -236,6 +238,7 @@ class PurchaseRequisitionList extends Component
                         , req.name, req.lastname, c.description";
         $strsql = $strsql . " ORDER BY " . $this->sortBy . " " . $this->sortDirection;
 
+        //แก้ปัญหาเรื่อง SQL Injection
         $pr_list = (new Collection(DB::select($strsql,["%".$this->prno."%"])))->paginate($this->numberOfPage);
 
         $this->resetPage();
