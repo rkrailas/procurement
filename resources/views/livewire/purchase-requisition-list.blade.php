@@ -36,7 +36,7 @@
                             @endforeach
                         </x-select2-multiple>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label for="site">Site No</label>
                         <x-select2-multiple id="site-select2" wire:model.defer="site">
                             @foreach($site_dd as $row)
@@ -46,28 +46,31 @@
                             @endforeach
                         </x-select2-multiple>
                     </div>
-                    <div class="col-2">
-                        <label class="">Request Date From</label>
-                        <div class="input-group mb-1">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">
-                                    <i class="fas fa-calendar"></i>
-                                </span>
+                    <div class="col-3">
+                        <label class="">Request Date From - To</label>
+                        <div class="row">
+                            <div class="col">
+                                <div class="input-group mb-1">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-calendar"></i>
+                                        </span>
+                                    </div>
+                                    <x-datepicker wire:model.defer="requestdate_from" id="requestdate_from" :error="'date'"
+                                        required />
+                                </div>
                             </div>
-                            <x-datepicker wire:model.defer="requestdate_from" id="requestdate_from" :error="'date'"
-                                required />
-                        </div>
-                    </div>
-                    <div class="col-2">
-                        <label class="">Request Date To</label>
-                        <div class="input-group mb-1">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">
-                                    <i class="fas fa-calendar"></i>
-                                </span>
+                            <div class="col">
+                                <div class="input-group mb-1">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-calendar"></i>
+                                        </span>
+                                    </div>
+                                    <x-datepicker wire:model.defer="requestdate_to" id="requestdate_to" :error="'date'"
+                                        required />
+                                </div>
                             </div>
-                            <x-datepicker wire:model.defer="requestdate_to" id="requestdate_to" :error="'date'"
-                                required />
                         </div>
                     </div>
                 </div>

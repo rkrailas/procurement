@@ -120,13 +120,17 @@ class PurchaseRequisitionList extends Component
                     WHERE pr = 1 ORDER BY ordertype";
         $this->ordertype_dd = DB::select($strsql);
 
+        //28-04-2022 เปิดให้แสดงทุก Company
+        // $strsql = "SELECT site, site_description FROM site 
+        //             WHERE company='" . auth()->user()->company . "' AND SUBSTRING(address_id, 7, 2)='EN'";
         $strsql = "SELECT site, site_description FROM site 
-                    WHERE company='" . auth()->user()->company . "' AND SUBSTRING(address_id, 7, 2)='EN'";
+                WHERE SUBSTRING(address_id, 7, 2)='EN'";
         $this->site_dd = DB::select($strsql);
 
-        $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users 
-                    WHERE company='" . auth()->user()->company 
-                    . "' ORDER BY users.name";
+        //28-04-2022 เปิดให้แสดงทุก Company
+        // $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users 
+        //             WHERE company='" . auth()->user()->company . "' ORDER BY users.name";
+        $strsql = "SELECT id, name + ' ' + ISNULL(lastname, '') as fullname, username FROM users ORDER BY users.name";
         $this->requestor_dd = DB::select($strsql);
         $this->requestedfor_dd = DB::select($strsql);
 
