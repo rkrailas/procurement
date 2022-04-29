@@ -2131,7 +2131,7 @@ class PurchaseRequisitionDetails extends Component
                     'currency' => 'required',
                     'exchange_rate' => 'required',
                     'purchase_unit' => 'required',
-                    'unit_price' => 'required|numeric|min:1|max:99999999.99',
+                    'unit_price' => 'required|numeric',
                     'qty' => 'required|numeric|min:1|max:99999999.99',
                     'req_date' => 'required|date|date_format:Y-m-d|after:yesterday',
                     'budget_code' => 'required',
