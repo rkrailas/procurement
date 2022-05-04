@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.19.0.final using JasperReports Library version 6.19.0-646c68931cebf1a58bc65c4359d1f0ca223c5e94  -->
+<!-- Created with Jaspersoft Studio version 6.19.1.final using JasperReports Library version 6.19.1-867c00bf88cd4d784d404379d6c05e1b419e8a4c  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="pr_form1" pageWidth="1224" pageHeight="792" orientation="Landscape" columnWidth="752" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d150523-390b-40f5-9705-ca0973d0e07f">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="275"/>
@@ -17,7 +17,7 @@
 	<parameter name="prno" class="java.lang.String"/>
 	<parameter name="signature_img" class="java.lang.String"/>
 	<queryString language="SQL">
-		<![CDATA[select g.name as company, a.prno, e.description as ordertype, m.rfqno, k.site_description as site
+		<![CDATA[select g.name as company, a.prno, e.description as ordertype, '' as rfqno, k.site_description as site
 , n.delivery_location as delivery_address
 , a.functions, a.department, a.division, isnull(a.requested_for_email, '') as email
 , isnull(a.requested_for_phone, '') as phone ,  isnull(a.requested_for_ext,'')  as ext  
@@ -39,7 +39,6 @@ left join dec_val_workflow i on i.ref_doc_id = a.id and i.approval_type='DECIDER
 left join users j on j.username = i.approver
 left join (select site, site_description, delivery_location from site group by site, site_description, delivery_location) as k on a.site = k.site
 left join supplier l on h.nominated_supplier = l.supplier
-left join rfq_header m on a.prno = m.prno
 left join site n on a.delivery_location=n.address_id
 where a.prno='$P!{prno}']]>
 	</queryString>
