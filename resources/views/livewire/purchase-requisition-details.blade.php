@@ -847,7 +847,7 @@
                     <div class="tab-pane fade {{ $currentTab == 'attachments' ? 'show active' : '' }}" id="pills-attachments" role="tabpanel" aria-labelledby="pills-attachments-tab" wire:ignore.self>
 
                         @if ($isRequester_RequestedFor == true)
-                            @if ( $prHeader['status'] <= '21' )
+                            @if ( $prHeader['status'] != '60' and  $prHeader['status'] != '70')
                                 <div class="row">
                                     <div class="col-md-4">
                                         <label>Attachment Level <span style="color: blue; font-weight: normal">(Please select before add new files.)</span></label>
