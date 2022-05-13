@@ -2032,8 +2032,10 @@ class PurchaseRequisitionDetails extends Component
                         $this->budgetcode_dd = [];
                         $strsql = "SELECT account, description FROM gl_master 
                                 WHERE category IN ('Noninventory', 'Asset Noninventory')
-                                AND company = '" . $this->prHeader['company'] . "'
-                                AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
+                                AND company = '" . $this->prHeader['company'] . "'";
+
+                                //13-05-22 ไม่ต้อง where gl_mapping_noninv
+                                //AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
                         $this->budgetcode_dd = DB::select($strsql);
 
                         $newOption = "";
@@ -2053,8 +2055,10 @@ class PurchaseRequisitionDetails extends Component
                     $this->budgetcode_dd = [];
                     $strsql = "SELECT account, description FROM gl_master 
                             WHERE category IN ('Noninventory', 'Asset Noninventory')
-                            AND company = '" . $this->prHeader['company'] . "'
-                            AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
+                            AND company = '" . $this->prHeader['company'] . "'";
+
+                            //13-05-22 ไม่ต้อง where gl_mapping_noninv
+                            //AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
                     $this->budgetcode_dd = DB::select($strsql);
 
                     $newOption = "";
@@ -2379,10 +2383,13 @@ class PurchaseRequisitionDetails extends Component
 
                         //16-03-22 ถ้า Item ไม่มี gl_account ให้หาจาก gl_mapping_noninv
                         $this->budgetcode_dd = [];
+
                         $strsql = "SELECT account, description FROM gl_master 
                                 WHERE category IN ('Noninventory', 'Asset Noninventory')
-                                AND company = '" . $this->prHeader['company'] . "'
-                                AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
+                                AND company = '" . $this->prHeader['company'] . "'";
+                        //13-05-22 ไม่ต้อง where gl_mapping_noninv
+                                //AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
+
                         $this->budgetcode_dd = DB::select($strsql);
 
                         $newOption = "<option value=' '>--- Please Select ---</option>";
@@ -2446,9 +2453,13 @@ class PurchaseRequisitionDetails extends Component
             //16-03-2022 ถ้าเป็น Free Text ให้หา Budget Code จาก gl_mapping_noninv
             $strsql = "SELECT account, description FROM gl_master 
                     WHERE category IN ('Noninventory', 'Asset Noninventory')
-                    AND company = '" . $this->prHeader['company'] . "'
-                    AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
+                    AND company = '" . $this->prHeader['company'] . "'";
+
+                    //13-05-22 ไม่ต้อง where gl_mapping_noninv
+                    //AND type IN (SELECT account_type FROM gl_mapping_noninv WHERE cost_center='" . $this->prHeader['cost_center'] . "')";
+
             $this->budgetcode_dd = DB::select($strsql);
+
 
             $newOption = "<option value=' '>--- Please Select ---</option>";
             $xBudgetcode_dd = json_decode(json_encode($this->budgetcode_dd), true);
