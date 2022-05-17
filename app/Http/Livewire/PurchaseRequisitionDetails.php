@@ -2545,7 +2545,8 @@ class PurchaseRequisitionDetails extends Component
                 , prh.cost_center, cc.description AS costcenter_desc
                 , prh.buyer, isnull(buyer.name,'') + ' ' + isnull(buyer.lastname,'') AS buyer_name
                 , prh.delivery_address, prh.delivery_location, prh.delivery_site, prh.budget_year, prh.purpose_pr, prh.capexno
-                , FORMAT(prh.request_date,'yyy-MM-dd') AS request_date, site.site + ' : ' + site_description AS delivery_location_desc
+                , FORMAT(prh.request_date,'yyy-MM-dd') AS request_date
+                , delivery_location.site + ' : ' + delivery_location AS delivery_location_desc
                 , pr_status.description AS statusname, FORMAT(prh.valid_until,'yyy-MM-dd') AS valid_until, prh.days_to_notify, prh.notify_below_10
                 , prh.notify_below_25, prh.notify_below_35, prh.ordertype, prh.requestor, prh.status
                 FROM pr_header prh
@@ -2557,6 +2558,7 @@ class PurchaseRequisitionDetails extends Component
                 LEFT JOIN company ON company.company=prh.company
                 LEFT JOIN cost_center cc ON cc.cost_center=prh.cost_center 
                 LEFT JOIN (SELECT site, address_id, site_description FROM site WHERE SUBSTRING(address_id, 7, 2)='EN') site ON site.site=prh.site
+                LEFT JOIN (SELECT site, address_id, site_description FROM site WHERE SUBSTRING(address_id, 7, 2)='EN') delivery_location ON delivery_location.site=prh.delivery_address
                 WHERE prh.prno ='" . $this->editPRNo . "'";
         $data = DB::select($strsql);
 
