@@ -24,7 +24,7 @@
 , f.description as status, a.request_date, b.name + ' ' + b.lastname as requested_for
 , c.name + ' ' + c.lastname as requestor, d.name + ' ' + d.lastname as buyer
 , h.partno, h.description, h.qty, h.purchase_unit, h.unit_price, h.qty * h.unit_price as total
-, h.final_price/h.qty as unit_price_final, h.final_price, h.budget_code, h.req_date
+, h.final_price as unit_price_final, h.final_price * h.qty as final_price, h.budget_code, h.req_date
 , l.name1 + ' ' + l.name2 as nominated_supplier, h.edecision, h.remarks,  j.name + ' ' + j.lastname as approver
 ,  j.position, i.changed_on as approve_date, h.currency
 from pr_header a

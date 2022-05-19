@@ -328,6 +328,7 @@
                                         @endif
                                         </th>
                                         <th scope="col">Final Price</th>
+                                        <th scope="col">Total Final Price</th>
                                         <th scope="col">PO No.</th>
                                         <th scope="col"></th>
                                     </tr>
@@ -339,7 +340,7 @@
                                             <div d-inline ml-2>
                                                 <input wire:model="selectedRows" type="checkbox" value="{{ $row->id }}"
                                                     id="{{ $row->lineno }}">
-                                                {{-- <span>{{ $loop->iteration + $itemList->firstitem()-1 }}</span> --}}
+                                                {{-- <span>{{ $loop->iteration + $itemList->firstitem()-1 }}</span> --}}  
                                                 <span>{{ $row->lineno }}</span>
                                             </div>
                                         </td>
@@ -353,6 +354,7 @@
                                         <td scope="col" class="text-center">{{ $row->currency }}</td>
                                         <td scope="col" class="text-center">{{ \Carbon\Carbon::parse( $row->req_date)->format('d-M-Y') }} </td>
                                         <td scope="col" class="text-right pr-2">{{ number_format($row->final_price, 2) }} </td>
+                                        <td scope="col" class="text-right pr-2">{{ number_format($row->total_final_price, 2) }} </td>
                                         <td scope="col">{{ $row->reference_po }}</td>
                                         <td scope="col">
                                             <center>

@@ -220,7 +220,7 @@ class PurchaseRequisitionList extends Component
                 , ISNULL(req.name,'') + ' ' + ISNULL(req.lastname,'') AS requestor, c.description as item_desc
                 FROM pr_header prh
                 LEFT JOIN (SELECT prno, SUM(qty * unit_price_local) as total_budget
-                            , SUM(final_price_local) as total_final_price 
+                            , SUM(qty * final_price_local) as total_final_price 
                             FROM pr_item 
                             WHERE ISNULL(deletion_flag, 0) = 0
                             GROUP BY prno) pri ON pri.prno=prh.prno

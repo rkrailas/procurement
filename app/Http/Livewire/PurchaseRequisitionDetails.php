@@ -2535,7 +2535,7 @@ class PurchaseRequisitionDetails extends Component
 
     public function editPR()
     {
-        //PR Header
+        //PR Header 
         $strsql = "SELECT prh.id, prh.prno, ort.description AS ordertypename
                 , isnull(req.name,'') + ' ' + isnull(req.lastname,'') AS requestor_name, prh.requestor_ext AS extention, prh.requestor_phone AS phone
                 , prh.requested_for, prh.requested_for_email AS email_reqf, prh.requested_for_ext AS extention_reqf
@@ -3096,7 +3096,8 @@ class PurchaseRequisitionDetails extends Component
         }else{
             //itemList
             $strsql = "SELECT pri.id, pri.[lineno], pri.description, pri.partno, sts.[description] AS status
-                , pri.qty, pri.purchase_unit, pri.unit_price, pri.qty * pri.unit_price AS budgettotal, pri.req_date, pri.final_price, pri.currency
+                , pri.qty, pri.purchase_unit, pri.unit_price, pri.qty * pri.unit_price AS budgettotal, pri.req_date, pri.currency
+                , pri.final_price, pri.qty * pri.final_price AS total_final_price
                 , pri.reference_po
                 FROM pr_item pri
                 LEFT JOIN pr_status sts ON sts.status=pri.[status]
