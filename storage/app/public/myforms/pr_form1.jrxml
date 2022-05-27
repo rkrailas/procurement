@@ -4,7 +4,7 @@
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="275"/>
 	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="719"/>
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="P2P_Nissan.xml"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Procument"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
@@ -26,7 +26,7 @@
 , h.partno, h.description, h.qty, h.purchase_unit, h.unit_price, h.qty * h.unit_price as total
 , h.final_price as unit_price_final, h.final_price * h.qty as final_price, h.budget_code, h.req_date
 , l.name1 + ' ' + l.name2 as nominated_supplier, h.edecision, h.remarks,  j.name + ' ' + j.lastname as approver
-,  j.position, i.changed_on as approve_date, h.currency
+,  j.position, i.changed_on as approve_date, h.currency, h.[lineno]
 from pr_header a
 left join users b on b.id = a.requested_for
 left join users c on c.id = a.requestor
@@ -39,7 +39,7 @@ left join dec_val_workflow i on i.ref_doc_id = a.id and i.approval_type='DECIDER
 left join users j on j.username = i.approver
 left join (select site, site_description, delivery_location from site group by site, site_description, delivery_location) as k on a.site = k.site
 left join supplier l on h.nominated_supplier = l.supplier
-left join site n on a.delivery_location=n.address_id
+left join site n on a.delivery_address=n.address_id
 where a.prno='$P!{prno}']]>
 	</queryString>
 	<field name="company" class="java.lang.String">
@@ -178,6 +178,11 @@ where a.prno='$P!{prno}']]>
 		<property name="com.jaspersoft.studio.field.name" value="currency"/>
 		<property name="com.jaspersoft.studio.field.label" value="currency"/>
 	</field>
+	<field name="lineno" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.name" value="lineno"/>
+		<property name="com.jaspersoft.studio.field.label" value="lineno"/>
+	</field>
+	<sortField name="lineno"/>
 	<variable name="phone_ext" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
@@ -610,7 +615,7 @@ Delivery Date]]></text>
 		</band>
 	</columnHeader>
 	<detail>
-		<band height="27" splitType="Stretch">
+		<band height="27" splitType="Prevent">
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
 				<reportElement stretchType="RelativeToTallestObject" x="30" y="0" width="58" height="27" uuid="145d8338-d817-44e5-8497-f9e941410f76"/>
 				<box leftPadding="5"/>
