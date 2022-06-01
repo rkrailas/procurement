@@ -39,7 +39,7 @@ left join dec_val_workflow i on i.ref_doc_id = a.id and i.approval_type='DECIDER
 left join users j on j.username = i.approver
 left join (select site, site_description, delivery_location from site group by site, site_description, delivery_location) as k on a.site = k.site
 left join supplier l on h.nominated_supplier = l.supplier
-left join site n on a.delivery_address=n.address_id
+left join site n on a.delivery_address+'-EN'=n.address_id
 where a.prno='$P!{prno}']]>
 	</queryString>
 	<field name="company" class="java.lang.String">
